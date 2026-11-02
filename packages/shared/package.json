@@ -1,0 +1,22 @@
+{
+	"name": "@longan/shared",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts",
+		"./contract": "./src/contract/index.ts"
+	},
+	"scripts": {
+		"typecheck": "tsc -p tsconfig.json",
+		"test": "vitest run --passWithNoTests"
+	},
+	"dependencies": {
+		"@orpc/contract": "^1.16.1",
+		"zod": "^4.6.7"
+	},
+	"devDependencies": {
+		"typescript": "~5.9.3",
+		"vitest": "^5.1.0"
+	}
+}

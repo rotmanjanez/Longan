@@ -1,0 +1,29 @@
+{
+	"name": "longan",
+	"private": true,
+	"version": "0.1.0",
+	"description": "Longan: a small self-hosted photo gallery (Lychee's core, in TypeScript)",
+	"license": "MIT",
+	"type": "module",
+	"packageManager": "pnpm@11.24.0",
+	"engines": {
+		"node": ">=22.18",
+		"bun": ">=1.2"
+	},
+	"scripts": {
+		"dev": "pnpm -r --parallel --filter ./apps/* dev",
+		"dev:server": "pnpm --filter @longan/server dev",
+		"dev:web": "pnpm --filter @longan/web dev",
+		"build": "pnpm -r build",
+		"typecheck": "pnpm -r typecheck",
+		"test": "pnpm -r test",
+		"lint": "biome check .",
+		"format": "biome format --write .",
+		"db:generate": "pnpm --filter @longan/server db:generate",
+		"db:migrate": "pnpm --filter @longan/server db:migrate"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.6.4",
+		"typescript": "~5.9.3"
+	}
+}
