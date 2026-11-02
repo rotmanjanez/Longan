@@ -149,6 +149,7 @@ import { assetUrl, versionOf } from "@/api/assets.ts";
 import type { LightboxProps } from "@/components/gallery/lightbox.ts";
 import { useInit } from "@/composables/useInit.ts";
 import { usePhotoDetails } from "@/composables/usePhotoDetails.ts";
+import { canMovePhotoFrom } from "@/lib/albums.ts";
 import { useUiStore } from "@/stores/ui.ts";
 import { onPhotosRemoved } from "./events.ts";
 import PhotoDetailsPanel from "./PhotoDetailsPanel.vue";
@@ -162,7 +163,7 @@ const emit = defineEmits<{ close: []; navigate: [photoId: string] }>();
 const { t, d } = useI18n();
 const ui = useUiStore();
 const toast = useToast();
-const { config, isLoggedIn } = useInit();
+const { config, isLoggedIn, user, rights: globalRights } = useInit();
 const actions = usePhotoActions();
 
 const rootRef = ref<HTMLElement | null>(null);
@@ -342,7 +343,8 @@ const menuItems = computed<DropdownMenuItem[][]>(() => {
 		groups.push(edit);
 	}
 	const organise: DropdownMenuItem[] = [];
-	if (p?.rights.canMove) {
+	const me = user.value ? { id: user.value.id, isAdmin: globalRights.value.isAdmin } : null;
+	if (p && canMovePhotoFrom(props.albumCtx, p, me)) {
 		organise.push({
 			label: t("lightbox.move"),
 			icon: "lucide:folder-input",

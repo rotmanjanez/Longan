@@ -100,7 +100,7 @@ import { useInit } from "@/composables/useInit.ts";
 import { useLightboxNav } from "@/composables/useLightboxNav.ts";
 import { invalidatePhotoDetails, usePhotoDetails } from "@/composables/usePhotoDetails.ts";
 import { usePhotoListing } from "@/composables/usePhotoListing.ts";
-import { isSmartAlbumId } from "@/lib/albums.ts";
+import { canMovePhotoFrom, isSmartAlbumId } from "@/lib/albums.ts";
 import { useSelectionStore } from "@/stores/selection.ts";
 import { useUiStore } from "@/stores/ui.ts";
 
@@ -110,7 +110,7 @@ const router = useRouter();
 const ui = useUiStore();
 const selection = useSelectionStore();
 const queryClient = useQueryClient();
-const { config } = useInit();
+const { config, user, rights: globalRights } = useInit();
 
 const albumId = computed(() => String(route.params.albumId ?? ""));
 const photoId = computed(() =>
@@ -190,7 +190,13 @@ const { details: selectedDetails } = usePhotoDetails(
 );
 function selectionAllows(right: "canEdit" | "canMove" | "canDelete"): boolean {
 	const ids = selection.photoIds;
-	return ids.length > 0 && ids.every((id) => selectedDetails.value.get(id)?.rights[right] === true);
+	if (ids.length === 0) return false;
+	const me = user.value ? { id: user.value.id, isAdmin: globalRights.value.isAdmin } : null;
+	return ids.every((id) => {
+		const d = selectedDetails.value.get(id);
+		if (!d) return false;
+		return right === "canMove" ? canMovePhotoFrom(resolvedId.value, d, me) : d.rights[right] === true;
+	});
 }
 const toolbarRights = computed(() => {
 	const r = headData.value?.rights;

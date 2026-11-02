@@ -29,3 +29,17 @@ export function plainText(text: string | null | undefined): string {
 		.replace(/\n{3,}/g, "\n\n")
 		.trim();
 }
+
+/**
+ * Whether a photo may be moved out of the given album context. Moving from a smart album (or Unsorted)
+ * replaces every album membership of the photo, so the server only allows it for the owner or an admin;
+ * a per-album move grant is not enough there. Mirrors `photos.move` in apps/server.
+ */
+export function canMovePhotoFrom(
+	albumCtx: string,
+	photo: { ownerId: number; rights: { canMove: boolean } },
+	me: { id: number; isAdmin: boolean } | null,
+): boolean {
+	if (!isSmartAlbumId(albumCtx)) return photo.rights.canMove;
+	return me !== null && (me.isAdmin || photo.ownerId === me.id);
+}
