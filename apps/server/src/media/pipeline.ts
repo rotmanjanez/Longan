@@ -34,6 +34,7 @@ import {
 	makePlaceholder,
 	readImageSettings,
 	type VariantRow,
+	withWorkingCopy,
 } from "./variants.ts";
 import { extractFrame } from "./video.ts";
 
@@ -218,12 +219,14 @@ export async function importFile(input: ImportInput): Promise<ImportResult> {
 		let colours: string[] = [];
 		let placeholder: string | null = null;
 		if (source) {
-			variants = await generateVariants({ source, stem, settings: s, onWrite: (rel) => written.add(rel) });
-			colours = await extractColours(source).catch((err) => {
-				log.warn("colour extraction failed", { err: String(err) });
-				return [] as string[];
+			await withWorkingCopy(source, s, async (work) => {
+				variants = await generateVariants({ work, stem, settings: s, onWrite: (rel) => written.add(rel) });
+				colours = await extractColours(work.path).catch((err) => {
+					log.warn("colour extraction failed", { err: String(err) });
+					return [] as string[];
+				});
+				if (s.placeholder) placeholder = await makePlaceholder(work.path);
 			});
-			if (s.placeholder) placeholder = await makePlaceholder(source);
 		}
 
 		const photoId = newId();
@@ -338,23 +341,26 @@ export async function reprocessPhoto(db: Db, photoId: string, variants?: SizeVar
 			.select({ path: sizeVariants.path })
 			.from(sizeVariants)
 			.where(and(eq(sizeVariants.photoId, photoId), inArray(sizeVariants.type, types)));
-		const rows = await generateVariants({
-			source,
-			stem,
-			settings: s,
-			only: types,
-			onWrite: (r) => written.add(r),
-		});
 		let extra: Partial<typeof photos.$inferInsert> = {};
-		if (full) {
-			const colours = await extractColours(source).catch(() => photo.colours);
-			const placeholder = s.placeholder ? await makePlaceholder(source) : null;
-			extra = { colours, placeholder };
-			if (photo.type === "image") {
-				const dims = await imageSize(originalAbs);
-				extra.width = dims.width;
-				extra.height = dims.height;
+		const rows = await withWorkingCopy(source, s, async (work) => {
+			const rows = await generateVariants({
+				work,
+				stem,
+				settings: s,
+				only: types,
+				onWrite: (r) => written.add(r),
+			});
+			if (full) {
+				const colours = await extractColours(work.path).catch(() => photo.colours);
+				const placeholder = s.placeholder ? await makePlaceholder(work.path) : null;
+				extra = { colours, placeholder };
 			}
+			return rows;
+		});
+		if (full && photo.type === "image") {
+			const dims = await imageSize(originalAbs);
+			extra.width = dims.width;
+			extra.height = dims.height;
 		}
 		await db.transaction(async (tx) => {
 			await tx

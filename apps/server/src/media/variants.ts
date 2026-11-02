@@ -3,7 +3,7 @@ import type { SizeVariantType } from "@longan/shared";
 import sharp from "sharp";
 import { log } from "../lib/log.ts";
 import { settingBool, settingInt, settingStr } from "../settings/index.ts";
-import { absPath, ensureDir, variantPath } from "./storage.ts";
+import { absPath, ensureDir, safeUnlink, tmpFile, variantPath } from "./storage.ts";
 import { heifDecoder, run } from "./tools.ts";
 
 export type GeneratedVariant = Exclude<SizeVariantType, "original">;
@@ -81,31 +81,64 @@ export async function imageSize(path: string): Promise<{ width: number; height: 
 	return { width, height };
 }
 
+export type WorkingCopy = { path: string; plan: VariantPlan[] };
+
+/** Resize target for the working copy: the smallest size that still serves every planned variant. */
+function workingResize(width: number, height: number, plan: VariantPlan[]) {
+	const inside = Math.max(0, ...plan.filter((p) => p.fit === "inside").map((p) => p.size));
+	const cover = Math.max(0, ...plan.filter((p) => p.fit === "cover").map((p) => p.size));
+	const byInside = inside / Math.max(width, height);
+	const byCover = cover / Math.min(width, height);
+	if (Math.max(byInside, byCover) >= 1) return null;
+	if (byInside >= byCover) return width >= height ? { width: inside } : { height: inside };
+	return width <= height ? { width: cover } : { height: cover };
+}
+
 /**
- * Generate size variants from `source` (an image file: the original, or a frame extracted from a video)
- * into STORAGE_PATH/<variant>/<stem>.<format>. Failures of single variants are logged and skipped.
- * `only` restricts generation to the given types (still subject to the size plan).
+ * Decode `source` once into an autorotated, downscaled libvips file (ICC profile kept) that every variant,
+ * the colours and the placeholder are rendered from. The file is removed after `fn`.
+ */
+export async function withWorkingCopy<T>(
+	source: string,
+	settings: ImageSettings,
+	fn: (work: WorkingCopy) => Promise<T>,
+): Promise<T> {
+	const { width, height } = await imageSize(source);
+	const plan = planVariants(width, height, settings);
+	const path = await tmpFile(".v");
+	try {
+		let img = sharp(source, { failOn: "none", animated: false }).autoOrient();
+		const target = workingResize(width, height, plan);
+		if (target) img = img.resize(target);
+		await img.keepIccProfile().toFile(path);
+		return await fn({ path, plan });
+	} finally {
+		await safeUnlink(path);
+	}
+}
+
+/**
+ * Generate size variants from a working copy into STORAGE_PATH/<variant>/<stem>.<format>.
+ * Failures of single variants are logged and skipped. `only` restricts generation to the given types.
  */
 export async function generateVariants(opts: {
-	source: string;
+	work: WorkingCopy;
 	stem: string;
 	settings: ImageSettings;
 	only?: readonly SizeVariantType[];
 	/** Called with the relative path of every written file (for cleanup on failure). */
 	onWrite?: (rel: string) => void;
 }): Promise<VariantRow[]> {
-	const { source, stem, settings: s } = opts;
-	const { width, height } = await imageSize(source);
+	const { work, stem, settings: s } = opts;
 	const ext = s.format === "jpeg" ? "jpg" : s.format;
 	const rows: VariantRow[] = [];
-	for (const p of planVariants(width, height, s)) {
+	for (const p of work.plan) {
 		if (opts.only && !opts.only.includes(p.type)) continue;
 		const rel = variantPath(p.type, stem, ext);
 		const abs = absPath(rel);
 		try {
 			await ensureDir(dirname(abs));
-			let img = sharp(source, { failOn: "none", animated: false })
-				.autoOrient()
+			let img = sharp(work.path)
 				.resize(p.size, p.size, {
 					fit: p.fit,
 					position: "centre",
@@ -118,12 +151,12 @@ export async function generateVariants(opts: {
 					: s.format === "avif"
 						? // AVIF needs a lower quality number than WebP for similar fidelity; effort 4 keeps encoding bearable.
 							img.avif({ quality: Math.max(1, s.quality - 25), effort: 4 })
-						: img.webp({ quality: s.quality });
+						: img.webp({ quality: s.quality, effort: 2 });
 			opts.onWrite?.(rel);
 			const info = await img.toFile(abs);
 			rows.push({ type: p.type, path: rel, width: info.width, height: info.height, filesize: info.size });
 		} catch (err) {
-			log.error("size variant failed", { type: p.type, source, err: String(err) });
+			log.error("size variant failed", { type: p.type, source: work.path, err: String(err) });
 		}
 	}
 	return rows;
