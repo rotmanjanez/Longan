@@ -140,6 +140,11 @@ describe.skipIf(!enabled)("asset / upload / zip routes (dev database)", async ()
 			headers: { "If-Modified-Since": res.headers.get("last-modified")! },
 		});
 		expect(since.status).toBe(304);
+		// The cache-busting version query is ignored by the route (same file, same ETag).
+		const versioned = await req(`/api/asset/${albumId}/${photoId}/original?v=1700000000`, { as: owner });
+		expect(versioned.status).toBe(200);
+		expect(versioned.headers.get("etag")).toBe(etag);
+		await versioned.arrayBuffer();
 	});
 
 	it("asset: range requests on the original", async () => {

@@ -178,9 +178,18 @@ export const contract = {
 				}),
 			)
 			.output(z.void()),
-		/** Move photos from one album (null = unsorted) into another. */
+		/**
+		 * Move photos out of `fromAlbum` into `toAlbum`. `fromAlbum` null (unsorted or a smart album context)
+		 * replaces all album memberships with `toAlbum`; `toAlbum` null (unsorted) removes all memberships.
+		 */
 		move: oc
-			.input(z.object({ ids: z.array(PhotoId).min(1), fromAlbum: AlbumId.nullable(), toAlbum: AlbumId }))
+			.input(
+				z.object({
+					ids: z.array(PhotoId).min(1),
+					fromAlbum: AlbumId.nullable(),
+					toAlbum: AlbumId.nullable(),
+				}),
+			)
 			.output(z.void()),
 		/** Link photos into an additional album (no file copy). */
 		copy: oc.input(z.object({ ids: z.array(PhotoId).min(1), toAlbum: AlbumId })).output(z.void()),
@@ -269,10 +278,17 @@ export const contract = {
 	admin: {
 		health: oc.output(Health),
 		jobs: oc.input(z.object({ limit: z.number().int().max(500).default(100) })).output(z.array(JobRow)),
-		/** Queue regeneration of size variants (all photos when ids omitted). */
+		/**
+		 * Queue regeneration of size variants: the given photos and/or every photo in `albumId` and its child
+		 * albums (recursive); all photos when neither is given.
+		 */
 		reprocess: oc
 			.input(
-				z.object({ photoIds: z.array(PhotoId).optional(), variants: z.array(SizeVariantType).optional() }),
+				z.object({
+					photoIds: z.array(PhotoId).optional(),
+					albumId: AlbumId.optional(),
+					variants: z.array(SizeVariantType).optional(),
+				}),
 			)
 			.output(z.object({ queued: z.number().int() })),
 		retryJob: oc.input(z.object({ id: z.number().int() })).output(z.void()),

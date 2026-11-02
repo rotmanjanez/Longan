@@ -112,6 +112,8 @@ export const InitConfig = z.object({
 	recentAgeDays: z.number().int(),
 	uploadMaxBytes: z.number().int(),
 	uploadParallelism: z.number().int(),
+	/** Lightbox slideshow interval in seconds. */
+	slideshowIntervalS: z.number().int(),
 });
 export type InitConfig = z.infer<typeof InitConfig>;
 
@@ -193,6 +195,8 @@ export const PhotoRatiosSoA = z.object({
 	createdAts: z.array(Timestamp),
 	/** First dominant colour (#rrggbb) or null; the tile is tinted with it until the thumb loads. */
 	colours: z.array(z.string().nullable()),
+	/** photos.updated_at as epoch seconds; appended as `?v=` to asset urls so rotate/reprocess bust caches. */
+	updatedAts: z.array(z.number()),
 	/** True when the listing was capped (search) and more rows exist. */
 	isTruncated: z.boolean(),
 });

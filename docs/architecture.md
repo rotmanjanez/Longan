@@ -65,9 +65,9 @@ Module owners add files inside their directory and their `rpc/procedures/<ns>.ts
 
 | Route | Module | Behaviour |
 |---|---|---|
-| `GET /auth/login?redirect=/path` | auth | Start OIDC code flow (PKCE). |
+| `GET /auth/login?redirect=<url>` | auth | Start OIDC code flow (PKCE). `redirect` is a same-site path or an absolute URL on `APP_URL` (outside production also the Vite origin); the web always sends `location.origin + fullPath`. |
 | `GET /auth/callback` | auth | Exchange code, upsert user, create session, set cookie `longan_session` (httpOnly, SameSite=Lax, Secure when APP_URL is https), redirect. |
-| `POST /auth/logout` | auth | Delete session, clear cookie, redirect to Keycloak end-session with `id_token_hint` and `post_logout_redirect_uri=APP_URL`. |
+| `POST /auth/logout?redirect=<url>` | auth | Delete session, clear cookie, redirect to Keycloak end-session with `id_token_hint` and `post_logout_redirect_uri` = `redirect` (validated like login) or `APP_URL`. JSON callers (`Accept: application/json`) get `{ redirect }` and navigate themselves. |
 | `GET /api/asset/:album/:photo/:variant` | http/asset | `album` is an album id, a smart album id, or `unsorted`. Resolve the photo, check `photoVisible`; `medium*`/`original` additionally need `photoGrant(fullPhoto)` (thumb-class variants: thumb, thumb2x, small, small2x are always allowed once visible). Fallback chain when a variant is missing: medium2x->medium->small2x->small->thumb2x->thumb. Headers: `Cache-Control: private, max-age=3600`, `ETag` (path+mtime+size), `Last-Modified`, 304 on match, `Accept-Ranges` + range requests for `original` (video playback), `Content-Disposition: attachment` when `?download=1` (needs download grant unless owner). |
 | `PUT /api/upload?album=<albumId or empty>&name=<filename>&mtime=<ms>` | http/upload | Raw file body. Requires a logged-in user with `mayUpload`, or album `grantsUpload`. Streams to `STORAGE_PATH/tmp/<random>`, runs the pipeline, returns `{ status: "created"|"duplicate"|"skipped"|"error", photoId?, message? }`. Enforce `UPLOAD_MAX_BYTES` via Content-Length. |
 | `GET /api/zip?albums=a,b&photos=x,y&variant=original` | http/zip | Streamed ZIP (yazl). Albums recurse with folder structure. Needs download grant per item; silently skips what the viewer may not download. |

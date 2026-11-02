@@ -1,5 +1,5 @@
 import { call } from "@orpc/server";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
@@ -273,6 +273,37 @@ describe("photo mutations", () => {
 		).rejects.toMatchObject({ code: "FORBIDDEN" });
 	});
 
+	it("move from a smart album replaces all memberships; move to null unsorts", async () => {
+		await call(router.photos.copy, { ids: [w.p.p7], toAlbum: w.a.priv }, { context: w.ctx.alice });
+		await call(router.photos.copy, { ids: [w.p.p7], toAlbum: w.a.hidden }, { context: w.ctx.alice });
+		const albumsOf = async () =>
+			(await db.select().from(photoAlbum).where(eq(photoAlbum.photoId, w.p.p7))).map((l) => l.albumId).sort();
+		expect((await albumsOf()).length).toBeGreaterThan(1);
+		// bob does not own the photo: replacing memberships is refused.
+		await expect(
+			call(
+				router.photos.move,
+				{ ids: [w.p.p7], fromAlbum: null, toAlbum: w.a.shared },
+				{ context: w.ctx.bob },
+			),
+		).rejects.toMatchObject({ code: "FORBIDDEN" });
+		await call(
+			router.photos.move,
+			{ ids: [w.p.p7], fromAlbum: null, toAlbum: w.a.shared },
+			{ context: w.ctx.alice },
+		);
+		expect(await albumsOf()).toEqual([w.a.shared]);
+		await call(
+			router.photos.move,
+			{ ids: [w.p.p7], fromAlbum: w.a.shared, toAlbum: null },
+			{ context: w.ctx.alice },
+		);
+		expect(await albumsOf()).toEqual([]);
+		const unsorted = await call(router.photos.ratios, { album: "unsorted" }, { context: w.ctx.alice });
+		expect(unsorted.ids).toContain(w.p.p7);
+		expect(unsorted.updatedAts.every((t) => Number.isInteger(t) && t > 1_600_000_000)).toBe(true);
+	});
+
 	it("delete needs delete rights", async () => {
 		await expect(call(router.photos.delete, { ids: [w.p.p5] }, { context: w.ctx.bob })).rejects.toMatchObject(
 			{
@@ -285,5 +316,48 @@ describe("photo mutations", () => {
 			.from(photosTable)
 			.where(inArray(photosTable.id, [w.p.p3]));
 		expect(rows).toEqual([]);
+	});
+});
+
+describe("admin.reprocess", () => {
+	it("queues every photo of an album subtree (rolled back, so the dev worker never sees the jobs)", async () => {
+		const rollback = new Error("rollback");
+		// pub -> child (p8), privChild; p1..p3 in pub (p3 may be deleted by an earlier test).
+		const expected = (
+			await db
+				.selectDistinct({ id: photoAlbum.photoId })
+				.from(photoAlbum)
+				.where(inArray(photoAlbum.albumId, [w.a.pub, w.a.child, w.a.privChild]))
+		)
+			.map((r) => r.id)
+			.sort();
+		expect(expected).toContain(w.p.p8);
+		let payloads: unknown[] = [];
+		await db
+			.transaction(async (tx) => {
+				const ctx = { ...w.ctx.admin, db: tx as unknown as typeof db };
+				const r = await call(
+					router.admin.reprocess,
+					{ albumId: w.a.pub, variants: ["thumb"] },
+					{ context: ctx },
+				);
+				expect(r.queued).toBe(expected.length);
+				const rows = await tx.execute<{ payload: unknown }>(
+					sql`select payload from jobs where type = 'reprocess_photo' order by id desc limit ${expected.length}`,
+				);
+				payloads = rows.map((j) => j.payload);
+				await expect(
+					call(router.admin.reprocess, { albumId: w.a.pub }, { context: { ...w.ctx.alice, db: ctx.db } }),
+				).rejects.toMatchObject({ code: "FORBIDDEN" });
+				throw rollback;
+			})
+			.catch((e) => {
+				if (e !== rollback) throw e;
+			});
+		const ids = payloads.map((p) => (p as { photoId: string; variants: string[] }).photoId).sort();
+		expect(ids).toEqual(expected);
+		expect(
+			payloads.every((p) => JSON.stringify((p as { variants: string[] }).variants) === '["thumb"]'),
+		).toBe(true);
 	});
 });

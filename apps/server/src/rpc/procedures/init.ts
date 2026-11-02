@@ -95,6 +95,7 @@ export const init = os.init.router({
 			recentAgeDays: await int("smart.recent_age_days", 30),
 			uploadMaxBytes: env.UPLOAD_MAX_BYTES,
 			uploadParallelism: await int("upload.parallelism", 3),
+			slideshowIntervalS: Math.min(60, Math.max(1, await int("gallery.slideshow_interval_s", 5))),
 		};
 
 		return { user: ctx.user ? toUserMe(ctx.user) : null, rights, config };

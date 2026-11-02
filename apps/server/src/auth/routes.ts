@@ -55,9 +55,13 @@ async function logout(c: Context<AppEnv>) {
 		log.warn("logout: session delete failed", { err: String(err) });
 	}
 	clearSessionCookie(c);
-	let target = "/";
+	// Where the IdP sends the browser afterwards: an absolute URL on an allowed origin (the SPA's origin,
+	// e.g. the Vite dev server), else APP_URL.
+	const back = safeRedirect(c.req.query("redirect"));
+	const postLogout = back.startsWith("/") ? new URL(back, env.APP_URL).toString() : back;
+	let target = postLogout;
 	try {
-		target = (await buildLogoutUrl(idToken))?.toString() ?? "/";
+		target = (await buildLogoutUrl(idToken, postLogout))?.toString() ?? postLogout;
 	} catch (err) {
 		log.warn("logout: no end-session url", { err: String(err) });
 	}

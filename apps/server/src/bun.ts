@@ -1,14 +1,14 @@
 import { serveStatic } from "hono/bun";
 import { createApp } from "./app.ts";
 import { env } from "./env.ts";
+import { mountSpa } from "./http/spa.ts";
 import { log } from "./lib/log.ts";
 import "./routes.ts";
 import { startWorker } from "./jobs/worker.ts";
 
 const app = createApp();
 if (env.NODE_ENV === "production") {
-	app.use("/*", serveStatic({ root: env.WEB_DIST }));
-	app.get("*", serveStatic({ root: env.WEB_DIST, path: "index.html" }));
+	mountSpa(app, serveStatic({ root: env.WEB_DIST }), serveStatic({ root: env.WEB_DIST, path: "index.html" }));
 }
 startWorker();
 log.info(`longan listening on http://localhost:${env.PORT} (bun)`);

@@ -94,11 +94,11 @@ export async function finishLogin(search: string, checks: { state: string; codeV
 }
 
 /** RP-initiated logout URL, or null when the provider has no end_session_endpoint. */
-export async function buildLogoutUrl(idToken: string | null): Promise<URL | null> {
+export async function buildLogoutUrl(idToken: string | null, postLogoutUrl?: string): Promise<URL | null> {
 	const config = await getOidcConfig();
 	if (!config.serverMetadata().end_session_endpoint) return null;
 	const params: Record<string, string> = {
-		post_logout_redirect_uri: new URL("/", env.APP_URL).toString(),
+		post_logout_redirect_uri: postLogoutUrl ?? new URL("/", env.APP_URL).toString(),
 		client_id: env.OIDC_CLIENT_ID,
 	};
 	if (idToken) params.id_token_hint = idToken;

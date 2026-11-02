@@ -211,14 +211,20 @@ export const photos = os.photos.router({
 		});
 	}),
 
+	/**
+	 * Lychee semantics: from a real album the photos leave that album and join the target. From a smart album
+	 * (fromAlbum null) every album membership is replaced by the target; moving to null (unsorted) removes all
+	 * memberships. Replacing memberships touches albums other than the source, so it is owner/admin only.
+	 */
 	move: os.photos.move.handler(async ({ input, context: ctx }) => {
 		requireUser(ctx);
 		const v = ctx.viewer;
 		const ids = [...new Set(input.ids)];
-		const target = await requireTargetAlbum(ctx, input.toAlbum);
-		if (input.fromAlbum !== null) {
-			if (input.fromAlbum === target.id) return;
-			const from = await requireAccessibleAlbum(ctx, input.fromAlbum);
+		const target = input.toAlbum === null ? null : await requireTargetAlbum(ctx, input.toAlbum);
+		const replaceAll = input.fromAlbum === null || target === null;
+		if (!replaceAll) {
+			if (input.fromAlbum === target?.id) return;
+			const from = await requireAccessibleAlbum(ctx, input.fromAlbum as string);
 			const r = await albumRightsFor(ctx.db, v, from);
 			if (!r.canMove) throw new ORPCError("FORBIDDEN");
 			const linked = await ctx.db
@@ -228,24 +234,27 @@ export const photos = os.photos.router({
 			if (linked.length !== ids.length)
 				throw new ORPCError("BAD_REQUEST", { message: "Photo not in source album" });
 		} else {
-			// From "unsorted": only the owner (or admin) can file their photos.
 			const rows = await ctx.db
 				.select({ id: photosTable.id, ownerId: photosTable.ownerId })
 				.from(photosTable)
-				.where(inArray(photosTable.id, ids));
+				.where(and(inArray(photosTable.id, ids), photoVisible(v)));
 			if (rows.length !== ids.length) throw new ORPCError("NOT_FOUND", { message: "Photo not found" });
 			if (rows.some((r) => !ownsOrAdmin(v, r))) throw new ORPCError("FORBIDDEN");
 		}
 		await ctx.db.transaction(async (tx) => {
-			if (input.fromAlbum !== null) {
+			if (replaceAll) {
+				await tx.delete(photoAlbum).where(inArray(photoAlbum.photoId, ids));
+			} else if (input.fromAlbum !== null) {
 				await tx
 					.delete(photoAlbum)
 					.where(and(eq(photoAlbum.albumId, input.fromAlbum), inArray(photoAlbum.photoId, ids)));
 			}
-			await tx
-				.insert(photoAlbum)
-				.values(ids.map((photoId) => ({ photoId, albumId: target.id })))
-				.onConflictDoNothing();
+			if (target) {
+				await tx
+					.insert(photoAlbum)
+					.values(ids.map((photoId) => ({ photoId, albumId: target.id })))
+					.onConflictDoNothing();
+			}
 		});
 	}),
 

@@ -361,11 +361,12 @@ export async function reprocessPhoto(db: Db, photoId: string, variants?: SizeVar
 				.delete(sizeVariants)
 				.where(and(eq(sizeVariants.photoId, photoId), inArray(sizeVariants.type, types)));
 			if (rows.length > 0) await tx.insert(sizeVariants).values(rows.map((r) => ({ photoId, ...r })));
+			// Always bump updated_at: clients use it as the cache-busting version of the asset urls.
+			await tx
+				.update(photos)
+				.set({ ...extra, updatedAt: sql`now()` })
+				.where(eq(photos.id, photoId));
 			if (full) {
-				await tx
-					.update(photos)
-					.set({ ...extra, updatedAt: sql`now()` })
-					.where(eq(photos.id, photoId));
 				if (extra.width && extra.height) {
 					await tx
 						.update(sizeVariants)

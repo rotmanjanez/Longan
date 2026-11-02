@@ -268,6 +268,7 @@ export function ratioColumns(bucket: SQL<string>) {
 		takenAt: photos.takenAt,
 		createdAt: photos.createdAt,
 		colour: sql<string | null>`${photos.colours}[1]`,
+		updatedAt: sql<number>`floor(extract(epoch from ${photos.updatedAt}))::int`,
 	};
 }
 
@@ -283,6 +284,7 @@ type RatioRow = {
 	takenAt: string | null;
 	createdAt: string;
 	colour: string | null;
+	updatedAt: number;
 };
 
 export function toRatiosSoA(rows: RatioRow[], isTruncated: boolean): PhotoRatiosSoA {
@@ -297,6 +299,7 @@ export function toRatiosSoA(rows: RatioRow[], isTruncated: boolean): PhotoRatios
 		takenAts: rows.map((r) => iso(r.takenAt)),
 		createdAts: rows.map((r) => iso(r.createdAt)),
 		colours: rows.map((r) => r.colour ?? null),
+		updatedAts: rows.map((r) => Number(r.updatedAt)),
 		isTruncated,
 	};
 }

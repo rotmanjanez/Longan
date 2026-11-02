@@ -6,10 +6,11 @@ import { desc, eq, sql } from "drizzle-orm";
 import pkg from "../../../package.json" with { type: "json" };
 import { toIso } from "../../auth/users.ts";
 import type { Db } from "../../db/index.ts";
-import { albums, jobs, photos, users } from "../../db/schema.ts";
+import { albums, jobs, photoAlbum, photos, users } from "../../db/schema.ts";
 import { env } from "../../env.ts";
 import { os } from "../base.ts";
 import { requireAdmin } from "../context.ts";
+import { accessibleSubtree } from "./gallery-common.ts";
 
 function runtimeInfo() {
 	const bun = (process.versions as Record<string, string | undefined>).bun;
@@ -131,7 +132,18 @@ export const admin = os.admin.router({
 	reprocess: os.admin.reprocess.handler(async ({ context: ctx, input }) => {
 		requireAdmin(ctx);
 		const { enqueueMany } = await import("../../jobs/worker.ts");
-		const ids = input.photoIds ?? (await ctx.db.select({ id: photos.id }).from(photos)).map((p) => p.id);
+		let ids: string[];
+		if (input.albumId) {
+			const [album] = await ctx.db.select({ id: albums.id }).from(albums).where(eq(albums.id, input.albumId));
+			if (!album) throw new ORPCError("NOT_FOUND", { message: "Album not found" });
+			const rows = await ctx.db
+				.selectDistinct({ id: photoAlbum.photoId })
+				.from(photoAlbum)
+				.where(sql`${photoAlbum.albumId} in ${accessibleSubtree(ctx.viewer, input.albumId)}`);
+			ids = [...new Set([...(input.photoIds ?? []), ...rows.map((r) => r.id)])];
+		} else {
+			ids = input.photoIds ?? (await ctx.db.select({ id: photos.id }).from(photos)).map((p) => p.id);
+		}
 		const payloads = ids.map((photoId) =>
 			input.variants ? { photoId, variants: input.variants } : { photoId },
 		);
