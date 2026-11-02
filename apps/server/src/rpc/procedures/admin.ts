@@ -8,7 +8,7 @@ import { toIso } from "../../auth/users.ts";
 import type { Db } from "../../db/index.ts";
 import { albums, jobs, photos, users } from "../../db/schema.ts";
 import { env } from "../../env.ts";
-import { notImplemented, os } from "../base.ts";
+import { os } from "../base.ts";
 import { requireAdmin } from "../context.ts";
 
 function runtimeInfo() {
@@ -128,7 +128,15 @@ export const admin = os.admin.router({
 		}));
 	}),
 
-	reprocess: os.admin.reprocess.handler(notImplemented("admin.reprocess")),
+	reprocess: os.admin.reprocess.handler(async ({ context: ctx, input }) => {
+		requireAdmin(ctx);
+		const { enqueueMany } = await import("../../jobs/worker.ts");
+		const ids = input.photoIds ?? (await ctx.db.select({ id: photos.id }).from(photos)).map((p) => p.id);
+		const payloads = ids.map((photoId) =>
+			input.variants ? { photoId, variants: input.variants } : { photoId },
+		);
+		return { queued: await enqueueMany(ctx.db, "reprocess_photo", payloads) };
+	}),
 
 	retryJob: os.admin.retryJob.handler(async ({ context: ctx, input }) => {
 		requireAdmin(ctx);
