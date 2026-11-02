@@ -10,7 +10,7 @@ const api = vi.hoisted(() => ({
 	albums: { root: vi.fn(), head: vi.fn(), children: vi.fn(), unlock: vi.fn() },
 	photos: { ratios: vi.fn(), buckets: vi.fn(), details: vi.fn(async () => []) },
 }));
-vi.mock("@/api/client.ts", () => ({ client: api }));
+vi.mock("@/api/client.ts", async () => ({ client: (await import("@/test/fixtures.ts")).autoMock(api) }));
 
 const { queryClient } = await import("@/api/query.ts");
 const { router } = await import("@/router/index.ts");

@@ -65,6 +65,7 @@
 				/>
 			</template>
 		</div>
+		<PageDropZone :album-id="null" :target-title="t('upload.unsorted')" :enabled="rights.mayUpload" />
 	</div>
 </template>
 
@@ -79,6 +80,7 @@ import AlbumGrid from "@/components/gallery/AlbumGrid.vue";
 import GallerySection from "@/components/gallery/GallerySection.vue";
 import SelectionToolbar from "@/components/gallery/SelectionToolbar.vue";
 import { actionDialog, type SelectionAction } from "@/components/gallery/selectionActions.ts";
+import PageDropZone from "@/components/upload/PageDropZone.vue";
 import { useInit } from "@/composables/useInit.ts";
 import { useSelectionStore } from "@/stores/selection.ts";
 import { useUiStore } from "@/stores/ui.ts";
@@ -127,6 +129,12 @@ defineShortcuts(
 		},
 		escape: () => {
 			if (!ui.anyDialogOpen) selection.clear();
+		},
+		u: () => {
+			if (!ui.anyDialogOpen && rights.value.mayUpload) ui.openDialog("upload", { albumId: null });
+		},
+		n: () => {
+			if (!ui.anyDialogOpen && rights.value.canCreateAlbums) ui.openDialog("createAlbum", { albumId: null });
 		},
 	})),
 );

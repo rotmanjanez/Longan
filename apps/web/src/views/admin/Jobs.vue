@@ -1,0 +1,198 @@
+<template>
+	<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+		<div class="flex flex-wrap items-center gap-2">
+			<h1 class="text-lg font-bold text-highlighted flex-1">{{ t("nav.admin_jobs") }}</h1>
+			<USelect v-model="status" size="sm" class="w-40" :items="statusItems" :aria-label="t('jobs.filter')" />
+			<UButton
+				icon="lucide:refresh-cw"
+				size="sm"
+				color="neutral"
+				variant="ghost"
+				:loading="jobs.isFetching.value"
+				:aria-label="t('admin.refresh')"
+				@click="jobs.refetch()"
+			/>
+		</div>
+
+		<section class="rounded-xl ring ring-default p-4 flex flex-col gap-3" aria-labelledby="reprocess-h">
+			<h2 id="reprocess-h" class="font-semibold text-highlighted">{{ t("jobs.reprocess.title") }}</h2>
+			<p class="text-sm text-muted">{{ t("jobs.reprocess.hint") }}</p>
+			<form class="flex flex-col gap-3" @submit.prevent="submitReprocess">
+				<URadioGroup
+					v-model="scope"
+					orientation="horizontal"
+					:legend="t('jobs.reprocess.scope')"
+					:items="[
+						{ value: 'all', label: t('jobs.reprocess.all') },
+						{ value: 'album', label: t('jobs.reprocess.album') },
+					]"
+				/>
+				<AlbumPicker
+					v-if="scope === 'album'"
+					v-model="albumId"
+					:allow-root="false"
+					:label="t('jobs.reprocess.pick_album')"
+				/>
+				<fieldset class="flex flex-col gap-1.5">
+					<legend class="text-sm font-medium text-default mb-1">{{ t("jobs.reprocess.variants") }}</legend>
+					<div class="flex flex-wrap gap-x-4 gap-y-1">
+						<UCheckbox
+							v-for="v in REPROCESS_VARIANTS"
+							:key="v"
+							:label="t(`variants.${v}`)"
+							:model-value="variants.includes(v)"
+							@update:model-value="(on: boolean | 'indeterminate') => toggleVariant(v, on === true)"
+						/>
+					</div>
+					<p class="text-xs text-dimmed">{{ t("jobs.reprocess.variants_hint") }}</p>
+				</fieldset>
+				<div class="flex justify-end">
+					<UButton
+						type="submit"
+						icon="lucide:refresh-ccw-dot"
+						:loading="reprocess.isPending.value"
+						:disabled="scope === 'album' && !albumId"
+					>
+						{{ t("jobs.reprocess.submit") }}
+					</UButton>
+				</div>
+			</form>
+		</section>
+
+		<div v-if="jobs.isPending.value" class="flex justify-center py-16 text-muted" role="status">
+			<UIcon name="lucide:loader-circle" class="size-6 animate-spin" />
+			<span class="sr-only">{{ t("app.loading") }}</span>
+		</div>
+		<UEmpty v-else-if="jobs.isError.value" icon="lucide:triangle-alert" :title="t('errors.load_failed')" :description="jobs.error.value?.message" />
+		<UEmpty v-else-if="visible.length === 0" icon="lucide:list-checks" :title="t('jobs.empty')" />
+		<div v-else class="overflow-x-auto rounded-xl ring ring-default">
+			<table class="w-full text-sm">
+				<caption class="sr-only">{{ t("nav.admin_jobs") }}</caption>
+				<thead class="bg-elevated/50 text-xs uppercase tracking-wide text-muted">
+					<tr>
+						<th scope="col" class="px-3 py-2 text-start font-semibold">#</th>
+						<th scope="col" class="px-3 py-2 text-start font-semibold">{{ t("jobs.cols.type") }}</th>
+						<th scope="col" class="px-3 py-2 text-start font-semibold">{{ t("jobs.cols.status") }}</th>
+						<th scope="col" class="px-3 py-2 text-end font-semibold">{{ t("jobs.cols.attempts") }}</th>
+						<th scope="col" class="px-3 py-2 text-start font-semibold">{{ t("jobs.cols.updated") }}</th>
+						<th scope="col" class="px-3 py-2 text-start font-semibold">{{ t("jobs.cols.error") }}</th>
+						<th scope="col" class="px-3 py-2"><span class="sr-only">{{ t("jobs.cols.actions") }}</span></th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-default">
+					<tr v-for="j in visible" :key="j.id" :data-job="j.id">
+						<td class="px-3 py-2 font-mono text-xs text-dimmed">{{ j.id }}</td>
+						<td class="px-3 py-2 font-mono text-xs">{{ j.type }}</td>
+						<td class="px-3 py-2">
+							<UBadge size="sm" variant="soft" :color="STATUS_COLOR[j.status]">{{ t(`jobs.status.${j.status}`) }}</UBadge>
+						</td>
+						<td class="px-3 py-2 text-end tabular-nums">{{ j.attempts }}</td>
+						<td class="px-3 py-2 text-muted whitespace-nowrap" :title="t('jobs.run_at', { at: fmt(j.runAt) })">{{ fmt(j.updatedAt) }}</td>
+						<td class="px-3 py-2 max-w-md">
+							<span v-if="j.lastError" class="block truncate text-xs text-error font-mono" :title="j.lastError">{{ j.lastError }}</span>
+						</td>
+						<td class="px-3 py-2 text-end">
+							<UButton
+								v-if="j.status === 'failed'"
+								size="xs"
+								color="neutral"
+								variant="soft"
+								icon="lucide:rotate-ccw"
+								:loading="retry.isPending.value && retry.variables.value === j.id"
+								@click="retry.mutate(j.id)"
+							>
+								{{ t("jobs.retry") }}
+							</UButton>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</template>
+
+<script setup lang="ts">
+import { useQuery } from "@tanstack/vue-query";
+import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { client } from "@/api/client.ts";
+import { orpc, queryClient } from "@/api/query.ts";
+import AlbumPicker from "@/components/dialogs/AlbumPicker.vue";
+import { useApiAction } from "@/components/dialogs/useDialog.ts";
+
+type JobStatus = "pending" | "running" | "done" | "failed";
+const STATUS_COLOR = { pending: "neutral", running: "info", done: "success", failed: "error" } as const;
+const REPROCESS_VARIANTS = ["medium2x", "medium", "small2x", "small", "thumb2x", "thumb"] as const;
+type ReprocessVariant = (typeof REPROCESS_VARIANTS)[number];
+
+const { t, locale } = useI18n();
+
+const status = ref<JobStatus | "all">("all");
+const statusItems = computed(() => [
+	{ value: "all", label: t("jobs.all") },
+	...(["pending", "running", "failed", "done"] as const).map((s) => ({
+		value: s,
+		label: t(`jobs.status.${s}`),
+	})),
+]);
+
+const jobs = useQuery(
+	orpc.admin.jobs.queryOptions({
+		input: { limit: 500 },
+		// Poll while work is queued so progress is visible without manual refreshes.
+		refetchInterval: (q: { state: { data?: readonly { status: string }[] } }) =>
+			q.state.data?.some((j) => j.status === "pending" || j.status === "running") ? 3000 : false,
+	}),
+);
+const visible = computed(() =>
+	(jobs.data.value ?? []).filter((j) => status.value === "all" || j.status === status.value),
+);
+
+const fmt = (iso: string) =>
+	new Date(iso).toLocaleString(locale.value, { dateStyle: "short", timeStyle: "medium" });
+
+async function refreshAdmin(): Promise<void> {
+	await Promise.all([
+		queryClient.invalidateQueries({ queryKey: orpc.admin.jobs.key() }),
+		queryClient.invalidateQueries({ queryKey: orpc.admin.health.key() }),
+	]);
+}
+
+const retry = useApiAction((id: number) => client.admin.retryJob({ id }), {
+	success: () => t("jobs.retried"),
+	after: refreshAdmin,
+});
+
+const scope = ref<"all" | "album">("all");
+const albumId = ref<string | null>(null);
+const variants = ref<ReprocessVariant[]>([]);
+function toggleVariant(v: ReprocessVariant, on: boolean) {
+	variants.value = on ? [...variants.value, v] : variants.value.filter((x) => x !== v);
+}
+
+const reprocess = useApiAction(
+	async (v: { albumId: string | null; variants: ReprocessVariant[] }) => {
+		let photoIds: string[] | undefined;
+		if (v.albumId) {
+			// admin.reprocess takes photo ids; resolve the album's photos via the column listing.
+			photoIds = (await client.photos.ratios({ album: v.albumId, granularity: "month" })).ids;
+			if (!photoIds.length) return { queued: 0 };
+		}
+		return client.admin.reprocess({
+			...(photoIds ? { photoIds } : {}),
+			...(v.variants.length ? { variants: v.variants } : {}),
+		});
+	},
+	{
+		success: (_v, r) => t("jobs.reprocess.queued", { n: r.queued }, r.queued),
+		after: refreshAdmin,
+	},
+);
+function submitReprocess() {
+	if (scope.value === "album" && !albumId.value) return;
+	reprocess.mutate({
+		albumId: scope.value === "album" ? albumId.value : null,
+		variants: [...variants.value],
+	});
+}
+</script>

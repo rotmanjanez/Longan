@@ -11,7 +11,8 @@
 	},
 	"common": {
 		"cancel": "Cancel",
-		"close": "Close"
+		"close": "Close",
+		"save": "Save"
 	},
 	"nav": {
 		"main": "Main navigation",
@@ -117,7 +118,61 @@
 	},
 	"lightbox": {
 		"previous": "Previous photo",
-		"next": "Next photo"
+		"next": "Next photo",
+		"untitled": "Untitled",
+		"position": "{n} / {total}",
+		"more": "More actions",
+		"edit": "Edit",
+		"tags": "Tags",
+		"rotate_ccw": "Rotate left",
+		"rotate_cw": "Rotate right",
+		"move": "Move",
+		"copy": "Copy to album",
+		"copy_link": "Copy link",
+		"delete": "Delete",
+		"download": "Download",
+		"download_variant": "Download {variant}",
+		"fullscreen": "Fullscreen",
+		"details_toggle": "Show details",
+		"details_title": "Photo details",
+		"highlight": "Highlight",
+		"unhighlight": "Remove highlight",
+		"slideshow_start": "Start slideshow",
+		"slideshow_stop": "Stop slideshow",
+		"video_unavailable": "This video can’t be played here.",
+		"toast": {
+			"link_copied": "Link copied",
+			"rotated": "Photo rotated",
+			"highlighted": "Highlighted",
+			"unhighlighted": "Highlight removed"
+		},
+		"details": {
+			"description": "Description",
+			"uploaded": "Uploaded",
+			"taken": "Taken",
+			"fps": "{fps} fps",
+			"colours": "Colours",
+			"search_colour": "Search for colour {colour}",
+			"rating": "Rating",
+			"rate": "Rate {n} star | Rate {n} stars",
+			"rating_avg": "Ø {avg}",
+			"highlighted": "Highlighted",
+			"tags": "Tags",
+			"albums": "Albums",
+			"camera": "Camera",
+			"camera_model": "Model",
+			"lens": "Lens",
+			"aperture": "Aperture",
+			"shutter": "Shutter",
+			"focal": "Focal length",
+			"iso": "ISO",
+			"location": "Location",
+			"open_map": "Show on map",
+			"open_osm": "OpenStreetMap",
+			"license": "License",
+			"variants": "Sizes"
+		},
+		"image_failed": "The image could not be loaded."
 	},
 	"timeline": {
 		"granularity": "Group by",
@@ -154,7 +209,17 @@
 		"escape": "Close the photo or clear the selection",
 		"prev_next": "Previous / next photo",
 		"nsfw": "Toggle sensitive content",
-		"help": "Show this help"
+		"help": "Show this help",
+		"gallery": "Gallery",
+		"lightbox": "Photo view",
+		"upload": "Upload photos",
+		"new_album": "New album",
+		"slideshow": "Start / stop slideshow",
+		"details": "Toggle details",
+		"fullscreen": "Toggle fullscreen",
+		"highlight": "Toggle highlight",
+		"zoom": "Zoom in / out / reset",
+		"rate": "Rate the photo"
 	},
 	"dialogs": {
 		"unlock": {
@@ -163,6 +228,138 @@
 			"password": "Password",
 			"submit": "Unlock",
 			"wrong": "Wrong password"
+		},
+		"default": "Default",
+		"save": "Save",
+		"fields": {
+			"title": "Title",
+			"description": "Description",
+			"tags": "Tags",
+			"tag_logic": "Match",
+			"taken_at": "Taken at",
+			"license": "License",
+			"photo_sorting": "Photo sorting",
+			"album_sorting": "Sub-album sorting",
+			"layout": "Layout",
+			"slug": "Short URL (slug)",
+			"nsfw": "Sensitive content",
+			"cover": "Cover photo"
+		},
+		"tag_logic": {
+			"or": "Any of the tags",
+			"and": "All of the tags"
+		},
+		"picker": {
+			"label": "Target album",
+			"filter": "Filter albums",
+			"root": "Top level",
+			"empty": "No matching albums"
+		},
+		"create_album": {
+			"title": "New album",
+			"submit": "Create",
+			"inside": "Inside “{title}”",
+			"done": "Album “{title}” created"
+		},
+		"create_tag_album": {
+			"title": "New tag album",
+			"description": "Shows every photo you can see that carries the selected tags."
+		},
+		"album_edit": {
+			"title": "Album settings",
+			"done": "Album saved",
+			"visibility": "Visibility & sharing",
+			"slug_hint": "Lowercase letters, digits and dashes. Leave empty to use the id.",
+			"slug_invalid": "Only a–z, 0–9 and dashes (max. 100)",
+			"cover_auto": "Automatic (first photo)",
+			"cover_choose": "Choose cover",
+			"cover_chosen": "Selected as cover",
+			"cover_reset": "Use automatic cover"
+		},
+		"protection": {
+			"title": "Visibility",
+			"done": "Visibility saved",
+			"public": "Public",
+			"public_hint": "Anyone can open this album without signing in.",
+			"link_required": "Hidden (link required)",
+			"link_required_hint": "Not listed; only people with the link can open it.",
+			"upload_hint": "Visitors may upload into this album.",
+			"nsfw_hint": "Show a warning and blur the cover until the viewer agrees.",
+			"password": "Password",
+			"password_new": "New password",
+			"password_keep": "Keep current password",
+			"password_none": "No password",
+			"password_change": "Change password",
+			"password_set": "Set a password",
+			"password_remove": "Remove password"
+		},
+		"share": {
+			"title": "Share album",
+			"search": "Find users",
+			"submit": "Share",
+			"add": "Add people",
+			"current": "Shared with",
+			"none": "Not shared with anyone yet",
+			"private": "This album is private: only the people below can see it.",
+			"copy_link": "Copy link",
+			"remove": "Stop sharing with {name}",
+			"unpick": "Remove {name}",
+			"removed": "Access removed",
+			"done": "Shared with {n} user | Shared with {n} users"
+		},
+		"move": {
+			"title_album": "Move album | Move {n} albums",
+			"title_photo": "Move photo | Move {n} photos",
+			"hint_album": "Choose the new parent album. | Choose the new parent of {n} albums.",
+			"hint_photo": "The photo is removed from this album and added to the target. | {n} photos are removed from this album and added to the target.",
+			"target": "Move to",
+			"submit": "Move",
+			"done": "Moved"
+		},
+		"copy": {
+			"title": "Copy photo to album | Copy {n} photos to album",
+			"hint": "Photos stay where they are and also appear in the target album.",
+			"submit": "Copy",
+			"done": "Copied"
+		},
+		"merge": {
+			"title": "Merge album | Merge {n} albums",
+			"hint": "Its photos and sub-albums move into the target, then it is deleted. | Their photos and sub-albums move into the target, then they are deleted.",
+			"target": "Merge into",
+			"submit": "Merge",
+			"done": "Albums merged"
+		},
+		"rename": {
+			"title_album": "Rename album | Rename {n} albums",
+			"title_photo": "Rename photo | Rename {n} photos",
+			"many": "All selected items get this title. | All {n} selected items get this title.",
+			"submit": "Rename",
+			"done": "Renamed"
+		},
+		"delete": {
+			"title_album": "Delete album | Delete {n} albums",
+			"title_photo": "Delete photo | Delete {n} photos",
+			"confirm_album": "Delete “{title}” with all its sub-albums and photos? | Delete {n} albums with all their sub-albums and photos?",
+			"confirm_photo": "Delete “{title}”? | Delete {n} photos?",
+			"album_warning": "Photos that are also in other albums stay there.",
+			"irreversible": "This cannot be undone.",
+			"submit": "Delete",
+			"done_album": "Album deleted | {n} albums deleted",
+			"done_photo": "Photo deleted | {n} photos deleted"
+		},
+		"tags": {
+			"title": "Edit tags | Edit tags of {n} photos",
+			"current": "Current tags",
+			"add": "Add tags",
+			"placeholder": "Type a tag and press Enter",
+			"keep": "Keep {name}",
+			"remove": "Remove {name}",
+			"submit": "Apply",
+			"done": "Tags updated"
+		},
+		"photo_edit": {
+			"title": "Edit photo",
+			"done": "Photo saved"
 		}
 	},
 	"errors": {
@@ -176,6 +373,225 @@
 			"CONFLICT": "Conflict",
 			"NOT_IMPLEMENTED": "Not implemented yet",
 			"INTERNAL_SERVER_ERROR": "Server error"
+		}
+	},
+	"admin": {
+		"refresh": "Refresh"
+	},
+	"upload": {
+		"title": "Upload",
+		"target_album": "Into “{title}”",
+		"target_unsorted": "Into Unsorted",
+		"unsorted": "Unsorted",
+		"drop_here": "Drop photos and videos here",
+		"drop_page": "Drop to upload",
+		"browse": "Choose files",
+		"limit": "Up to {size} per file",
+		"queue": "Upload queue",
+		"retry": "Retry {name}",
+		"cancel": "Cancel {name}",
+		"open": "Open {name}",
+		"retry_failed": "Retry failed",
+		"cancel_all": "Cancel all",
+		"clear": "Clear finished",
+		"summary": "{done} of {total} done",
+		"summary_failed": "{done} of {total} done, {failed} failed",
+		"done_toast": "No new photos | {n} photo uploaded | {n} photos uploaded",
+		"duplicates": "no duplicates | {n} duplicate skipped | {n} duplicates skipped",
+		"status": {
+			"queued": "Waiting",
+			"uploading": "Uploading",
+			"created": "Uploaded",
+			"duplicate": "Already in the library",
+			"skipped": "Skipped",
+			"error": "Failed",
+			"cancelled": "Cancelled"
+		},
+		"errors": {
+			"PAYLOAD_TOO_LARGE": "File is larger than {size}",
+			"UNSUPPORTED_MEDIA_TYPE": "Unsupported file type",
+			"FORBIDDEN": "Not allowed to upload here",
+			"UNAUTHORIZED": "Please sign in again",
+			"NOT_FOUND": "Album not found",
+			"BAD_REQUEST": "Invalid upload",
+			"INTERNAL_SERVER_ERROR": "Server error",
+			"NETWORK": "Network error",
+			"TIMEOUT": "Timed out",
+			"ABORTED": "Cancelled"
+		}
+	},
+	"sharing": {
+		"filter": "Filter by album or user",
+		"page_hint": "Albums you can share and the people who have access. Changes apply immediately.",
+		"empty": "Nothing shared yet",
+		"empty_hint": "Use “Share” on an album to give people access.",
+		"no_match": "No matching shares",
+		"manage": "Add people",
+		"user_count": "no users | {n} user | {n} users",
+		"remove": "Stop sharing {album} with {name}",
+		"removed": "Access removed",
+		"updated": "Access updated",
+		"grants": {
+			"grantsFullPhotoAccess": "Full-size photos",
+			"grantsDownload": "Download",
+			"grantsUpload": "Upload",
+			"grantsEdit": "Edit",
+			"grantsMove": "Move",
+			"grantsDelete": "Delete"
+		},
+		"grants_short": {
+			"grantsFullPhotoAccess": "Full size",
+			"grantsDownload": "Download",
+			"grantsUpload": "Upload",
+			"grantsEdit": "Edit",
+			"grantsMove": "Move",
+			"grantsDelete": "Delete"
+		}
+	},
+	"settings": {
+		"filter": "Filter settings",
+		"categories": "Categories",
+		"no_match": "No matching settings",
+		"save_all": "Save all ({n})",
+		"save_group": "Save ({n})",
+		"save_row": "Save {key}",
+		"revert": "Revert {key}",
+		"discard": "Discard",
+		"saved": "Settings saved",
+		"unsaved": "Unsaved changes",
+		"errors": {
+			"required": "A value is required",
+			"bool": "Must be on or off",
+			"int": "Must be a whole number",
+			"min": "Must be at least {min}",
+			"max": "Must be at most {max}",
+			"enum": "Pick one of the options",
+			"json": "Invalid JSON",
+			"color": "Use a hex colour like #0ea5e9"
+		},
+		"theme": {
+			"primary": "Primary colour",
+			"neutral": "Neutral colour",
+			"overrides": "Shade overrides",
+			"overrides_hint": "Optional hex colours that replace single shades of the palette.",
+			"override": "Override for {token}",
+			"pick": "Pick colour for {token}",
+			"clear_override": "Clear override for {token}",
+			"preview": "Preview",
+			"link_sample": "Link text",
+			"save": "Save theme",
+			"saved": "Theme saved"
+		}
+	},
+	"users": {
+		"filter": "Filter users",
+		"hint": "Users are created on their first sign-in; roles and groups come from the identity provider.",
+		"empty": "No users",
+		"admin": "Admin",
+		"upload": "Upload",
+		"viewer": "Viewer",
+		"never": "Never",
+		"cols": {
+			"user": "User",
+			"email": "Email",
+			"rights": "Rights",
+			"groups": "Roles & groups",
+			"created": "Created",
+			"last_login": "Last sign-in"
+		}
+	},
+	"health": {
+		"server": "Server",
+		"database": "Database",
+		"storage": "Storage",
+		"media": "Media tools",
+		"jobs": "Jobs",
+		"counts": "Library",
+		"ok": "OK",
+		"problem": "Check",
+		"version": "Version",
+		"runtime": "Runtime",
+		"path": "Path",
+		"used": "Used",
+		"free": "Free",
+		"yes": "yes",
+		"no": "no",
+		"missing": "not installed",
+		"users": "Users",
+		"albums": "Albums",
+		"photos": "Photos",
+		"open_jobs": "Open job list"
+	},
+	"jobs": {
+		"filter": "Status",
+		"all": "All statuses",
+		"empty": "No jobs",
+		"retry": "Retry",
+		"retried": "Job queued again",
+		"run_at": "Runs at {at}",
+		"status": {
+			"pending": "Pending",
+			"running": "Running",
+			"done": "Done",
+			"failed": "Failed"
+		},
+		"cols": {
+			"type": "Type",
+			"status": "Status",
+			"attempts": "Attempts",
+			"updated": "Updated",
+			"error": "Last error",
+			"actions": "Actions"
+		},
+		"reprocess": {
+			"title": "Regenerate sizes",
+			"hint": "Queue jobs that rebuild the resized versions, e.g. after changing the image processing settings.",
+			"scope": "Photos",
+			"all": "All photos",
+			"album": "One album",
+			"pick_album": "Album",
+			"variants": "Sizes",
+			"variants_hint": "Leave all unchecked to rebuild every size.",
+			"submit": "Queue jobs",
+			"queued": "No photos to process | {n} job queued | {n} jobs queued"
+		}
+	},
+	"variants": {
+		"original": "Original",
+		"medium2x": "Medium (2×)",
+		"medium": "Medium",
+		"small2x": "Small (2×)",
+		"small": "Small",
+		"thumb2x": "Thumbnail (2×)",
+		"thumb": "Thumbnail"
+	},
+	"licenses": {
+		"none": "None",
+		"reserved": "All rights reserved",
+		"CC0": "CC0 (public domain)",
+		"CC-BY-4_0": "CC BY 4.0",
+		"CC-BY-SA-4_0": "CC BY-SA 4.0",
+		"CC-BY-ND-4_0": "CC BY-ND 4.0",
+		"CC-BY-NC-4_0": "CC BY-NC 4.0",
+		"CC-BY-NC-SA-4_0": "CC BY-NC-SA 4.0",
+		"CC-BY-NC-ND-4_0": "CC BY-NC-ND 4.0"
+	},
+	"sorting": {
+		"asc": "Ascending",
+		"desc": "Descending",
+		"photo": {
+			"created_at": "Upload date",
+			"taken_at": "Date taken",
+			"title": "Title",
+			"is_highlighted": "Highlighted first",
+			"type": "Type",
+			"rating_avg": "Rating"
+		},
+		"album": {
+			"created_at": "Creation date",
+			"title": "Title",
+			"min_taken_at": "Oldest photo",
+			"max_taken_at": "Newest photo"
 		}
 	}
 }

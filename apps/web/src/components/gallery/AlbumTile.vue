@@ -55,7 +55,7 @@
 			<p class="text-2xs text-white/75">{{ t("gallery.photo_count", album.numPhotos) }}</p>
 		</div>
 
-		<div class="absolute top-0 start-0 flex">
+		<div class="absolute top-0 start-2 flex">
 			<TileBadge v-if="album.isNsfw" role="nsfw" icon="lucide:triangle-alert" :label="t('gallery.badges.nsfw')" />
 			<TileBadge v-if="album.isLocked" role="danger" icon="lucide:lock" :label="t('gallery.badges.locked')" />
 			<TileBadge

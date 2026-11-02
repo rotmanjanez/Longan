@@ -14,6 +14,9 @@ export default defineConfig({
 			colorMode: false,
 			// Composables are imported explicitly from "@nuxt/ui/composables".
 			autoImport: false,
+			// Bundle every icon referenced in our sources (Nuxt UI's own icons are bundled by default), so the
+			// app never falls back to fetching from api.iconify.design. Icon names must be string literals.
+			icon: { clientBundle: { scan: { globInclude: ["src/**/*.{vue,ts}"], globExclude: ["**/*.test.ts"] } } },
 			ui: {
 				colors: { primary: "sky", neutral: "slate" },
 				button: {

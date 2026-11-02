@@ -15,8 +15,6 @@ declare module "vue-router" {
 	}
 }
 
-const ComingSoon = () => import("@/views/ComingSoon.vue");
-
 const routes: RouteRecordRaw[] = [
 	{
 		path: "/",
@@ -61,38 +59,40 @@ const routes: RouteRecordRaw[] = [
 	},
 
 	// ---------------------------------------------------------------------------------------------------
-	// SECOND WEB AGENT: sharing + admin views. Swap `ComingSoon` for the real lazy views, e.g.
-	//   component: () => import("@/views/Sharing.vue")
-	//   component: () => import("@/views/admin/Settings.vue")   (Users.vue, Health.vue, Jobs.vue)
-	// Route names/paths/meta are final; keep them so the left menu links keep working.
+	// Sharing + admin views. Route names/paths/meta are final; the left menu links depend on them.
 	// ---------------------------------------------------------------------------------------------------
-	{ path: "/sharing", name: "sharing", component: ComingSoon, meta: { auth: true, title: "nav.sharing" } },
+	{
+		path: "/sharing",
+		name: "sharing",
+		component: () => import("@/views/Sharing.vue"),
+		meta: { auth: true, title: "nav.sharing" },
+	},
 	{ path: "/admin", redirect: "/admin/settings" },
 	{
 		path: "/admin/settings",
 		name: "admin-settings",
-		component: ComingSoon,
+		component: () => import("@/views/admin/Settings.vue"),
 		meta: { admin: true, title: "nav.admin_settings" },
 	},
 	{
 		path: "/admin/users",
 		name: "admin-users",
-		component: ComingSoon,
+		component: () => import("@/views/admin/Users.vue"),
 		meta: { admin: true, title: "nav.admin_users" },
 	},
 	{
 		path: "/admin/health",
 		name: "admin-health",
-		component: ComingSoon,
+		component: () => import("@/views/admin/Health.vue"),
 		meta: { admin: true, title: "nav.admin_health" },
 	},
 	{
 		path: "/admin/jobs",
 		name: "admin-jobs",
-		component: ComingSoon,
+		component: () => import("@/views/admin/Jobs.vue"),
 		meta: { admin: true, title: "nav.admin_jobs" },
 	},
-	// --- end of second-agent section -------------------------------------------------------------------
+	// --- end of sharing + admin section -------------------------------------------------------------------
 
 	{ path: "/:pathMatch(.*)*", name: "not-found", component: () => import("@/views/NotFound.vue") },
 ];

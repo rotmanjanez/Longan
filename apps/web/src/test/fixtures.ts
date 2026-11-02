@@ -1,4 +1,5 @@
 import type { AlbumTile, PhotoRatiosSoA } from "@longan/shared";
+import { vi } from "vitest";
 import type { InitData, RootAlbums } from "@/api/client.ts";
 
 export const id24 = (s: string) => s.padEnd(24, "x").slice(0, 24);
@@ -116,4 +117,29 @@ export function installResizeObserver(width = 1000) {
 		disconnect() {}
 	}
 	(globalThis as unknown as { ResizeObserver: typeof RO }).ResizeObserver = RO;
+}
+
+const PASS_THROUGH = new Set(["then", "toJSON", "constructor", "asymmetricMatch", "nodeType", "$$typeof"]);
+
+/**
+ * Wraps a partial oRPC client mock so every other `namespace.procedure` exists too (a `vi.fn` resolving to
+ * undefined). The tanstack-query utils walk the client object, so components that build query options for
+ * procedures a test doesn't care about (e.g. dialogs mounted by the shell) must not hit `undefined`.
+ */
+export function autoMock<T extends object>(base: T): T {
+	const ns = (target: Record<string, unknown>) =>
+		new Proxy(target, {
+			get(t, p) {
+				if (typeof p !== "string" || PASS_THROUGH.has(p) || p.startsWith("__")) return Reflect.get(t, p);
+				if (!(p in t)) t[p] = vi.fn(async () => undefined);
+				return t[p];
+			},
+		});
+	return new Proxy(base as Record<string, Record<string, unknown>>, {
+		get(t, p) {
+			if (typeof p !== "string" || PASS_THROUGH.has(p) || p.startsWith("__")) return Reflect.get(t, p);
+			if (!(p in t)) t[p] = {};
+			return ns(t[p]!);
+		},
+	}) as T;
 }

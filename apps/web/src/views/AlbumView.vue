@@ -41,7 +41,7 @@
 					<PhotoGrid
 						v-else-if="listing && listing.ids.length"
 						ref="gridRef"
-						:album-ctx="albumId"
+						:album-ctx="resolvedId"
 						:data="listing"
 						:buckets="buckets.data.value ?? null"
 						:layout-mode="layoutMode"
@@ -60,13 +60,14 @@
 				</template>
 			</template>
 		</div>
+		<PageDropZone :album-id="resolvedId" :target-title="headData?.title" :enabled="canUploadHere && !photoId" />
 		<LightboxMount
 			v-if="photoId && listing && !nsfwBlocked"
-			:album-ctx="albumId"
+			:album-ctx="resolvedId"
 			:photo-id="photoId"
 			:ids="listing.ids"
 			:listing="listing"
-			:album-id="isReal ? albumId : null"
+			:album-id="isReal ? resolvedId : null"
 			@close="nav.close"
 			@navigate="nav.step"
 		/>
@@ -94,6 +95,7 @@ import {
 	actionDialog,
 	type SelectionAction,
 } from "@/components/gallery/selectionActions.ts";
+import PageDropZone from "@/components/upload/PageDropZone.vue";
 import { useInit } from "@/composables/useInit.ts";
 import { useLightboxNav } from "@/composables/useLightboxNav.ts";
 import { invalidatePhotoDetails } from "@/composables/usePhotoDetails.ts";
@@ -119,12 +121,14 @@ const isReal = computed(() => !isSmartAlbumId(albumId.value));
 const head = useQuery(computed(() => orpc.albums.head.queryOptions({ input: { id: albumId.value } })));
 const headData = computed(() => head.data.value);
 const headErrorCode = computed(() => errorCode(head.error.value));
+/** The route may carry a slug; listings and asset urls need the real id (from albums.head). */
+const resolvedId = computed(() => headData.value?.id ?? albumId.value);
 const nsfwBlocked = computed(() => !!headData.value?.isNsfw && !ui.hasNsfwConsent(albumId.value));
 
 const children = useQuery(
 	computed(() =>
 		orpc.albums.children.queryOptions({
-			input: { id: albumId.value },
+			input: { id: resolvedId.value },
 			enabled: isReal.value && (headData.value?.numChildren ?? 0) > 0,
 		}),
 	),
@@ -134,7 +138,7 @@ const childAlbums = computed(() =>
 );
 
 const { ratios, buckets } = usePhotoListing(
-	albumId,
+	resolvedId,
 	"month",
 	computed(() => head.isSuccess.value && !nsfwBlocked.value && (headData.value?.numPhotos ?? 0) > 0),
 );
@@ -213,7 +217,7 @@ const highlight = useMutation({
 
 function onSelectionAction(name: SelectionAction) {
 	const ctx = {
-		albumId: isReal.value ? albumId.value : null,
+		albumId: isReal.value ? resolvedId.value : null,
 		photoIds: [...selection.photoIds],
 		albumIds: [...selection.albumIds],
 	};
@@ -229,8 +233,13 @@ function onSelectionAction(name: SelectionAction) {
 }
 
 function onAlbumAction(name: AlbumAction) {
-	ui.openDialog(name, { albumId: albumId.value, photoIds: [], albumIds: [albumId.value] });
+	ui.openDialog(name, { albumId: resolvedId.value, photoIds: [], albumIds: [resolvedId.value] });
 }
+
+const canUploadHere = computed(
+	() => !!headData.value?.rights.canUpload && headData.value.kind === "album" && !nsfwBlocked.value,
+);
+const canCreateHere = computed(() => !!headData.value?.rights.canEdit && headData.value.kind === "album");
 
 defineShortcuts(
 	computed(() => ({
@@ -242,6 +251,12 @@ defineShortcuts(
 		},
 		escape: () => {
 			if (!photoId.value && !ui.anyDialogOpen) selection.clear();
+		},
+		u: () => {
+			if (!photoId.value && !ui.anyDialogOpen && canUploadHere.value) onAlbumAction("upload");
+		},
+		n: () => {
+			if (!photoId.value && !ui.anyDialogOpen && canCreateHere.value) onAlbumAction("createAlbum");
 		},
 	})),
 );
