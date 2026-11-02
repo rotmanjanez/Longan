@@ -65,7 +65,7 @@ One API generation, modelled on Lychee's v3 struct-of-arrays tiers but without t
 ### Ship in v1
 
 - Albums: tree, create/rename/describe, move, merge, delete, cover, per-album sort and layout, friendly slug, NSFW flag.
-- Photos: chunked upload with Lychee's field contract, sha1 dedup, EXIF, size variants (original, medium, small, thumb, each with optional 2x, placeholder), webp or jpeg output, video thumbs, HEIC.
+- Photos: streamed upload, sha1 dedup, EXIF, size variants (original, medium, small, thumb, each with optional 2x, placeholder), webp or jpeg output, video thumbs, HEIC, five dominant colours per photo (median cut over a 64px raster from sharp) for tinted tiles and `color:` search.
 - Photo edit: title, description, tags, taken_at, license, star rating, highlight, rotate, move/copy (many-to-many `photo_album`), delete with async file cleanup.
 - Sharing: public, link-only, password (signed cookie unlock), per-user grants (full photo, download, upload, edit, delete, move), SQL visibility filter shared by every listing.
 - Discovery: smart albums (unsorted, recent, highlighted, untagged, on this day, rated), tags with rename/merge, tag albums, search (text, tag, date, type), timeline bucketed by date, basic clustered map.
@@ -77,7 +77,7 @@ One API generation, modelled on Lychee's v3 struct-of-arrays tiers but without t
 
 ### Defer (no hook, keep v1 simple)
 
-Faces/people as a sidecar HTTP contract, Apple live photos and Google motion photos, flow feed, frame mode, date scrubber rail, group-based sharing from Keycloak groups, webhooks, S3 storage adapter. Also deferred: watermarking, global gallery password, reverse geocoding, bulk album edit, disk-usage statistics, duplicates finder UI, camera capture, RSS, additional locales, map grid bucketing, photo colour extraction.
+Faces/people as a sidecar HTTP contract, Apple live photos and Google motion photos, flow feed, frame mode, date scrubber rail, group-based sharing from Keycloak groups, webhooks, S3 storage adapter. Also deferred: watermarking, global gallery password, reverse geocoding, bulk album edit, disk-usage statistics, duplicates finder UI, camera capture, RSS, additional locales, map grid bucketing.
 
 ### Cut
 
@@ -86,7 +86,7 @@ Faces/people as a sidecar HTTP contract, Apple live photos and Google motion pho
 - Entire local auth stack: password login, remember-me, email login, registration, invites, admin setup page, installer, API tokens, WebAuthn, LDAP, 13 Socialite providers.
 - NSFW classifier, moderation queue, upload trust levels, moderation history.
 - Landing page builder, 4 landing templates, white-label.
-- Contact form, security advisories, update check, changelogs, live metrics, insights (echarts), admin dashboard, renamer rules, embed widget, Dropbox and import-from-server web UI, JXL, colour palette extraction, honeypot, log viewer, telemetry.
+- Contact form, security advisories, update check, changelogs, live metrics, insights (echarts), admin dashboard, renamer rules, embed widget, Dropbox and import-from-server web UI, JXL, honeypot, log viewer, telemetry.
 - GPX tracks, 360 photos, PDF viewing.
 - Maintenance web UI (27 tasks), custom CSS/JS injection.
 - v7 frontend, v2 API, nested set and fix-tree, managed-cache tag service (rely on `ETag` and per-album `updated_at`).
@@ -104,3 +104,4 @@ Every cut item is either paid-tier in Lychee, replaced by Keycloak, or an extern
 5. `/` is the gallery root. No landing page in v1.
 6. Theme palette customization is in v1.
 7. GPX, 360 and PDF are cut.
+8. Photo colour extraction (dominant palette) is in v1.
