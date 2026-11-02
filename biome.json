@@ -6,13 +6,7 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": [
-			"**",
-			"!**/dist",
-			"!**/node_modules",
-			"!**/drizzle/meta",
-			"!docs"
-		]
+		"includes": ["**", "!**/dist", "!**/node_modules", "!**/drizzle/meta", "!docs"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -21,8 +15,8 @@
 	},
 	"linter": {
 		"enabled": true,
-		"preset": "recommended",
 		"rules": {
+			"preset": "recommended",
 			"suspicious": {
 				"noExplicitAny": "warn"
 			},
