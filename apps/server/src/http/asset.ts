@@ -11,7 +11,6 @@ import { albums, photoAlbum, photos, sizeVariants } from "../db/schema.ts";
 import { log } from "../lib/log.ts";
 import { absPath } from "../media/storage.ts";
 import { albumAccessible, photoGrant, photoVisible, type Viewer } from "../policy/index.ts";
-import { settingBool } from "../settings/index.ts";
 import { contentDisposition, EXT_MIME, extOf, jsonError, safeName } from "./common.ts";
 
 /** Fallback chain for display variants (each entry falls back to the ones after it). */
@@ -24,11 +23,9 @@ async function contextAllows(viewer: Viewer, albumCtx: string, photo: PhotoRow):
 	if (albumCtx === "unsorted") {
 		return !photo.inAlbum && (viewer.isAdmin || (viewer.userId !== null && viewer.userId === photo.ownerId));
 	}
-	if (isSmartAlbumId(albumCtx)) {
-		if (viewer.userId !== null) return true;
-		if (!(await settingBool("smart.public", false))) return false;
-		return albumCtx !== "timeline" || (await settingBool("features.timeline_public", false));
-	}
+	// Other smart contexts (incl. `timeline`, which search results use) only require the photo to be visible,
+	// which the caller has already checked: a visible photo's variants leak nothing about where it lives.
+	if (isSmartAlbumId(albumCtx)) return true;
 	const [album] = await db
 		.select({
 			kind: albums.kind,
