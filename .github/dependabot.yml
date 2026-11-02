@@ -9,6 +9,14 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+    ignore:
+      # TypeScript 7 (native compiler) has no JavaScript compiler API yet; vue-tsc and
+      # @vue/compiler-sfc need it. Revisit when Vue Language Tools v4 ships TS 7 support.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      # Keep @types/node on the runtime major pinned in .node-version and docker/Dockerfile.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
