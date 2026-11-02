@@ -1,0 +1,40 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@source "../index.html";
+
+@theme {
+	--font-sans: "Libre Franklin", "Vazirmatn", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	--text-2xs: 0.65rem;
+	--text-2xs--line-height: 0.8rem;
+}
+
+:root {
+	--ui-header-height: 3.5rem;
+	--ui-container: 100%;
+}
+
+body {
+	/* Not on html: keeps the modal scroll lock working. */
+	overflow-x: hidden;
+	background: var(--ui-bg);
+}
+
+.iconify {
+	display: inline-block;
+}
+
+/* Album tiles: three stacked prints that fan out on hover (Lychee DESIGN.md). */
+.album-print {
+	transition: transform 200ms ease-out;
+}
+
+/* Rubber-band selection rectangle. */
+.drag-select-rect {
+	position: absolute;
+	z-index: 30;
+	pointer-events: none;
+	border: 1px solid var(--ui-primary);
+	background: color-mix(in oklab, var(--ui-primary) 15%, transparent);
+	border-radius: 0.25rem;
+}

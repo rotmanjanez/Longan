@@ -9,3 +9,4 @@ coverage/
 .vite/
 *.tsbuildinfo
 .DS_Store
+apps/web/components.d.ts

@@ -1,0 +1,181 @@
+{
+	"app": {
+		"name": "Longan",
+		"loading": "Loading…",
+		"init_failed": "The gallery could not be loaded",
+		"retry": "Retry",
+		"version": "Version {version}",
+		"dark_mode": "Switch to dark mode",
+		"light_mode": "Switch to light mode",
+		"coming_soon": "This page is coming soon."
+	},
+	"common": {
+		"cancel": "Cancel",
+		"close": "Close"
+	},
+	"nav": {
+		"main": "Main navigation",
+		"open_menu": "Open navigation",
+		"gallery": "Gallery",
+		"timeline": "Timeline",
+		"map": "Map",
+		"search": "Search",
+		"tags": "Tags",
+		"sharing": "Sharing",
+		"login": "Sign in",
+		"admin": "Admin",
+		"admin_settings": "Settings",
+		"admin_users": "Users",
+		"admin_jobs": "Jobs",
+		"admin_health": "Health"
+	},
+	"user": {
+		"menu": "Account menu",
+		"sign_in": "Sign in",
+		"sign_out": "Sign out",
+		"redirecting": "Redirecting to sign in…"
+	},
+	"gallery": {
+		"albums": "Albums",
+		"photos": "Photos",
+		"photo_count": "No photos | {n} photo | {n} photos",
+		"album_count": "No albums | {n} album | {n} albums",
+		"by_owner": "by {name}",
+		"not_found": "Album not found",
+		"sections": {
+			"smart": "Smart albums",
+			"albums": "Albums",
+			"shared": "Shared with me",
+			"tag_albums": "Tag albums"
+		},
+		"smart": {
+			"unsorted": "Unsorted",
+			"recent": "Recent",
+			"highlighted": "Highlighted",
+			"untagged": "Untagged",
+			"on_this_day": "On this day",
+			"timeline": "Timeline"
+		},
+		"badges": {
+			"nsfw": "Sensitive",
+			"locked": "Password protected",
+			"public": "Public",
+			"link": "Public (link only)",
+			"highlighted": "Highlighted",
+			"video": "Video"
+		},
+		"layout": {
+			"label": "Photo layout",
+			"square": "Squares",
+			"justified": "Justified",
+			"masonry": "Masonry",
+			"grid": "Grid"
+		},
+		"actions": {
+			"new_album": "New album",
+			"upload": "Upload",
+			"createAlbum": "New sub-album",
+			"albumEdit": "Album settings",
+			"share": "Share",
+			"download": "Download album"
+		},
+		"empty": {
+			"root_title": "No albums yet",
+			"root_upload": "Create an album or upload photos to get started.",
+			"root_guest": "Sign in to see more.",
+			"album_title": "This album is empty",
+			"album_upload": "Upload photos to fill it."
+		},
+		"locked": {
+			"title": "This album is password protected",
+			"description": "Enter the password to see its photos."
+		},
+		"nsfw": {
+			"sensitive": "Sensitive",
+			"title": "Sensitive content",
+			"description": "This album is marked as sensitive. Continue only if you want to see its contents.",
+			"continue": "Show content",
+			"leave": "Back to gallery"
+		}
+	},
+	"selection": {
+		"toolbar": "Selection actions",
+		"clear": "Clear selection",
+		"select_all": "Select all",
+		"photos": "{n} photo selected | {n} photo selected | {n} photos selected",
+		"albums": "{n} album selected | {n} album selected | {n} albums selected",
+		"actions": {
+			"highlight": "Highlight",
+			"tag": "Tag",
+			"rename": "Rename",
+			"copy": "Copy to album",
+			"move": "Move",
+			"merge": "Merge",
+			"delete": "Delete",
+			"download": "Download"
+		}
+	},
+	"lightbox": {
+		"previous": "Previous photo",
+		"next": "Next photo"
+	},
+	"timeline": {
+		"granularity": "Group by",
+		"year": "Year",
+		"month": "Month",
+		"day": "Day",
+		"empty": "No photos yet"
+	},
+	"search": {
+		"label": "Search",
+		"placeholder": "Search photos and albums",
+		"submit": "Search",
+		"hint": "Modifiers: tag:name, type:video, date:2024-05, make:Canon, rating:>=4, color:#ff8800",
+		"results": "Search results",
+		"albums": "Albums ({n}) | Album ({n}) | Albums ({n})",
+		"photos": "Photos ({n}) | Photo ({n}) | Photos ({n})",
+		"no_results": "Nothing found for “{q}”",
+		"truncated": "Only the first results are shown. Refine the search to narrow them down."
+	},
+	"map": {
+		"label": "Map of geotagged photos",
+		"empty": "No geotagged photos",
+		"truncated": "Too many photos: zoom in to see all of them."
+	},
+	"tags": {
+		"filter": "Filter tags",
+		"empty": "No tags",
+		"open": "Search photos tagged {name} ({count})"
+	},
+	"keys": {
+		"title": "Keyboard shortcuts",
+		"search": "Focus search",
+		"select_all": "Select all",
+		"escape": "Close the photo or clear the selection",
+		"prev_next": "Previous / next photo",
+		"nsfw": "Toggle sensitive content",
+		"help": "Show this help"
+	},
+	"dialogs": {
+		"unlock": {
+			"title": "Unlock album",
+			"description": "This album is protected by a password.",
+			"password": "Password",
+			"submit": "Unlock",
+			"wrong": "Wrong password"
+		}
+	},
+	"errors": {
+		"network": "Network error",
+		"load_failed": "Could not load",
+		"not_found": "Page not found",
+		"codes": {
+			"BAD_REQUEST": "Invalid request",
+			"FORBIDDEN": "Not allowed",
+			"NOT_FOUND": "Not found",
+			"CONFLICT": "Conflict",
+			"NOT_IMPLEMENTED": "Not implemented yet",
+			"INTERNAL_SERVER_ERROR": "Server error"
+		}
+	}
+}
