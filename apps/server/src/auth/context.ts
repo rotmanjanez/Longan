@@ -20,7 +20,10 @@ export async function resolveAuth(req: Request): Promise<AuthState> {
 		if (sid) {
 			const loaded = await loadSession(db, sid);
 			if (loaded) {
-				return { viewer: viewerFor(loaded.user, loaded.session), user: loaded.user, sessionId: sid };
+				const viewer = loaded.user
+					? viewerFor(loaded.user, loaded.session)
+					: { ...GUEST, unlockedAlbumIds: loaded.session.unlockedAlbumIds };
+				return { viewer, user: loaded.user, sessionId: sid };
 			}
 		}
 	} catch (err) {

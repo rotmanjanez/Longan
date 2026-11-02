@@ -1,7 +1,7 @@
 import { eq, lt, sql } from "drizzle-orm";
 import type { Context } from "hono";
 import { deleteCookie, setSignedCookie } from "hono/cookie";
-import { parseSigned } from "hono/utils/cookie";
+import { parseSigned, serializeSigned } from "hono/utils/cookie";
 import type { Db } from "../db/index.ts";
 import { sessions, type User, users } from "../db/schema.ts";
 import { env } from "../env.ts";
@@ -28,7 +28,8 @@ async function sweepExpired(db: Db) {
 	}
 }
 
-export async function createSession(db: Db, userId: number, idToken: string | null): Promise<Session> {
+/** `userId` null creates an anonymous session (used to remember unlocked password albums for guests). */
+export async function createSession(db: Db, userId: number | null, idToken: string | null): Promise<Session> {
 	void sweepExpired(db);
 	const expiresAt = new Date(Date.now() + env.SESSION_TTL_HOURS * 3600 * 1000).toISOString();
 	const [row] = await db
@@ -39,12 +40,15 @@ export async function createSession(db: Db, userId: number, idToken: string | nu
 	return row;
 }
 
-/** Load a live session with its user. Expired sessions are deleted and yield null. */
-export async function loadSession(db: Db, id: string): Promise<{ session: Session; user: User } | null> {
+/** Load a live session with its user (null for anonymous sessions). Expired sessions are deleted and yield null. */
+export async function loadSession(
+	db: Db,
+	id: string,
+): Promise<{ session: Session; user: User | null } | null> {
 	const [row] = await db
 		.select({ session: sessions, user: users, expired: sql<boolean>`${sessions.expiresAt} < now()` })
 		.from(sessions)
-		.innerJoin(users, eq(users.id, sessions.userId))
+		.leftJoin(users, eq(users.id, sessions.userId))
 		.where(eq(sessions.id, id))
 		.limit(1);
 	if (!row) return null;
@@ -81,6 +85,14 @@ const cookieOptions = () =>
 
 export async function setSessionCookie(c: Context, session: Session) {
 	await setSignedCookie(c, SESSION_COOKIE, session.id, env.SESSION_SECRET, {
+		...cookieOptions(),
+		expires: new Date(session.expiresAt),
+	});
+}
+
+/** `Set-Cookie` header value for a session; for code paths without a Hono context (RPC procedures). */
+export function sessionCookieHeader(session: Session): Promise<string> {
+	return serializeSigned(SESSION_COOKIE, session.id, env.SESSION_SECRET, {
 		...cookieOptions(),
 		expires: new Date(session.expiresAt),
 	});

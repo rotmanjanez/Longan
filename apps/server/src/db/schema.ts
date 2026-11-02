@@ -47,9 +47,8 @@ export const sessions = pgTable(
 	"sessions",
 	{
 		id: text("id").primaryKey(),
-		userId: integer("user_id")
-			.notNull()
-			.references(() => users.id, { onDelete: "cascade" }),
+		/** NULL for anonymous sessions, which only exist to remember unlocked password albums. */
+		userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
 		expiresAt: ts("expires_at").notNull(),
 		/** Needed for RP-initiated logout. */
 		idToken: text("id_token"),

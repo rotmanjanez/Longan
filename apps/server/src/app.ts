@@ -39,9 +39,14 @@ export function createApp() {
 			user: auth.user,
 			sessionId: auth.sessionId,
 			requestUrl: new URL(c.req.url),
+			resHeaders: new Headers(),
 		};
 		const { matched, response } = await rpc.handle(c.req.raw, { prefix: "/api/rpc", context });
-		if (matched) return c.newResponse(response.body, response);
+		if (matched) {
+			const res = c.newResponse(response.body, response);
+			context.resHeaders.forEach((v, k) => res.headers.append(k, v));
+			return res;
+		}
 		await next();
 	});
 

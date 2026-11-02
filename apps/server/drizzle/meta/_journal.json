@@ -8,6 +8,13 @@
       "when": 1793643373427,
       "tag": "0000_early_micromax",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793644787134,
+      "tag": "0001_anonymous_sessions",
+      "breakpoints": true
     }
   ]
 }

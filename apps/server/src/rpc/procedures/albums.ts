@@ -11,7 +11,7 @@ import {
 } from "@longan/shared";
 import { ORPCError } from "@orpc/server";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
-import { unlockAlbums } from "../../auth/session.ts";
+import { createSession, sessionCookieHeader, unlockAlbums } from "../../auth/session.ts";
 import {
 	type Album,
 	accessPermissions,
@@ -474,8 +474,6 @@ export const albums = os.albums.router({
 	}),
 
 	unlock: os.albums.unlock.handler(async ({ input, context: ctx }) => {
-		if (!ctx.sessionId)
-			throw new ORPCError("UNAUTHORIZED", { message: "A session is required to unlock albums" });
 		const row = await publicRow(ctx.db, input.id);
 		if (!row) throw new ORPCError("NOT_FOUND", { message: "Album not found" });
 		if (!row.passwordHash) return;
@@ -493,6 +491,13 @@ export const albums = os.albums.router({
 				ids.add(other.albumId);
 			}
 		}
-		await unlockAlbums(ctx.db, ctx.sessionId, [...ids]);
+		let sessionId = ctx.sessionId;
+		if (!sessionId) {
+			// Guests get an anonymous session whose only purpose is remembering the unlocked albums.
+			const session = await createSession(ctx.db, null, null);
+			ctx.resHeaders.append("set-cookie", await sessionCookieHeader(session));
+			sessionId = session.id;
+		}
+		await unlockAlbums(ctx.db, sessionId, [...ids]);
 	}),
 });

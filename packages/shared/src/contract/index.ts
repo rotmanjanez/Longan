@@ -59,7 +59,8 @@ export const contract = {
 				tagAlbums: z.array(AlbumTile),
 			}),
 		),
-		head: oc.input(z.object({ id: AnyAlbumId })).output(AlbumHead),
+		/** `id` is a smart album id, an album id or an album slug. */
+		head: oc.input(z.object({ id: z.string().min(1).max(100) })).output(AlbumHead),
 		children: oc.input(z.object({ id: AlbumId })).output(z.array(AlbumTile)),
 		/** Flat editable tree for move/merge pickers. Index-aligned. */
 		tree: oc.output(

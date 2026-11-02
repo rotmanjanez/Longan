@@ -33,7 +33,14 @@ import { hashPassword } from "./password.ts";
 export type World = Awaited<ReturnType<typeof createWorld>>;
 
 export function ctxFor(viewer: Viewer, user: User | null, sessionId: string | null = null): Ctx {
-	return { db, viewer, user, sessionId, requestUrl: new URL("http://localhost/api/rpc") };
+	return {
+		db,
+		viewer,
+		user,
+		sessionId,
+		requestUrl: new URL("http://localhost/api/rpc"),
+		resHeaders: new Headers(),
+	};
 }
 
 export async function createWorld() {

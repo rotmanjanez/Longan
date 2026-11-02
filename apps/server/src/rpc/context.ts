@@ -10,6 +10,8 @@ export type Ctx = {
 	user: User | null;
 	sessionId: string | null;
 	requestUrl: URL;
+	/** Headers appended to the HTTP response (e.g. Set-Cookie for anonymous unlock sessions). */
+	resHeaders: Headers;
 };
 
 export function requireUser(ctx: Ctx): User {

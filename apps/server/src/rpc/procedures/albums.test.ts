@@ -153,10 +153,16 @@ describe("albums.head / children", () => {
 });
 
 describe("albums.unlock", () => {
-	it("requires a session", async () => {
-		await expect(
-			call(router.albums.unlock, { id: w.a.pwd, password: "secret" }, { context: w.ctx.guest }),
-		).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+	it("gives a guest an anonymous session that remembers the unlock", async () => {
+		const ctx = ctxFor(w.ctx.guest.viewer, null);
+		await call(router.albums.unlock, { id: w.a.pwd, password: "secret" }, { context: ctx });
+		const cookie = ctx.resHeaders.get("set-cookie");
+		expect(cookie).toMatch(/^longan_session=/);
+		const sid = decodeURIComponent(cookie!.split(";")[0]!.slice("longan_session=".length)).split(".")[0]!;
+		const [s] = await db.select().from(sessions).where(eq(sessions.id, sid));
+		expect(s?.userId).toBeNull();
+		expect(s?.unlockedAlbumIds).toEqual(expect.arrayContaining([w.a.pwd, w.a.pwd2]));
+		await db.delete(sessions).where(eq(sessions.id, sid));
 	});
 
 	it("rejects a wrong password and unlocks all albums sharing the password", async () => {
