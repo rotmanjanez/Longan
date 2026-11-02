@@ -44,7 +44,7 @@ export function createApp() {
 		const { matched, response } = await rpc.handle(c.req.raw, { prefix: "/api/rpc", context });
 		if (matched) {
 			const res = c.newResponse(response.body, response);
-			context.resHeaders.forEach((v, k) => res.headers.append(k, v));
+			for (const [k, v] of context.resHeaders) res.headers.append(k, v);
 			return res;
 		}
 		await next();
