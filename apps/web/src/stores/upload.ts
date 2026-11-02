@@ -177,8 +177,10 @@ export const useUploadStore = defineStore("upload", () => {
 		const live = () => find(id);
 		Object.assign(item, { status: "uploading", progress: 0, code: undefined, message: undefined });
 		const handle = transport(item.file, item.albumId, (fraction) => {
+			// Whole percent steps only: XHR fires progress events far more often, and every write re-renders.
+			const p = Math.round(Math.min(1, Math.max(0, fraction)) * 100) / 100;
 			const it = live();
-			if (it && it.status === "uploading") it.progress = Math.min(1, Math.max(0, fraction));
+			if (it && it.status === "uploading" && it.progress !== p) it.progress = p;
 		});
 		handles.set(id, handle);
 		handle.promise.then((result) => {

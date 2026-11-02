@@ -45,45 +45,7 @@
 					</div>
 					<UProgress :model-value="Math.round(upload.progress * 100)" size="sm" :color="upload.failed.length ? 'warning' : 'primary'" />
 					<ul class="sm:max-h-80 sm:overflow-y-auto divide-y divide-default rounded-md ring ring-default" :aria-label="t('upload.queue')">
-						<li v-for="item in upload.items" :key="item.id" class="flex items-center gap-3 px-3 py-2" :data-upload-item="item.status">
-							<UIcon :name="STATUS_ICONS[item.status]" class="size-5 shrink-0" :class="[STATUS_COLORS[item.status], item.status === 'uploading' ? 'animate-pulse' : '']" />
-							<div class="min-w-0 flex-1">
-								<p class="text-sm truncate" :title="item.file.name">{{ item.file.name }}</p>
-								<UProgress v-if="item.status === 'uploading'" :model-value="Math.round(item.progress * 100)" size="xs" class="mt-1" />
-								<p v-else class="text-xs" :class="item.status === 'error' ? 'text-error' : 'text-muted'">
-									{{ formatBytes(item.file.size) }} · {{ statusText(item) }}
-								</p>
-							</div>
-							<UButton
-								v-if="(item.status === 'error' || item.status === 'cancelled') && item.retryable !== false"
-								icon="lucide:rotate-cw"
-								size="sm"
-								color="neutral"
-								variant="ghost"
-								:aria-label="t('upload.retry', { name: item.file.name })"
-								@click="upload.retry(item.id)"
-							/>
-							<UButton
-								v-if="item.status === 'queued' || item.status === 'uploading'"
-								icon="lucide:x"
-								size="sm"
-								color="neutral"
-								variant="ghost"
-								:aria-label="t('upload.cancel', { name: item.file.name })"
-								@click="upload.cancel(item.id)"
-							/>
-							<UButton
-								v-else-if="item.status === 'created' || item.status === 'duplicate'"
-								icon="lucide:image"
-								size="xs"
-								color="neutral"
-								variant="ghost"
-								:to="item.photoId && item.albumId ? { name: 'album', params: { albumId: item.albumId, photoId: item.photoId } } : undefined"
-								:disabled="!item.photoId || !item.albumId"
-								:aria-label="t('upload.open', { name: item.file.name })"
-								@click="close"
-							/>
-						</li>
+						<UploadRow v-for="item in upload.items" :key="item.id" :item="item" :max-bytes="config.uploadMaxBytes" @open="close" />
 					</ul>
 				</div>
 			</div>
@@ -116,28 +78,10 @@ import { invalidateGallery, useDialog } from "@/components/dialogs/useDialog.ts"
 import { useInit } from "@/composables/useInit.ts";
 import { formatBytes } from "@/lib/format.ts";
 import { useUiStore } from "@/stores/ui.ts";
-import { UPLOAD_ACCEPT, type UploadItem, type UploadStatus, useUploadStore } from "@/stores/upload.ts";
+import { UPLOAD_ACCEPT, useUploadStore } from "@/stores/upload.ts";
+import UploadRow from "./UploadRow.vue";
 
-const STATUS_ICONS: Record<UploadStatus, string> = {
-	queued: "lucide:clock",
-	uploading: "lucide:upload",
-	created: "lucide:circle-check",
-	duplicate: "lucide:copy-check",
-	skipped: "lucide:circle-minus",
-	error: "lucide:circle-x",
-	cancelled: "lucide:circle-slash",
-};
-const STATUS_COLORS: Record<UploadStatus, string> = {
-	queued: "text-dimmed",
-	uploading: "text-primary",
-	created: "text-success",
-	duplicate: "text-info",
-	skipped: "text-muted",
-	error: "text-error",
-	cancelled: "text-muted",
-};
-
-const { t, te } = useI18n();
+const { t } = useI18n();
 const ui = useUiStore();
 const toast = useToast();
 const queryClient = useQueryClient();
@@ -190,15 +134,6 @@ const summary = computed(() => {
 		? t("upload.summary_failed", { done: finished, total, failed })
 		: t("upload.summary", { done: finished, total });
 });
-
-function statusText(item: UploadItem) {
-	if (item.status !== "error") return t(`upload.status.${item.status}`);
-	const code = item.code ?? "";
-	const known = te(`upload.errors.${code}`)
-		? t(`upload.errors.${code}`, { size: formatBytes(config.value.uploadMaxBytes) })
-		: code;
-	return item.message ? `${known}: ${item.message}` : known || t("upload.status.error");
-}
 
 function addFiles(list: FileList | File[] | null | undefined) {
 	const files = Array.from(list ?? []);
