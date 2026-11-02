@@ -9,7 +9,7 @@
 			:aria-label="t('user.menu')"
 		/>
 	</UDropdownMenu>
-	<UButton v-else color="neutral" variant="ghost" icon="lucide:log-in" :href="login" :aria-label="t('user.sign_in')">
+	<UButton v-else color="neutral" variant="ghost" icon="lucide:log-in" :href="login" external :aria-label="t('user.sign_in')">
 		<span class="hidden sm:inline">{{ t("user.sign_in") }}</span>
 	</UButton>
 </template>
@@ -30,13 +30,24 @@ const { user, rights } = useInit();
 
 const login = computed(() => loginUrl(route.fullPath));
 
-/** `POST /auth/logout` as a real form submit so the server can redirect to the IdP end-session endpoint. */
-function logout() {
-	const form = document.createElement("form");
-	form.method = "POST";
-	form.action = "/auth/logout";
-	document.body.appendChild(form);
-	form.submit();
+/**
+ * `POST /auth/logout` as JSON: the server ends the session and answers `{ redirect }` (the IdP end-session
+ * URL); navigating there from here works whichever origin serves the SPA (APP_URL or the Vite dev server).
+ */
+async function logout() {
+	let target = "/";
+	try {
+		const back = encodeURIComponent(`${window.location.origin}/`);
+		const res = await fetch(`/auth/logout?redirect=${back}`, {
+			method: "POST",
+			headers: { Accept: "application/json" },
+		});
+		const body = (await res.json()) as { redirect?: string };
+		if (typeof body.redirect === "string") target = body.redirect;
+	} catch {
+		// session cookie is cleared server-side even if the body is unreadable
+	}
+	window.location.assign(target);
 }
 
 const items = computed<DropdownMenuItem[][]>(() => {

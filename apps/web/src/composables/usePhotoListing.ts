@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/vue-query";
 import { computed, type MaybeRefOrGetter, toValue } from "vue";
 import { orpc } from "@/api/query.ts";
 
-/** `photos.ratios` + `photos.buckets` for an album scope (real, tag or smart). */
+/** `photos.ratios` + `photos.buckets` for an album scope (real, tag or smart), plus per-photo asset versions. */
 export function usePhotoListing(
 	album: MaybeRefOrGetter<string | null>,
 	granularity: MaybeRefOrGetter<BucketGranularity> = "month",
@@ -26,5 +26,10 @@ export function usePhotoListing(
 			}),
 		),
 	);
-	return { ratios, buckets };
+	/** Asset version per photo id (updated_at epoch seconds) for cache-busting `?v=` on asset urls. */
+	const versions = computed(() => {
+		const d = ratios.data.value;
+		return new Map<string, number>(d ? d.ids.map((id, i) => [id, d.updatedAts[i] ?? 0]) : []);
+	});
+	return { ratios, buckets, versions };
 }

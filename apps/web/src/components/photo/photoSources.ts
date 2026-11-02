@@ -1,21 +1,16 @@
 import type { PhotoDetail, SizeVariantType } from "@longan/shared";
-import { assetUrl } from "@/api/assets.ts";
+import { assetUrl, versionOf } from "@/api/assets.ts";
 
 type Variant = { type: SizeVariantType; width: number; height: number; filesize: number };
 
-/**
- * Cache-busting revisions for photos rotated in this session: rotation rewrites the variant files in place
- * (same URLs, `Cache-Control: max-age=3600`), so the lightbox appends `?r=<n>` after a rotate.
- */
-const revisions = new Map<string, number>();
-export function bumpPhotoRevision(photoId: string): void {
-	revisions.set(photoId, (revisions.get(photoId) ?? 0) + 1);
-}
-
-export function photoAssetUrl(albumCtx: string, photoId: string, variant: SizeVariantType): string {
-	const url = assetUrl(albumCtx, photoId, variant);
-	const rev = revisions.get(photoId);
-	return rev ? `${url}?r=${rev}` : url;
+/** Asset url versioned with the photo's `updatedAt` (bumped by rotate/reprocess) for cache busting. */
+export function photoAssetUrl(
+	albumCtx: string,
+	photoId: string,
+	variant: SizeVariantType,
+	detail?: PhotoDetail | null,
+): string {
+	return assetUrl(albumCtx, photoId, variant, false, versionOf(detail?.updatedAt));
 }
 
 export type ImageSources = {
@@ -38,7 +33,7 @@ const FALLBACK_ORDER: SizeVariantType[] = ["small2x", "small", "thumb2x", "thumb
  * Without details yet, medium/medium2x are requested (the asset route falls back server-side).
  */
 export function imageSources(albumCtx: string, photoId: string, detail?: PhotoDetail | null): ImageSources {
-	const url = (v: SizeVariantType) => photoAssetUrl(albumCtx, photoId, v);
+	const url = (v: SizeVariantType) => photoAssetUrl(albumCtx, photoId, v, detail);
 	if (!detail) {
 		return { src: url("medium"), srcset: `${url("medium")} 1x, ${url("medium2x")} 2x`, zoom: null, width: 0 };
 	}
@@ -76,6 +71,6 @@ export function videoPoster(albumCtx: string, photoId: string, detail?: PhotoDet
 export function videoSource(albumCtx: string, photoId: string, detail?: PhotoDetail | null): string | null {
 	if (!detail) return null;
 	return detail.sizeVariants.some((v) => v.type === "original")
-		? photoAssetUrl(albumCtx, photoId, "original")
+		? photoAssetUrl(albumCtx, photoId, "original", detail)
 		: null;
 }

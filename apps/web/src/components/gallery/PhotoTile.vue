@@ -67,6 +67,8 @@ const props = defineProps<{
 	colour: string | null;
 	isVideo: boolean;
 	isHighlighted: boolean;
+	/** Asset version (updated_at epoch seconds) for cache busting. */
+	version?: number | null;
 	/** Position relative to the enclosing chunk. */
 	box: LayoutBox;
 	family: VariantFamily;
@@ -87,8 +89,8 @@ watch(
 	},
 );
 
-const src = computed(() => assetUrl(props.albumCtx, props.id, props.family));
-const srcset = computed(() => srcsetFor(props.albumCtx, props.id, props.family));
+const src = computed(() => assetUrl(props.albumCtx, props.id, props.family, false, props.version));
+const srcset = computed(() => srcsetFor(props.albumCtx, props.id, props.family, props.version));
 const style = computed(() => ({
 	top: `${props.box.top}px`,
 	left: `${props.box.left}px`,

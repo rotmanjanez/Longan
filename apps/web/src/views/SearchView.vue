@@ -71,7 +71,7 @@ import { orpc } from "@/api/query.ts";
 import AlbumGrid from "@/components/gallery/AlbumGrid.vue";
 import GallerySection from "@/components/gallery/GallerySection.vue";
 import LightboxMount from "@/components/gallery/LightboxMount.vue";
-import type PhotoGrid from "@/components/gallery/PhotoGrid.vue";
+import PhotoGrid from "@/components/gallery/PhotoGrid.vue";
 import { useInit } from "@/composables/useInit.ts";
 import { useLightboxNav } from "@/composables/useLightboxNav.ts";
 import { useUiStore } from "@/stores/ui.ts";

@@ -312,6 +312,7 @@
 			"title_photo": "Move photo | Move {n} photos",
 			"hint_album": "Choose the new parent album. | Choose the new parent of {n} albums.",
 			"hint_photo": "The photo is removed from this album and added to the target. | {n} photos are removed from this album and added to the target.",
+			"hint_photo_all": "The photo leaves all its albums and is filed into the target (Unsorted = no album). | {n} photos leave all their albums and are filed into the target (Unsorted = no album).",
 			"target": "Move to",
 			"submit": "Move",
 			"done": "Moved"
@@ -548,7 +549,7 @@
 			"hint": "Queue jobs that rebuild the resized versions, e.g. after changing the image processing settings.",
 			"scope": "Photos",
 			"all": "All photos",
-			"album": "One album",
+			"album": "One album (with sub-albums)",
 			"pick_album": "Album",
 			"variants": "Sizes",
 			"variants_hint": "Leave all unchecked to rebuild every size.",

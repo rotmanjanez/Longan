@@ -16,8 +16,8 @@
 				:class="modelValue === null ? 'bg-primary/10 text-primary' : ''"
 				@click="emit('update:modelValue', null)"
 			>
-				<UIcon name="lucide:house" class="size-4 shrink-0" />
-				{{ t("dialogs.picker.root") }}
+				<UIcon :name="rootIcon ?? 'lucide:house'" class="size-4 shrink-0" />
+				{{ rootLabel ?? t("dialogs.picker.root") }}
 			</button>
 			<button
 				v-for="row in rows"
@@ -58,6 +58,9 @@ const props = defineProps<{
 	/** Also exclude these ids, but not their descendants (e.g. the source album of a photo move). */
 	excludeOnly?: readonly string[];
 	allowRoot?: boolean;
+	/** Label/icon of the `null` option (default: top level). */
+	rootLabel?: string;
+	rootIcon?: string;
 	label?: string;
 }>();
 const emit = defineEmits<{ "update:modelValue": [value: string | null] }>();

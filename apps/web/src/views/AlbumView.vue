@@ -87,7 +87,7 @@ import { orpc } from "@/api/query.ts";
 import AlbumGrid from "@/components/gallery/AlbumGrid.vue";
 import AlbumHeading from "@/components/gallery/AlbumHeading.vue";
 import LightboxMount from "@/components/gallery/LightboxMount.vue";
-import type PhotoGrid from "@/components/gallery/PhotoGrid.vue";
+import PhotoGrid from "@/components/gallery/PhotoGrid.vue";
 import SelectionToolbar from "@/components/gallery/SelectionToolbar.vue";
 import SensitiveWarning from "@/components/gallery/SensitiveWarning.vue";
 import {
@@ -98,7 +98,7 @@ import {
 import PageDropZone from "@/components/upload/PageDropZone.vue";
 import { useInit } from "@/composables/useInit.ts";
 import { useLightboxNav } from "@/composables/useLightboxNav.ts";
-import { invalidatePhotoDetails } from "@/composables/usePhotoDetails.ts";
+import { invalidatePhotoDetails, usePhotoDetails } from "@/composables/usePhotoDetails.ts";
 import { usePhotoListing } from "@/composables/usePhotoListing.ts";
 import { isSmartAlbumId } from "@/lib/albums.ts";
 import { useSelectionStore } from "@/stores/selection.ts";
@@ -182,12 +182,23 @@ onBeforeUnmount(() => {
 	selection.clear();
 });
 
+/** Smart albums carry no album-level edit rights: the toolbar uses the per-photo rights of the selection. */
+const isSmart = computed(() => headData.value?.kind === "smart");
+const { details: selectedDetails } = usePhotoDetails(
+	() => (isSmart.value ? resolvedId.value : ""),
+	() => (isSmart.value ? selection.photoIds : []),
+);
+function selectionAllows(right: "canEdit" | "canMove" | "canDelete"): boolean {
+	const ids = selection.photoIds;
+	return ids.length > 0 && ids.every((id) => selectedDetails.value.get(id)?.rights[right] === true);
+}
 const toolbarRights = computed(() => {
 	const r = headData.value?.rights;
+	const smart = isSmart.value;
 	return {
-		canEdit: !!r?.canEdit,
-		canMove: !!r?.canMove,
-		canDelete: !!r?.canDelete,
+		canEdit: !!r?.canEdit || (smart && selectionAllows("canEdit")),
+		canMove: !!r?.canMove || (smart && selectionAllows("canMove")),
+		canDelete: !!r?.canDelete || (smart && selectionAllows("canDelete")),
 		canDownload: !!r?.canDownload,
 	};
 });

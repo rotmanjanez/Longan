@@ -65,8 +65,9 @@
 							icon="lucide:download"
 							color="neutral"
 							variant="ghost"
-							:href="assetUrl(albumCtx, photoId, 'original', true)"
+							:href="assetUrl(albumCtx, photoId, 'original', true, versionOf(detail.updatedAt))"
 							download
+							external
 							:aria-label="t('lightbox.download')"
 						/>
 					</UTooltip>
@@ -144,7 +145,7 @@ import { defineShortcuts, useToast } from "@nuxt/ui/composables";
 import { useClipboard, useFullscreen, useLocalStorage } from "@vueuse/core";
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { assetUrl } from "@/api/assets.ts";
+import { assetUrl, versionOf } from "@/api/assets.ts";
 import type { LightboxProps } from "@/components/gallery/lightbox.ts";
 import { useInit } from "@/composables/useInit.ts";
 import { usePhotoDetails } from "@/composables/usePhotoDetails.ts";
@@ -152,12 +153,9 @@ import { useUiStore } from "@/stores/ui.ts";
 import { onPhotosRemoved } from "./events.ts";
 import PhotoDetailsPanel from "./PhotoDetailsPanel.vue";
 import PhotoOverlay from "./PhotoOverlay.vue";
-import type PhotoStage from "./PhotoStage.vue";
+import PhotoStage from "./PhotoStage.vue";
 import { imageSources } from "./photoSources.ts";
 import { usePhotoActions } from "./usePhotoActions.ts";
-
-/** Interval of the slideshow (ms). */
-const SLIDESHOW_MS = 5000;
 
 const props = defineProps<LightboxProps>();
 const emit = defineEmits<{ close: []; navigate: [photoId: string] }>();
@@ -236,6 +234,8 @@ onBeforeUnmount(stopRemoved);
 
 // --- slideshow + chrome ------------------------------------------------------------------------------
 const slideshow = ref(false);
+/** Slideshow interval from `gallery.slideshow_interval_s` (seconds). */
+const slideshowMs = computed(() => Math.max(1, config.value.slideshowIntervalS || 5) * 1000);
 let slideTimer: ReturnType<typeof setTimeout> | undefined;
 function toggleSlideshow() {
 	slideshow.value = !slideshow.value;
@@ -249,7 +249,7 @@ watch(
 			const target = nextId.value ?? props.ids[0];
 			if (target && target !== props.photoId) emit("navigate", target);
 			else slideshow.value = false;
-		}, SLIDESHOW_MS);
+		}, slideshowMs.value);
 	},
 	{ immediate: true },
 );

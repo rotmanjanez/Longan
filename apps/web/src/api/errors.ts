@@ -27,8 +27,15 @@ export function isClientError(error: unknown): boolean {
 	return error instanceof ORPCError && error.status >= 400 && error.status < 500;
 }
 
+/**
+ * `/auth/login` with an absolute post-login redirect (`location.origin + path`). The OIDC callback runs on
+ * APP_URL, so a relative path would land on the API server instead of the SPA when they differ (Vite dev
+ * server on :5173); the server only honours absolute URLs on APP_URL or, outside production, the dev origin.
+ */
 export function loginUrl(redirect: string): string {
-	return `/auth/login?redirect=${encodeURIComponent(redirect)}`;
+	const local = redirect.startsWith("/") && !redirect.startsWith("//");
+	const target = local && typeof window !== "undefined" ? `${window.location.origin}${redirect}` : redirect;
+	return `/auth/login?redirect=${encodeURIComponent(target)}`;
 }
 
 /** Album id carried by a PASSWORD_REQUIRED error (`data.albumId` / `data.id`), when the server provides it. */

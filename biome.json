@@ -6,7 +6,7 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": ["**", "!**/dist", "!**/node_modules", "!**/drizzle/meta", "!docs", "!**/components.d.ts"]
+		"includes": ["**", "!**/dist", "!**/node_modules", "!**/drizzle/meta", "!docs"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -44,6 +44,9 @@
 					"correctness": {
 						"noUnusedVariables": "off",
 						"noUnusedImports": "off"
+					},
+					"style": {
+						"useImportType": "off"
 					}
 				}
 			}

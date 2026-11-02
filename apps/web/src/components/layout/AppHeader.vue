@@ -40,7 +40,7 @@ import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useInit } from "@/composables/useInit.ts";
 import { useUiStore } from "@/stores/ui.ts";
-import type SearchBox from "./SearchBox.vue";
+import SearchBox from "./SearchBox.vue";
 import UserMenu from "./UserMenu.vue";
 
 const { t } = useI18n();

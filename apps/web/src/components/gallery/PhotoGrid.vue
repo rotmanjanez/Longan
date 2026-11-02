@@ -43,6 +43,7 @@
 					:colour="data.colours[i] ?? null"
 					:is-video="data.types[i] === 'video'"
 					:is-highlighted="data.isHighlighteds[i] ?? false"
+					:version="data.updatedAts[i] ?? null"
 					:box="relativeBox(i, chunks[item.index]!.top)"
 					:family="family"
 					:fit="layoutMode === 'grid' ? 'contain' : 'cover'"

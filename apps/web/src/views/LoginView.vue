@@ -2,7 +2,7 @@
 	<div class="flex flex-col items-center justify-center gap-3 py-24 text-muted" role="status">
 		<UIcon name="lucide:loader-circle" class="size-6 animate-spin" />
 		<p>{{ t("user.redirecting") }}</p>
-		<UButton color="neutral" variant="ghost" :href="target">{{ t("user.sign_in") }}</UButton>
+		<UButton color="neutral" variant="ghost" :href="target" external>{{ t("user.sign_in") }}</UButton>
 	</div>
 </template>
 

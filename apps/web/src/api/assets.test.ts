@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assetUrl, srcsetFor, tileFamily, zipUrl } from "./assets.ts";
+import { assetUrl, srcsetFor, tileFamily, versionOf, zipUrl } from "./assets.ts";
 
 const P = "AbCdEfGhIjKlMnOpQrStUvWx";
 
@@ -19,6 +19,17 @@ describe("asset helpers", () => {
 		);
 		expect(srcsetFor("recent", P, "thumb")).toContain("/thumb2x 2x");
 		expect(srcsetFor("recent", P, "medium")).toContain("/medium2x 2x");
+	});
+
+	it("appends the asset version for cache busting", () => {
+		expect(assetUrl("a", P, "thumb", false, 1700000000)).toBe(`/api/asset/a/${P}/thumb?v=1700000000`);
+		expect(assetUrl("a", P, "original", true, 5)).toBe(`/api/asset/a/${P}/original?v=5&download=1`);
+		expect(assetUrl("a", P, "thumb", false, null)).toBe(`/api/asset/a/${P}/thumb`);
+		expect(srcsetFor("a", P, "small", 7)).toBe(
+			`/api/asset/a/${P}/small?v=7 1x, /api/asset/a/${P}/small2x?v=7 2x`,
+		);
+		expect(versionOf("2024-08-02T10:00:00.900Z")).toBe(1722592800);
+		expect(versionOf(null)).toBeNull();
 	});
 
 	it("picks square thumbs only for the square layout", () => {

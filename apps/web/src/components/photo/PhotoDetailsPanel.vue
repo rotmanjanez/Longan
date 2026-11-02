@@ -145,8 +145,9 @@
 						<td class="py-1 w-8 text-end">
 							<UButton
 								v-if="canDownloadVariant(v.type)"
-								:href="assetUrl(albumCtx, detail.id, v.type, true)"
+								:href="assetUrl(albumCtx, detail.id, v.type, true, versionOf(detail.updatedAt))"
 								download
+								external
 								icon="lucide:download"
 								size="xs"
 								color="neutral"
@@ -166,7 +167,7 @@ import type { PhotoDetail, SizeVariantType } from "@longan/shared";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import type { RouteLocationRaw } from "vue-router";
-import { assetUrl } from "@/api/assets.ts";
+import { assetUrl, versionOf } from "@/api/assets.ts";
 import { useInit } from "@/composables/useInit.ts";
 import { isSmartAlbumId, plainText } from "@/lib/albums.ts";
 import { formatBytes, formatDuration, formatTakenAt } from "@/lib/format.ts";

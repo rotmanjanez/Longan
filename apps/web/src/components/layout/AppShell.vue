@@ -18,7 +18,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useInit } from "@/composables/useInit.ts";
 import { applyTheme } from "@/lib/theme.ts";
 import { useUiStore } from "@/stores/ui.ts";
-import type AppHeader from "./AppHeader.vue";
+import AppHeader from "./AppHeader.vue";
 import DialogHost from "./DialogHost.vue";
 import LeftMenu from "./LeftMenu.vue";
 

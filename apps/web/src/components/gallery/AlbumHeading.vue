@@ -41,6 +41,7 @@
 						size="sm"
 						:href="zipUrl({ albums: [head.id] })"
 						download
+						external
 						:aria-label="t('gallery.actions.download')"
 					/>
 				</UTooltip>

@@ -33,6 +33,7 @@
 				size="sm"
 				:href="downloadHref"
 				download
+				external
 				:aria-label="t('selection.actions.download')"
 			/>
 		</UTooltip>

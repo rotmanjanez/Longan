@@ -171,18 +171,11 @@ function toggleVariant(v: ReprocessVariant, on: boolean) {
 }
 
 const reprocess = useApiAction(
-	async (v: { albumId: string | null; variants: ReprocessVariant[] }) => {
-		let photoIds: string[] | undefined;
-		if (v.albumId) {
-			// admin.reprocess takes photo ids; resolve the album's photos via the column listing.
-			photoIds = (await client.photos.ratios({ album: v.albumId, granularity: "month" })).ids;
-			if (!photoIds.length) return { queued: 0 };
-		}
-		return client.admin.reprocess({
-			...(photoIds ? { photoIds } : {}),
+	(v: { albumId: string | null; variants: ReprocessVariant[] }) =>
+		client.admin.reprocess({
+			...(v.albumId ? { albumId: v.albumId } : {}),
 			...(v.variants.length ? { variants: v.variants } : {}),
-		});
-	},
+		}),
 	{
 		success: (_v, r) => t("jobs.reprocess.queued", { n: r.queued }, r.queued),
 		after: refreshAdmin,

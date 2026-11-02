@@ -59,7 +59,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import LayoutSwitcher from "@/components/gallery/LayoutSwitcher.vue";
 import LightboxMount from "@/components/gallery/LightboxMount.vue";
-import type PhotoGrid from "@/components/gallery/PhotoGrid.vue";
+import PhotoGrid from "@/components/gallery/PhotoGrid.vue";
 import { useInit } from "@/composables/useInit.ts";
 import { useLightboxNav } from "@/composables/useLightboxNav.ts";
 import { usePhotoListing } from "@/composables/usePhotoListing.ts";

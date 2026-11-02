@@ -48,6 +48,7 @@ export const initData: InitData = {
 		recentAgeDays: 7,
 		uploadMaxBytes: 1,
 		uploadParallelism: 1,
+		slideshowIntervalS: 5,
 	},
 };
 
@@ -96,6 +97,7 @@ export function ratios(n: number, buckets: string[]): PhotoRatiosSoA {
 		takenAts: ids.map(() => null),
 		createdAts: ids.map(() => "2024-01-01T00:00:00Z"),
 		colours: ids.map(() => "#884422"),
+		updatedAts: ids.map(() => 1704067200),
 		isTruncated: false,
 	};
 }
