@@ -3,6 +3,6 @@
  * Import this file before createApp(). Keep the list explicit so the dependency is visible.
  */
 import "./auth/routes.ts";
-// import "./http/asset.ts";
-// import "./http/upload.ts";
-// import "./http/zip.ts";
+import "./http/asset.ts";
+import "./http/upload.ts";
+import "./http/zip.ts";

@@ -106,4 +106,4 @@ Jobs (`jobs/`): table `jobs(type, payload, status, attempts, run_at)`. `startWor
 
 ## Docker
 
-`docker/Dockerfile`: multi-stage. Build stage installs with pnpm and runs `vite build`. Runtime: `node:24-bookworm-slim` + `libvips42` (Debian build has HEIF) + `ffmpeg`; sharp installed with `SHARP_FORCE_GLOBAL_LIBVIPS=1` so HEIC decodes; non-root user; `STORAGE_PATH=/data` volume; entrypoint runs migrations then `node apps/server/src/node.ts`. `docker-compose.yml` = app + Postgres + Keycloak (realm import) for a full stack; `docker-compose.dev.yml` = Postgres + Keycloak only.
+`docker/Dockerfile`: multi-stage. Build stage installs with pnpm and runs `vite build`. Runtime: `node:24-bookworm-slim` + `ffmpeg` + `libheif-examples`; sharp uses its bundled libvips (sharp 0.35 needs libvips 8.18, newer than any Debian package), and HEVC-coded HEIC (iPhone) is decoded through `heif-convert` as a fallback in the pipeline; non-root user; `STORAGE_PATH=/data` volume; entrypoint runs migrations then `node apps/server/src/node.ts`. `docker-compose.yml` = app + Postgres + Keycloak (realm import) for a full stack; `docker-compose.dev.yml` = Postgres + Keycloak only.
