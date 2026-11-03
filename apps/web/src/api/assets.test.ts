@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assetUrl, srcsetFor, tileFamily, versionOf, zipUrl } from "./assets.ts";
+import { assetUrl, renderedWidth, srcsetFor, tileFamily, tileSrcset, versionOf, zipUrl } from "./assets.ts";
 
 const P = "AbCdEfGhIjKlMnOpQrStUvWx";
 
@@ -30,6 +30,24 @@ describe("asset helpers", () => {
 		);
 		expect(versionOf("2024-08-02T10:00:00.900Z")).toBe(1722592800);
 		expect(versionOf(null)).toBeNull();
+	});
+
+	it("describes tile candidates by width from the nominal variant sizes", () => {
+		const sizes = { smallMax: 720, thumbSize: 200 };
+		const u = `/api/asset/a/${P}`;
+		expect(tileSrcset("a", P, "small", 1.5, sizes)).toBe(`${u}/small 720w, ${u}/small2x 1440w`);
+		// Portrait: the longest edge is the height, so the width shrinks with the ratio.
+		expect(tileSrcset("a", P, "small", 2 / 3, sizes)).toBe(`${u}/small 480w, ${u}/small2x 960w`);
+		// Thumbs are squares whatever the photo's ratio.
+		expect(tileSrcset("a", P, "thumb", 0.5, sizes, 9)).toBe(`${u}/thumb?v=9 200w, ${u}/thumb2x?v=9 400w`);
+	});
+
+	it("sizes tiles by the width the image renders at", () => {
+		const box = { width: 300, height: 200 };
+		expect(renderedWidth(box, 1.5, "cover")).toBe(300);
+		expect(renderedWidth(box, 2, "cover")).toBe(400); // wider than the box: cropped at the sides
+		expect(renderedWidth(box, 1, "contain")).toBe(200); // letterboxed
+		expect(renderedWidth(box, 3, "contain")).toBe(300);
 	});
 
 	it("picks square thumbs only for the square layout", () => {

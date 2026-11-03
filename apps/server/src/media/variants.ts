@@ -21,7 +21,7 @@ export type ImageSettings = {
 	smallMax: number;
 	thumbSize: number;
 	generate2x: boolean;
-	format: "webp" | "jpeg";
+	format: "webp" | "jpeg" | "avif";
 	quality: number;
 	placeholder: boolean;
 };
@@ -33,7 +33,7 @@ export async function readImageSettings(): Promise<ImageSettings> {
 		smallMax: await settingInt("image.small_max", 720),
 		thumbSize: await settingInt("image.thumb_size", 200),
 		generate2x: await settingBool("image.generate_2x", true),
-		format: format === "jpeg" ? "jpeg" : "webp",
+		format: format === "jpeg" || format === "avif" ? format : "webp",
 		quality: Math.min(100, Math.max(1, await settingInt("image.quality", 85))),
 		placeholder: await settingBool("image.placeholder", true),
 	};
@@ -96,7 +96,7 @@ export async function generateVariants(opts: {
 }): Promise<VariantRow[]> {
 	const { source, stem, settings: s } = opts;
 	const { width, height } = await imageSize(source);
-	const ext = s.format === "jpeg" ? "jpg" : "webp";
+	const ext = s.format === "jpeg" ? "jpg" : s.format;
 	const rows: VariantRow[] = [];
 	for (const p of planVariants(width, height, s)) {
 		if (opts.only && !opts.only.includes(p.type)) continue;
@@ -115,7 +115,10 @@ export async function generateVariants(opts: {
 			img =
 				s.format === "jpeg"
 					? img.flatten({ background: "#ffffff" }).jpeg({ quality: s.quality, mozjpeg: true })
-					: img.webp({ quality: s.quality });
+					: s.format === "avif"
+						? // AVIF needs a lower quality number than WebP for similar fidelity; effort 4 keeps encoding bearable.
+							img.avif({ quality: Math.max(1, s.quality - 25), effort: 4 })
+						: img.webp({ quality: s.quality });
 			opts.onWrite?.(rel);
 			const info = await img.toFile(abs);
 			rows.push({ type: p.type, path: rel, width: info.width, height: info.height, filesize: info.size });

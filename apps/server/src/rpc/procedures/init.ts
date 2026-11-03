@@ -82,6 +82,10 @@ export const init = os.init.router({
 				gridColumnWidth: await int("layout.grid_column_width", 300),
 				gap: await int("layout.gap", 8),
 			},
+			imageSizes: {
+				smallMax: await int("image.small_max", 720),
+				thumbSize: await int("image.thumb_size", 200),
+			},
 			imageOverlayType: ImageOverlayType.catch("exif").parse(await str("layout.image_overlay", "exif")),
 			dateFormat: await str("site.date_format", "d MMM yyyy"),
 			loginRequired,

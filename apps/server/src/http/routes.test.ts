@@ -144,6 +144,8 @@ describe.skipIf(!enabled)("asset / upload / zip routes (dev database)", async ()
 		const versioned = await req(`/api/asset/${albumId}/${photoId}/original?v=1700000000`, { as: owner });
 		expect(versioned.status).toBe(200);
 		expect(versioned.headers.get("etag")).toBe(etag);
+		// Versioned urls never change content: cached long-term without revalidation.
+		expect(versioned.headers.get("cache-control")).toBe("private, max-age=31536000, immutable");
 		await versioned.arrayBuffer();
 	});
 

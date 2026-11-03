@@ -65,6 +65,14 @@ function etagMatches(header: string | undefined, etag: string): boolean {
 	return header.split(",").some((t) => t.trim().replace(/^W\//, "") === bare);
 }
 
+/**
+ * Versioned urls (`?v=<updated_at>`, bumped by rotate/reprocess) never change content, so browsers may keep
+ * them without revalidating. Unversioned urls are revalidated hourly. `private`: assets are access-checked.
+ */
+export function cacheControl(version: string | undefined): string {
+	return version && /^\d+$/.test(version) ? "private, max-age=31536000, immutable" : "private, max-age=3600";
+}
+
 const IS_BUN = Boolean((process.versions as Record<string, string | undefined>).bun);
 
 /**
@@ -134,7 +142,7 @@ async function serveAsset(c: Context<AppEnv>) {
 	const etag = `"${createHash("sha1").update(`${rel}:${st.mtimeMs}:${st.size}`).digest("hex").slice(0, 32)}"`;
 	const lastModified = new Date(Math.floor(st.mtimeMs / 1000) * 1000);
 	const headers = new Headers({
-		"Cache-Control": "private, max-age=3600",
+		"Cache-Control": cacheControl(c.req.query("v")),
 		ETag: etag,
 		"Last-Modified": lastModified.toUTCString(),
 		"X-Content-Type-Options": "nosniff",

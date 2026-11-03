@@ -1,4 +1,4 @@
-import type { SizeVariantType } from "@longan/shared";
+import type { ImageSizesConfig, SizeVariantType } from "@longan/shared";
 
 /** Asset version: `photos.updated_at` as epoch seconds (listing `updatedAts[i]`) or null when unknown. */
 export type AssetVersion = number | null | undefined;
@@ -45,8 +45,50 @@ export function srcsetFor(
 	return `${url(family)} 1x, ${url(`${family}2x`)} 2x`;
 }
 
+/** Aspect ratio (width / height) of a variant family: thumbs are centre-cropped squares, the rest keep the photo's. */
+export function familyRatio(family: VariantFamily, photoRatio: number): number {
+	return family === "thumb" || !(photoRatio > 0) ? 1 : photoRatio;
+}
+
+/**
+ * Width-descriptor srcset for a grid tile, e.g. `.../small 480w, .../small2x 960w`, so the browser picks by the
+ * tile's rendered size (paired with `sizes`) instead of only by screen density. Widths are the nominal ones from
+ * the `image.*` settings: a source smaller than that has a smaller rendition (and no 2x, which the server
+ * answers with the 1x file), so overstating its width only ever makes the browser settle for what exists.
+ */
+export function tileSrcset(
+	albumCtx: string,
+	photoId: string,
+	family: Exclude<VariantFamily, "medium">,
+	photoRatio: number,
+	sizes: ImageSizesConfig,
+	version?: AssetVersion,
+): string {
+	const url = (v: SizeVariantType) => assetUrl(albumCtx, photoId, v, false, version);
+	const r = familyRatio(family, photoRatio);
+	const longest = family === "thumb" ? sizes.thumbSize : sizes.smallMax;
+	const w = Math.max(1, Math.round(r >= 1 ? longest : longest * r));
+	return `${url(family)} ${w}w, ${url(`${family}2x`)} ${2 * w}w`;
+}
+
+/**
+ * CSS width an image of aspect `ratio` occupies in a box: covering it needs the wider of the box width and
+ * the height-matched width; containing uses the narrower. Used as the tile `sizes`.
+ */
+export function renderedWidth(
+	box: { width: number; height: number },
+	ratio: number,
+	fit: "cover" | "contain",
+): number {
+	const byHeight = box.height * ratio;
+	return Math.max(
+		1,
+		Math.round(fit === "cover" ? Math.max(box.width, byHeight) : Math.min(box.width, byHeight)),
+	);
+}
+
 /** Tile image family for a layout: square tiles use the centre-cropped thumbs, others the ratio-preserving smalls. */
-export function tileFamily(layout: string): VariantFamily {
+export function tileFamily(layout: string): "thumb" | "small" {
 	return layout === "square" ? "thumb" : "small";
 }
 

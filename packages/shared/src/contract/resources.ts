@@ -91,6 +91,15 @@ export const LayoutConfig = z.object({
 });
 export type LayoutConfig = z.infer<typeof LayoutConfig>;
 
+/** Nominal size-variant dimensions (`image.*` settings), for width descriptors in tile srcsets. */
+export const ImageSizesConfig = z.object({
+	/** Longest edge of `small` (`small2x` is twice that). */
+	smallMax: z.number().int(),
+	/** Edge of the square `thumb` (`thumb2x` is twice that). */
+	thumbSize: z.number().int(),
+});
+export type ImageSizesConfig = z.infer<typeof ImageSizesConfig>;
+
 /** Everything the UI needs at boot. Mirrors Lychee's Gallery::Init, trimmed. */
 export const InitConfig = z.object({
 	title: z.string(),
@@ -99,6 +108,7 @@ export const InitConfig = z.object({
 	theme: ThemePalette,
 	defaultLayout: PhotoLayout,
 	layout: LayoutConfig,
+	imageSizes: ImageSizesConfig,
 	imageOverlayType: ImageOverlayType,
 	dateFormat: z.string(),
 	loginRequired: z.boolean(),

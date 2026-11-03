@@ -293,9 +293,9 @@ export const DEFAULT_SETTINGS: Array<{
 	{
 		key: "image.format",
 		value: "webp",
-		type: "enum:webp|jpeg",
+		type: "enum:webp|jpeg|avif",
 		category: "Image processing",
-		description: "Format of generated variants",
+		description: "Format of generated variants (avif: ~20-30% smaller, much slower to encode)",
 	},
 	{
 		key: "image.quality",

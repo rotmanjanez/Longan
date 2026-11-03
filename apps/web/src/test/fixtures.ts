@@ -35,6 +35,7 @@ export const initData: InitData = {
 			gridColumnWidth: 200,
 			gap: 8,
 		},
+		imageSizes: { smallMax: 720, thumbSize: 200 },
 		imageOverlayType: "none",
 		dateFormat: "",
 		loginRequired: false,
