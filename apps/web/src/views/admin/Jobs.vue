@@ -2,7 +2,7 @@
 	<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
 		<div class="flex flex-wrap items-center gap-2">
 			<h1 class="text-lg font-bold text-highlighted flex-1">{{ t("nav.admin_jobs") }}</h1>
-			<USelect v-model="status" size="sm" class="w-40" :items="statusItems" :aria-label="t('jobs.filter')" />
+			<USelect v-model="status" size="sm" class="w-36" :items="statusItems" :aria-label="t('jobs.filter')" />
 			<UButton
 				icon="lucide:refresh-cw"
 				size="sm"
@@ -18,34 +18,35 @@
 			<h2 id="reprocess-h" class="font-semibold text-highlighted">{{ t("jobs.reprocess.title") }}</h2>
 			<p class="text-sm text-muted">{{ t("jobs.reprocess.hint") }}</p>
 			<form class="flex flex-col gap-3" @submit.prevent="submitReprocess">
-				<URadioGroup
-					v-model="scope"
-					orientation="horizontal"
-					:legend="t('jobs.reprocess.scope')"
-					:items="[
-						{ value: 'all', label: t('jobs.reprocess.all') },
-						{ value: 'album', label: t('jobs.reprocess.album') },
-					]"
-				/>
+				<div class="grid gap-3 sm:grid-cols-2">
+					<UFormField :label="t('jobs.reprocess.scope')">
+						<USelect
+							v-model="scope"
+							class="w-full"
+							:items="[
+								{ value: 'all', label: t('jobs.reprocess.all') },
+								{ value: 'album', label: t('jobs.reprocess.album') },
+							]"
+						/>
+					</UFormField>
+					<UFormField :label="t('jobs.reprocess.variants')">
+						<USelectMenu
+							v-model="variants"
+							class="w-full"
+							multiple
+							value-key="value"
+							:search-input="false"
+							:placeholder="t('jobs.reprocess.variants_all')"
+							:items="REPROCESS_VARIANTS.map((v) => ({ value: v, label: t(`variants.${v}`) }))"
+						/>
+					</UFormField>
+				</div>
 				<AlbumPicker
 					v-if="scope === 'album'"
 					v-model="albumId"
 					:allow-root="false"
 					:label="t('jobs.reprocess.pick_album')"
 				/>
-				<fieldset class="flex flex-col gap-1.5">
-					<legend class="text-sm font-medium text-default mb-1">{{ t("jobs.reprocess.variants") }}</legend>
-					<div class="flex flex-wrap gap-x-4 gap-y-1">
-						<UCheckbox
-							v-for="v in REPROCESS_VARIANTS"
-							:key="v"
-							:label="t(`variants.${v}`)"
-							:model-value="variants.includes(v)"
-							@update:model-value="(on: boolean | 'indeterminate') => toggleVariant(v, on === true)"
-						/>
-					</div>
-					<p class="text-xs text-dimmed">{{ t("jobs.reprocess.variants_hint") }}</p>
-				</fieldset>
 				<div class="flex justify-end">
 					<UButton
 						type="submit"
@@ -89,7 +90,7 @@
 						<td class="px-3 py-2 text-end tabular-nums">{{ j.attempts }}</td>
 						<td class="px-3 py-2 text-muted whitespace-nowrap" :title="t('jobs.run_at', { at: fmt(j.runAt) })">{{ fmt(j.updatedAt) }}</td>
 						<td class="px-3 py-2 max-w-md">
-							<span v-if="j.lastError" class="block truncate text-xs text-error font-mono" :title="j.lastError">{{ j.lastError }}</span>
+							<span v-if="j.lastError" class="block text-xs text-error font-mono break-all line-clamp-4">{{ j.lastError }}</span>
 						</td>
 						<td class="px-3 py-2 text-end">
 							<UButton
@@ -166,9 +167,6 @@ const retry = useApiAction((id: number) => client.admin.retryJob({ id }), {
 const scope = ref<"all" | "album">("all");
 const albumId = ref<string | null>(null);
 const variants = ref<ReprocessVariant[]>([]);
-function toggleVariant(v: ReprocessVariant, on: boolean) {
-	variants.value = on ? [...variants.value, v] : variants.value.filter((x) => x !== v);
-}
 
 const reprocess = useApiAction(
 	(v: { albumId: string | null; variants: ReprocessVariant[] }) =>

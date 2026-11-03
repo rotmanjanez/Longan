@@ -3,7 +3,7 @@
 		<template #body>
 			<div class="flex flex-col gap-4">
 				<div
-					class="relative flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors"
+					class="relative flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 pointer-coarse:py-6 text-center transition-colors"
 					:class="over ? 'border-primary bg-primary/10' : 'border-default'"
 					data-upload-dropzone
 					@dragenter.prevent.stop="over = true"
@@ -12,7 +12,7 @@
 					@drop.prevent.stop="onDrop"
 				>
 					<UIcon name="lucide:cloud-upload" class="size-10 text-dimmed" />
-					<p class="text-sm text-muted">{{ t("upload.drop_here") }}</p>
+					<p class="text-sm text-muted pointer-coarse:hidden">{{ t("upload.drop_here") }}</p>
 					<UButton color="neutral" variant="outline" icon="lucide:folder-open" @click="input?.click()">
 						{{ t("upload.browse") }}
 					</UButton>
@@ -31,8 +31,8 @@
 				</div>
 
 				<div v-if="upload.items.length" class="flex flex-col gap-2">
-					<div class="flex items-center gap-2 text-sm">
-						<span class="flex-1 text-muted" role="status" aria-live="polite">{{ summary }}</span>
+					<div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+						<span class="flex-1 basis-full sm:basis-auto text-muted" role="status" aria-live="polite">{{ summary }}</span>
 						<UButton v-if="retryableCount" size="xs" color="neutral" variant="ghost" icon="lucide:rotate-cw" @click="upload.retryFailed()">
 							{{ t("upload.retry_failed") }}
 						</UButton>
@@ -44,7 +44,7 @@
 						</UButton>
 					</div>
 					<UProgress :model-value="Math.round(upload.progress * 100)" size="sm" :color="upload.failed.length ? 'warning' : 'primary'" />
-					<ul class="max-h-80 overflow-y-auto divide-y divide-default rounded-md ring ring-default" :aria-label="t('upload.queue')">
+					<ul class="sm:max-h-80 sm:overflow-y-auto divide-y divide-default rounded-md ring ring-default" :aria-label="t('upload.queue')">
 						<li v-for="item in upload.items" :key="item.id" class="flex items-center gap-3 px-3 py-2" :data-upload-item="item.status">
 							<UIcon :name="STATUS_ICONS[item.status]" class="size-5 shrink-0" :class="[STATUS_COLORS[item.status], item.status === 'uploading' ? 'animate-pulse' : '']" />
 							<div class="min-w-0 flex-1">
@@ -57,7 +57,7 @@
 							<UButton
 								v-if="(item.status === 'error' || item.status === 'cancelled') && item.retryable !== false"
 								icon="lucide:rotate-cw"
-								size="xs"
+								size="sm"
 								color="neutral"
 								variant="ghost"
 								:aria-label="t('upload.retry', { name: item.file.name })"
@@ -66,7 +66,7 @@
 							<UButton
 								v-if="item.status === 'queued' || item.status === 'uploading'"
 								icon="lucide:x"
-								size="xs"
+								size="sm"
 								color="neutral"
 								variant="ghost"
 								:aria-label="t('upload.cancel', { name: item.file.name })"
@@ -88,17 +88,12 @@
 				</div>
 			</div>
 		</template>
-		<template #footer>
-			<div class="flex justify-end w-full">
-				<UButton color="neutral" variant="ghost" @click="close">{{ t("common.close") }}</UButton>
-			</div>
-		</template>
 	</UModal>
 
 	<button
 		v-if="!open && upload.items.length && (upload.isActive || upload.failed.length)"
 		type="button"
-		class="fixed bottom-4 start-4 z-40 flex items-center gap-2 rounded-full bg-elevated ring ring-default px-4 py-2 shadow-lg text-sm hover:bg-accented"
+		class="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] start-4 z-40 flex items-center gap-2 rounded-full bg-elevated ring ring-default px-4 py-2 shadow-lg text-sm hover:bg-accented"
 		data-upload-pill
 		@click="ui.openDialog('upload', { albumId: upload.targetAlbumId })"
 	>

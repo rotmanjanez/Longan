@@ -1,22 +1,26 @@
 <template>
 	<a
 		:href="href"
-		class="group relative block aspect-square rounded-lg outline-offset-2 focus-visible:outline-2 focus-visible:outline-primary"
+		class="group [-webkit-touch-callout:none] relative block aspect-square rounded-lg outline-offset-2 focus-visible:outline-2 focus-visible:outline-primary"
 		:class="{ 'outline-2 outline-primary': selected }"
 		:aria-label="ariaLabel"
 		:aria-selected="selected || undefined"
 		:data-album-id="album.id"
-		@click="emit('activate', $event)"
+		@click="onClick"
+		@pointerdown="press.onPointerdown"
+		@contextmenu="press.onContextmenu"
 	>
 		<template v-if="album.coverId">
-			<!-- Two decorative copies fan out on hover: a small stack of prints (Lychee DESIGN.md). -->
+			<!-- Two decorative copies fan out on hover: a small stack of prints (Lychee DESIGN.md). Same src/srcset as
+			     the cover, so all three share one download. -->
 			<img
 				v-for="cls in PRINTS"
 				:key="cls"
 				:src="thumb"
+				:srcset="srcset"
 				alt=""
 				aria-hidden="true"
-				loading="lazy"
+				:loading="eager ? 'eager' : 'lazy'"
 				decoding="async"
 				draggable="false"
 				class="album-print absolute inset-0 size-full object-cover rounded-lg shadow-md shadow-black/25"
@@ -27,7 +31,8 @@
 				:src="thumb"
 				:srcset="srcset"
 				:alt="title"
-				loading="lazy"
+				:loading="eager ? 'eager' : 'lazy'"
+				:fetchpriority="eager ? 'high' : undefined"
 				decoding="async"
 				draggable="false"
 				class="album-print absolute inset-0 size-full object-cover rounded-lg shadow-md shadow-black/25"
@@ -85,6 +90,7 @@ import type { AlbumTile } from "@longan/shared";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { assetUrl, srcsetFor } from "@/api/assets.ts";
+import { useLongPress } from "@/composables/useLongPress.ts";
 import { SMART_ALBUM_ICONS } from "@/lib/albums.ts";
 import TileBadge from "./TileBadge.vue";
 
@@ -99,8 +105,19 @@ const props = defineProps<{
 	selected?: boolean;
 	/** Blur the cover (NSFW album without consent). */
 	blurred?: boolean;
+	/** Within the first screenful: load the cover immediately at high priority. */
+	eager?: boolean;
 }>();
-const emit = defineEmits<{ activate: [event: MouseEvent] }>();
+const emit = defineEmits<{ activate: [event: MouseEvent]; longpress: [] }>();
+
+const press = useLongPress(() => emit("longpress"));
+function onClick(e: MouseEvent) {
+	if (press.consumeClick()) {
+		e.preventDefault();
+		return;
+	}
+	emit("activate", e);
+}
 const { t, te } = useI18n();
 
 const title = computed(() => {

@@ -2,7 +2,7 @@
 	<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-4">
 		<div class="flex flex-wrap items-center gap-2">
 			<h1 class="text-lg font-bold text-highlighted flex-1">{{ t("nav.tags") }}</h1>
-			<UInput v-model="filter" icon="lucide:search" size="sm" :placeholder="t('tags.filter')" :aria-label="t('tags.filter')" />
+			<UInput v-model="filter" icon="lucide:search" class="max-sm:w-full" :placeholder="t('tags.filter')" :aria-label="t('tags.filter')" />
 		</div>
 		<div v-if="tags.isPending.value" class="flex justify-center py-16 text-muted" role="status">
 			<UIcon name="lucide:loader-circle" class="size-6 animate-spin" />

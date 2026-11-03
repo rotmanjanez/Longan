@@ -18,7 +18,7 @@
 				:aria-label="title"
 			/>
 			<div v-else class="relative max-w-full max-h-full">
-				<img :src="poster" :alt="title" class="max-w-full max-h-[80vh] object-contain" />
+				<img :src="poster" :alt="title" class="max-w-full max-h-[80dvh] object-contain" />
 				<p v-if="detail" class="absolute inset-x-0 bottom-2 text-center text-sm text-white/80">
 					{{ t("lightbox.video_unavailable") }}
 				</p>
@@ -39,6 +39,7 @@
 				:sizes="currentSrcset ? sizes : undefined"
 				:alt="title"
 				draggable="false"
+				fetchpriority="high"
 				decoding="async"
 				class="absolute object-contain transition-opacity duration-200"
 				:class="loaded ? 'opacity-100' : 'opacity-0'"
@@ -60,6 +61,7 @@
 
 <script setup lang="ts">
 import type { PhotoDetail } from "@longan/shared";
+import { useEventListener } from "@vueuse/core";
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { imageSources, videoPoster, videoSource } from "./photoSources.ts";
@@ -95,6 +97,39 @@ const zoom = usePanZoom(containerRef, natural, {
 	enabled: () => !props.isVideo,
 	onSwipe: (dir) => emit("swipe", dir),
 });
+
+/**
+ * Videos have no pan/zoom, but still swipe to the neighbours. Touch events (not pointer events, which the
+ * native player cancels) and never from the player's control bar at the bottom of the video.
+ */
+let videoSwipe: { x: number; y: number } | null = null;
+useEventListener(
+	containerRef,
+	"touchstart",
+	(e: TouchEvent) => {
+		videoSwipe = null;
+		const p = e.touches[0];
+		if (!props.isVideo || e.touches.length !== 1 || !p) return;
+		const video = (e.target as Element | null)?.closest?.("video");
+		if (video && video.getBoundingClientRect().bottom - p.clientY < 64) return;
+		videoSwipe = { x: p.clientX, y: p.clientY };
+	},
+	{ passive: true },
+);
+useEventListener(
+	containerRef,
+	"touchend",
+	(e: TouchEvent) => {
+		const s = videoSwipe;
+		const p = e.changedTouches[0];
+		videoSwipe = null;
+		if (!s || !p) return;
+		const dx = p.clientX - s.x;
+		const dy = p.clientY - s.y;
+		if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(dy)) emit("swipe", dx < 0 ? "next" : "prev");
+	},
+	{ passive: true },
+);
 watch(zoom.zoomed, (z) => emit("zoomed", z));
 
 const sources = computed(() => imageSources(props.albumCtx, props.photoId, props.detail));

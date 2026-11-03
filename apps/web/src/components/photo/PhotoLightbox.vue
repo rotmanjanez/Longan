@@ -9,7 +9,7 @@
 		data-lightbox
 		@mousemove="poke"
 	>
-		<div class="relative flex-1 min-w-0">
+		<div ref="stageBoxRef" class="relative flex-1 min-w-0">
 			<PhotoStage
 				:key="photoId"
 				ref="stageRef"
@@ -26,7 +26,7 @@
 			/>
 
 			<header
-				class="absolute top-0 inset-x-0 z-10 flex items-center gap-1 h-14 px-2 bg-linear-to-b from-black/70 to-transparent transition-opacity duration-300"
+				class="absolute top-0 inset-x-0 z-10 flex items-center gap-1 h-[calc(3.5rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] px-[max(0.5rem,env(safe-area-inset-left))] bg-linear-to-b from-black/70 to-transparent transition-opacity duration-300"
 				:class="chromeVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'"
 			>
 				<UButton icon="lucide:x" color="neutral" variant="ghost" size="lg" :aria-label="t('common.close')" @click="emit('close')" />
@@ -38,7 +38,7 @@
 					</p>
 				</div>
 				<div class="flex items-center">
-					<UTooltip v-if="ids.length > 1" :text="t(slideshow ? 'lightbox.slideshow_stop' : 'lightbox.slideshow_start')">
+					<UTooltip v-if="ids.length > 1 && wide" :text="t(slideshow ? 'lightbox.slideshow_stop' : 'lightbox.slideshow_start')">
 						<UButton
 							:icon="slideshow ? 'lucide:pause' : 'lucide:play'"
 							color="neutral"
@@ -48,7 +48,7 @@
 							@click="toggleSlideshow"
 						/>
 					</UTooltip>
-					<UTooltip v-if="detail?.rights.canEdit" :text="t(detail.isHighlighted ? 'lightbox.unhighlight' : 'lightbox.highlight')">
+					<UTooltip v-if="detail?.rights.canEdit && wide" :text="t(detail.isHighlighted ? 'lightbox.unhighlight' : 'lightbox.highlight')">
 						<UButton
 							icon="lucide:star"
 							color="neutral"
@@ -60,7 +60,7 @@
 							@click="toggleHighlight"
 						/>
 					</UTooltip>
-					<UTooltip v-if="detail?.rights.canDownload" :text="t('lightbox.download')">
+					<UTooltip v-if="detail?.rights.canDownload && wide" :text="t('lightbox.download')">
 						<UButton
 							icon="lucide:download"
 							color="neutral"
@@ -83,7 +83,7 @@
 							@click="detailsOpen = !detailsOpen"
 						/>
 					</UTooltip>
-					<UTooltip v-if="fullscreen.isSupported.value" :text="t('lightbox.fullscreen')">
+					<UTooltip v-if="fullscreen.isSupported.value && wide" :text="t('lightbox.fullscreen')">
 						<UButton
 							:icon="fullscreen.isFullscreen.value ? 'lucide:minimize' : 'lucide:maximize'"
 							color="neutral"
@@ -102,7 +102,7 @@
 			<template v-if="chromeVisible && !zoomed">
 				<UButton
 					v-if="prevId"
-					class="absolute start-2 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/30 hover:bg-black/60"
+					class="pointer-coarse:hidden absolute start-2 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/30 hover:bg-black/60"
 					icon="lucide:chevron-left"
 					color="neutral"
 					variant="ghost"
@@ -112,7 +112,7 @@
 				/>
 				<UButton
 					v-if="nextId"
-					class="absolute end-2 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/30 hover:bg-black/60"
+					class="pointer-coarse:hidden absolute end-2 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/30 hover:bg-black/60"
 					icon="lucide:chevron-right"
 					color="neutral"
 					variant="ghost"
@@ -121,17 +121,18 @@
 					@click="goNext"
 				/>
 			</template>
-			<PhotoOverlay v-if="!zoomed && !slideshow" :type="config.imageOverlayType" :title="title" :detail="detail" />
+			<PhotoOverlay v-if="!zoomed && !slideshow && !isVideo" :type="config.imageOverlayType" :title="title" :detail="detail" />
 		</div>
 
 		<aside
 			v-if="detailsOpen && detail"
-			class="absolute inset-0 z-20 sm:static sm:w-96 shrink-0 overflow-y-auto bg-neutral-900 text-default border-s border-white/10"
+			class="absolute inset-0 z-20 sm:static sm:w-96 shrink-0 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)] bg-neutral-900 text-default border-s border-white/10"
 			:aria-label="t('lightbox.details_title')"
 		>
-			<div class="sticky top-0 z-10 flex items-center h-14 px-4 bg-neutral-900/95 backdrop-blur">
+			<div class="sticky top-0 z-10 flex items-center h-[calc(3.5rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] sm:h-14 sm:pt-0 px-4 bg-neutral-900/95 backdrop-blur">
 				<h2 class="flex-1 font-bold text-highlighted">{{ t("lightbox.details_title") }}</h2>
-				<UButton icon="lucide:x" color="neutral" variant="ghost" :aria-label="t('common.close')" @click="detailsOpen = false" />
+				<!-- Phones only: the panel covers the photo there; on wider screens the info toggle closes it. -->
+				<UButton class="sm:hidden" icon="lucide:x" color="neutral" variant="ghost" :aria-label="t('common.close')" @click="detailsOpen = false" />
 			</div>
 			<PhotoDetailsPanel :album-ctx="albumCtx" :detail="detail" />
 		</aside>
@@ -142,14 +143,22 @@
 import type { PhotoDetail } from "@longan/shared";
 import type { DropdownMenuItem } from "@nuxt/ui";
 import { defineShortcuts, useToast } from "@nuxt/ui/composables";
-import { useClipboard, useFullscreen, useLocalStorage } from "@vueuse/core";
-import { computed, onBeforeUnmount, ref, shallowRef, watch } from "vue";
+import {
+	useClipboard,
+	useElementSize,
+	useFullscreen,
+	useLocalStorage,
+	useMediaQuery,
+	useScrollLock,
+} from "@vueuse/core";
+import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { assetUrl, versionOf } from "@/api/assets.ts";
 import type { LightboxProps } from "@/components/gallery/lightbox.ts";
 import { useInit } from "@/composables/useInit.ts";
 import { usePhotoDetails } from "@/composables/usePhotoDetails.ts";
 import { canMovePhotoFrom } from "@/lib/albums.ts";
+import { fitRect } from "@/lib/panZoom.ts";
 import { useUiStore } from "@/stores/ui.ts";
 import { onPhotosRemoved } from "./events.ts";
 import PhotoDetailsPanel from "./PhotoDetailsPanel.vue";
@@ -169,7 +178,22 @@ const actions = usePhotoActions();
 const rootRef = ref<HTMLElement | null>(null);
 const stageRef = ref<InstanceType<typeof PhotoStage> | null>(null);
 const zoomed = ref(false);
-const detailsOpen = useLocalStorage("longan-lightbox-details", false);
+const wide = useMediaQuery("(min-width: 640px)");
+/** Remembered on wide screens (side panel); on phones the panel covers the photo, so it starts closed. */
+const detailsStored = useLocalStorage("longan-lightbox-details", false);
+const detailsPhone = ref(false);
+const detailsOpen = computed({
+	get: () => (wide.value ? detailsStored.value : detailsPhone.value),
+	set: (v: boolean) => {
+		if (wide.value) detailsStored.value = v;
+		else detailsPhone.value = v;
+	},
+});
+
+// The page underneath must not scroll (touch drags on the header/edges would otherwise move it).
+const scrollLock = useScrollLock(typeof document !== "undefined" ? document.body : null);
+onMounted(() => (scrollLock.value = true));
+onBeforeUnmount(() => (scrollLock.value = false));
 
 const index = computed(() => props.ids.indexOf(props.photoId));
 const prevId = computed(() => (index.value > 0 ? (props.ids[index.value - 1] ?? null) : null));
@@ -276,22 +300,32 @@ onBeforeUnmount(() => {
 });
 
 // --- preload neighbours ------------------------------------------------------------------------------
+// The neighbour's <img> will get `sizes` = its fitted width on this stage (PhotoStage); preloading with the
+// same value makes the browser pick the same srcset candidate, so the preload is the file actually shown.
+const stageBoxRef = ref<HTMLElement | null>(null);
+const stageSize = useElementSize(stageBoxRef);
 const preloaded = new Set<string>();
 watch(
-	[neighbours, details],
-	([ids, map]) => {
-		if (typeof Image === "undefined") return;
+	[neighbours, details, stageSize.width, stageSize.height],
+	([ids, map, stageW, stageH]) => {
+		if (typeof Image === "undefined" || stageW <= 0 || stageH <= 0) return;
 		for (const id of ids) {
 			const i = props.ids.indexOf(id);
-			if ((map.get(id)?.type ?? props.listing?.types[i]) === "video") continue;
-			const s = imageSources(props.albumCtx, id, map.get(id));
-			const key = `${s.src}|${s.srcset}`;
+			const d = map.get(id);
+			if ((d?.type ?? props.listing?.types[i]) === "video") continue;
+			const s = imageSources(props.albumCtx, id, d);
+			// Width descriptors only come with details (density descriptors otherwise, which ignore `sizes`).
+			const sizes =
+				s.srcset && d && d.width > 0 && d.height > 0
+					? `${Math.max(1, Math.round(fitRect(d, { width: stageW, height: stageH }).width))}px`
+					: "";
+			const key = `${s.src}|${s.srcset}|${sizes}`;
 			if (preloaded.has(key)) continue;
 			preloaded.add(key);
 			const img = new Image();
 			img.decoding = "async";
 			if (s.srcset) {
-				img.sizes = `${typeof window !== "undefined" ? window.innerWidth : 1024}px`;
+				if (sizes) img.sizes = sizes;
 				img.srcset = s.srcset;
 			}
 			img.src = s.src;
@@ -317,6 +351,31 @@ async function copyLink() {
 const menuItems = computed<DropdownMenuItem[][]>(() => {
 	const p = detail.value;
 	const groups: DropdownMenuItem[][] = [];
+	// Phones: header buttons that don't fit move here (hidden in the header with max-sm:hidden).
+	if (!wide.value) {
+		const view: DropdownMenuItem[] = [];
+		if (props.ids.length > 1)
+			view.push({
+				label: t(slideshow.value ? "lightbox.slideshow_stop" : "lightbox.slideshow_start"),
+				icon: slideshow.value ? "lucide:pause" : "lucide:play",
+				onSelect: toggleSlideshow,
+			});
+		if (p?.rights.canEdit)
+			view.push({
+				label: t(p.isHighlighted ? "lightbox.unhighlight" : "lightbox.highlight"),
+				icon: "lucide:star",
+				onSelect: toggleHighlight,
+			});
+		if (p?.rights.canDownload)
+			view.push({
+				label: t("lightbox.download"),
+				icon: "lucide:download",
+				href: assetUrl(props.albumCtx, props.photoId, "original", true, versionOf(p.updatedAt)),
+				download: true,
+				external: true,
+			});
+		if (view.length) groups.push(view);
+	}
 	if (p?.rights.canEdit) {
 		const edit: DropdownMenuItem[] = [
 			{

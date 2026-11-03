@@ -1,4 +1,3 @@
-import type { PhotoLayout } from "@longan/shared";
 import { defineStore } from "pinia";
 import { computed, reactive, ref, watch } from "vue";
 
@@ -34,7 +33,6 @@ export type DialogContext = {
 };
 
 const DARK_KEY = "longan-dark-mode";
-const LAYOUT_KEY = "longan-layout";
 const NSFW_KEY = "longan-nsfw-consent";
 
 function readStorage(storage: Storage | undefined, key: string): string | null {
@@ -72,12 +70,6 @@ export const useUiStore = defineStore("ui", () => {
 		darkOverride.value = isDark.value ? "light" : "dark";
 	}
 	watch(darkOverride, (v) => writeStorage(local, DARK_KEY, v));
-
-	// Photo layout chosen in the album header; null = album/server default.
-	const layoutOverride = ref<PhotoLayout | null>(
-		(readStorage(local, LAYOUT_KEY) as PhotoLayout | null) ?? null,
-	);
-	watch(layoutOverride, (v) => writeStorage(local, LAYOUT_KEY, v));
 
 	const leftMenuOpen = ref(false);
 
@@ -126,7 +118,6 @@ export const useUiStore = defineStore("ui", () => {
 		darkOverride,
 		isDark,
 		toggleDark,
-		layoutOverride,
 		leftMenuOpen,
 		pageTitle,
 		dialogs,

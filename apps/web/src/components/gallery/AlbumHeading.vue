@@ -1,9 +1,8 @@
 <template>
 	<div class="flex flex-col gap-3">
-		<UBreadcrumb :items="crumbs" :ui="{ list: 'flex-wrap' }" />
-		<div class="flex flex-wrap items-start gap-2">
+		<UBreadcrumb v-if="crumbs.length" :items="crumbs" :ui="{ list: 'flex-wrap' }" />
+		<div class="flex items-center gap-2">
 			<div class="flex-1 min-w-0">
-				<h1 class="text-lg sm:text-xl font-bold text-highlighted break-words">{{ title }}</h1>
 				<p class="text-sm text-muted">
 					<span>{{ t("gallery.photo_count", head.numPhotos) }}</span>
 					<template v-if="head.numChildren > 0">
@@ -21,30 +20,20 @@
 				</p>
 			</div>
 			<div class="flex items-center gap-1" data-no-drag-select>
-				<LayoutSwitcher v-if="head.numPhotos > 0" :model-value="layout" @update:model-value="emit('update:layout', $event)" />
-				<USeparator v-if="actions.length" orientation="vertical" class="h-6 mx-1" />
-				<UTooltip v-for="a in actions" :key="a.name" :text="t(`gallery.actions.${a.name}`)">
-					<UButton
-						:icon="a.icon"
-						color="neutral"
-						variant="ghost"
-						size="sm"
-						:aria-label="t(`gallery.actions.${a.name}`)"
-						@click="emit('action', a.name)"
-					/>
-				</UTooltip>
-				<UTooltip v-if="head.rights.canDownload && head.numPhotos > 0 && !isSmart" :text="t('gallery.actions.download')">
-					<UButton
-						icon="lucide:download"
-						color="neutral"
-						variant="ghost"
-						size="sm"
-						:href="zipUrl({ albums: [head.id] })"
-						download
-						external
-						:aria-label="t('gallery.actions.download')"
-					/>
-				</UTooltip>
+				<UButton
+					v-if="canUpload"
+					icon="lucide:upload"
+					color="neutral"
+					variant="ghost"
+					size="sm"
+					:aria-label="t('gallery.actions.upload')"
+					@click="emit('action', 'upload')"
+				>
+					<span class="hidden sm:inline">{{ t("gallery.actions.upload") }}</span>
+				</UButton>
+				<UDropdownMenu v-if="menu.length" :items="menu" :content="{ align: 'end' }">
+					<UButton icon="lucide:ellipsis" color="neutral" variant="ghost" size="sm" :aria-label="t('gallery.actions.more')" />
+				</UDropdownMenu>
 			</div>
 		</div>
 		<p v-if="description" class="max-w-3xl text-sm text-toned whitespace-pre-line break-words">{{ description }}</p>
@@ -57,36 +46,31 @@
 </template>
 
 <script setup lang="ts">
-import type { AlbumHead, PhotoLayout } from "@longan/shared";
-import type { BreadcrumbItem } from "@nuxt/ui";
+import type { AlbumHead } from "@longan/shared";
+import type { BreadcrumbItem, DropdownMenuItem } from "@nuxt/ui";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { zipUrl } from "@/api/assets.ts";
 import { useInit } from "@/composables/useInit.ts";
 import { plainText } from "@/lib/albums.ts";
-import LayoutSwitcher from "./LayoutSwitcher.vue";
 import type { AlbumAction } from "./selectionActions.ts";
 
-const props = defineProps<{ head: AlbumHead; layout: PhotoLayout }>();
-const emit = defineEmits<{ "update:layout": [value: PhotoLayout]; action: [name: AlbumAction] }>();
-const { t, te, d } = useI18n();
+/** Meta line, actions, description and parent links of an album. Its title is shown in the app header. */
+const props = defineProps<{ head: AlbumHead }>();
+const emit = defineEmits<{ action: [name: AlbumAction] }>();
+const { t, d } = useI18n();
 const { user } = useInit();
 
 const isSmart = computed(() => props.head.kind === "smart");
 const isOwn = computed(() => user.value !== null && user.value.id === props.head.ownerId);
-const title = computed(() => {
-	const key = `gallery.smart.${props.head.id}`;
-	return isSmart.value && te(key) ? t(key) : props.head.title;
-});
 const description = computed(() => plainText(props.head.description));
 
-const crumbs = computed<BreadcrumbItem[]>(() => [
-	{ label: t("nav.gallery"), icon: "lucide:images", to: "/" },
-	...props.head.breadcrumbs
+/** Parent albums only, and only those the viewer can open (the server stops at the first one they cannot). */
+const crumbs = computed<BreadcrumbItem[]>(() =>
+	props.head.breadcrumbs
 		.filter((b) => b.id !== props.head.id)
 		.map((b) => ({ label: b.title, to: { name: "album", params: { albumId: b.id } } })),
-	{ label: title.value },
-]);
+);
 
 const dateRange = computed(() => {
 	const { minTakenAt, maxTakenAt } = props.head;
@@ -96,14 +80,33 @@ const dateRange = computed(() => {
 	return a === b ? a : `${a} – ${b}`;
 });
 
-const actions = computed(() => {
+const canUpload = computed(() => props.head.rights.canUpload && props.head.kind === "album");
+
+/** Everything but upload lives in one overflow menu: labelled rows work on touch and keep the header narrow. */
+const menu = computed<DropdownMenuItem[][]>(() => {
 	const r = props.head.rights;
 	const real = props.head.kind === "album";
-	const list: { name: AlbumAction; icon: string }[] = [];
-	if (r.canUpload && real) list.push({ name: "upload", icon: "lucide:upload" });
-	if (r.canEdit && real) list.push({ name: "createAlbum", icon: "lucide:folder-plus" });
-	if (r.canShare && !isSmart.value) list.push({ name: "share", icon: "lucide:share-2" });
-	if (r.canEdit && !isSmart.value) list.push({ name: "albumEdit", icon: "lucide:settings" });
-	return list;
+	const act = (name: AlbumAction, icon: string, extra: Partial<DropdownMenuItem> = {}): DropdownMenuItem => ({
+		label: t(`gallery.actions.${name}`),
+		icon,
+		onSelect: () => emit("action", name),
+		...extra,
+	});
+	const main: DropdownMenuItem[] = [];
+	if (r.canEdit && real) main.push(act("createAlbum", "lucide:folder-plus"));
+	if (r.canShare && !isSmart.value) main.push(act("share", "lucide:share-2"));
+	if (r.canDownload && props.head.numPhotos > 0 && !isSmart.value)
+		main.push({
+			label: t("gallery.actions.download"),
+			icon: "lucide:download",
+			href: zipUrl({ albums: [props.head.id] }),
+			download: true,
+			external: true,
+		});
+	if (r.canEdit && !isSmart.value) main.push(act("albumEdit", "lucide:settings"));
+	const manage: DropdownMenuItem[] = [];
+	if (r.canMove && real) manage.push(act("move", "lucide:folder-input"));
+	if (r.canDelete && !isSmart.value) manage.push(act("delete", "lucide:trash-2", { color: "error" }));
+	return [main, manage].filter((g) => g.length > 0);
 });
 </script>

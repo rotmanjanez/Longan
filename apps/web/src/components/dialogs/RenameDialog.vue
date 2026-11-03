@@ -1,5 +1,5 @@
 <template>
-	<UModal v-model:open="open" :title="t(isAlbum ? 'dialogs.rename.title_album' : 'dialogs.rename.title_photo', count)">
+	<UModal v-model:open="open" :close="false" :title="t(isAlbum ? 'dialogs.rename.title_album' : 'dialogs.rename.title_photo', count)">
 		<template #body>
 			<form id="rename-form" @submit.prevent="submit">
 				<UFormField :label="t('dialogs.fields.title')" :hint="count > 1 ? t('dialogs.rename.many', count) : undefined">

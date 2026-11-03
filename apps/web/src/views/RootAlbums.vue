@@ -18,6 +18,7 @@
 					icon="lucide:folder-plus"
 					color="neutral"
 					variant="ghost"
+					:aria-label="t('gallery.actions.new_album')"
 					@click="ui.openDialog('createAlbum', { albumId: null })"
 				>
 					<span class="hidden sm:inline">{{ t("gallery.actions.new_album") }}</span>
@@ -27,6 +28,7 @@
 					icon="lucide:upload"
 					color="neutral"
 					variant="ghost"
+					:aria-label="t('gallery.actions.upload')"
 					@click="ui.openDialog('upload', { albumId: null })"
 				>
 					<span class="hidden sm:inline">{{ t("gallery.actions.upload") }}</span>

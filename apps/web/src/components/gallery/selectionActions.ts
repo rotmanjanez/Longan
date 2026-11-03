@@ -15,4 +15,4 @@ export function actionDialog(name: SelectionAction): Exclude<SelectionAction, "h
 }
 
 /** Album-level actions in the album heading; each maps to the ui store dialog of the same name. */
-export type AlbumAction = "upload" | "createAlbum" | "albumEdit" | "share";
+export type AlbumAction = "upload" | "createAlbum" | "albumEdit" | "share" | "move" | "delete";

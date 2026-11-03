@@ -1,5 +1,5 @@
 <template>
-	<UModal v-model:open="open" :title="t('dialogs.copy.title', ctx.photoIds.length)">
+	<UModal v-model:open="open" :close="false" :title="t('dialogs.copy.title', ctx.photoIds.length)">
 		<template #body>
 			<form id="copy-form" class="flex flex-col gap-3" @submit.prevent="submit">
 				<p class="text-sm text-muted">{{ t("dialogs.copy.hint") }}</p>

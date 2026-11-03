@@ -30,7 +30,7 @@
 				:actions="[{ label: t('nav.gallery'), icon: 'lucide:images', color: 'neutral', variant: 'outline', to: '/' }]"
 			/>
 			<template v-else-if="headData">
-				<AlbumHeading :head="headData" :layout="layoutMode" @update:layout="ui.layoutOverride = $event" @action="onAlbumAction" />
+				<AlbumHeading :head="headData" @action="onAlbumAction" />
 				<SensitiveWarning v-if="nsfwBlocked" @consent="ui.consentNsfw(albumId)" />
 				<template v-else>
 					<AlbumGrid v-if="childAlbums.length" :albums="childAlbums" :selectable="headData.rights.canEdit" />
@@ -100,11 +100,11 @@ import { useInit } from "@/composables/useInit.ts";
 import { useLightboxNav } from "@/composables/useLightboxNav.ts";
 import { invalidatePhotoDetails, usePhotoDetails } from "@/composables/usePhotoDetails.ts";
 import { usePhotoListing } from "@/composables/usePhotoListing.ts";
-import { canMovePhotoFrom, isSmartAlbumId } from "@/lib/albums.ts";
+import { albumTitle, canMovePhotoFrom, isSmartAlbumId } from "@/lib/albums.ts";
 import { useSelectionStore } from "@/stores/selection.ts";
 import { useUiStore } from "@/stores/ui.ts";
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const ui = useUiStore();
@@ -144,9 +144,8 @@ const { ratios, buckets } = usePhotoListing(
 );
 const listing = computed(() => ((headData.value?.numPhotos ?? 0) > 0 ? ratios.data.value : undefined));
 
-const layoutMode = computed(
-	() => ui.layoutOverride ?? headData.value?.photoLayout ?? config.value.defaultLayout,
-);
+/** Set per album in Album settings; smart albums use the server default. */
+const layoutMode = computed(() => headData.value?.photoLayout ?? config.value.defaultLayout);
 /** Date headers only make sense when the album is ordered by a date. */
 const dateHeaders = computed(() => {
 	const col = headData.value?.photoSorting?.col;
@@ -163,8 +162,9 @@ const nav = useLightboxNav({
 	onClose: (id) => requestAnimationFrame(() => gridRef.value?.scrollToPhoto(id)),
 });
 
+// Shown in the app header (and the document title) instead of a heading on the page.
 watch(
-	() => headData.value?.title,
+	() => headData.value && albumTitle(headData.value, t, te),
 	(title) => {
 		ui.pageTitle = title ?? null;
 	},

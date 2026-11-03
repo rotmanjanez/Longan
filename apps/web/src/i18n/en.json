@@ -66,7 +66,6 @@
 			"video": "Video"
 		},
 		"layout": {
-			"label": "Photo layout",
 			"square": "Squares",
 			"justified": "Justified",
 			"masonry": "Masonry",
@@ -78,7 +77,10 @@
 			"createAlbum": "New sub-album",
 			"albumEdit": "Album settings",
 			"share": "Share",
-			"download": "Download album"
+			"download": "Download album",
+			"move": "Move album",
+			"delete": "Delete album",
+			"more": "Album actions"
 		},
 		"empty": {
 			"root_title": "No albums yet",
@@ -114,7 +116,8 @@
 			"merge": "Merge",
 			"delete": "Delete",
 			"download": "Download"
-		}
+		},
+		"actions_menu": "Actions"
 	},
 	"lightbox": {
 		"previous": "Previous photo",
@@ -131,7 +134,6 @@
 		"copy_link": "Copy link",
 		"delete": "Delete",
 		"download": "Download",
-		"download_variant": "Download {variant}",
 		"fullscreen": "Fullscreen",
 		"details_toggle": "Show details",
 		"details_title": "Photo details",
@@ -151,8 +153,6 @@
 			"uploaded": "Uploaded",
 			"taken": "Taken",
 			"fps": "{fps} fps",
-			"colours": "Colours",
-			"search_colour": "Search for colour {colour}",
 			"rating": "Rating",
 			"rate": "Rate {n} star | Rate {n} stars",
 			"rating_avg": "Ø {avg}",
@@ -169,8 +169,7 @@
 			"location": "Location",
 			"open_map": "Show on map",
 			"open_osm": "OpenStreetMap",
-			"license": "License",
-			"variants": "Sizes"
+			"license": "License"
 		},
 		"image_failed": "The image could not be loaded."
 	},
@@ -268,21 +267,15 @@
 		"album_edit": {
 			"title": "Album settings",
 			"done": "Album saved",
-			"visibility": "Visibility & sharing",
-			"slug_hint": "Lowercase letters, digits and dashes. Leave empty to use the id.",
+			"slug_hint": "Lowercase letters, digits and dashes. Empty uses the id.",
 			"slug_invalid": "Only a–z, 0–9 and dashes (max. 100)",
-			"cover_auto": "Automatic (first photo)",
 			"cover_choose": "Choose cover",
-			"cover_chosen": "Selected as cover",
-			"cover_reset": "Use automatic cover"
+			"more": "More options",
+			"cover_auto": "Automatic"
 		},
 		"protection": {
-			"title": "Visibility",
+			"title": "Visitor options",
 			"done": "Visibility saved",
-			"public": "Public",
-			"public_hint": "Anyone can open this album without signing in.",
-			"link_required": "Hidden (link required)",
-			"link_required_hint": "Not listed; only people with the link can open it.",
 			"upload_hint": "Visitors may upload into this album.",
 			"nsfw_hint": "Show a warning and blur the cover until the viewer agrees.",
 			"password": "Password",
@@ -291,21 +284,26 @@
 			"password_none": "No password",
 			"password_change": "Change password",
 			"password_set": "Set a password",
-			"password_remove": "Remove password"
+			"password_remove": "Remove password",
+			"intro": "What people who are not in the share list may do when they open this album."
 		},
 		"share": {
 			"title": "Share album",
-			"search": "Find users",
-			"submit": "Share",
-			"add": "Add people",
-			"current": "Shared with",
-			"none": "Not shared with anyone yet",
-			"private": "This album is private: only the people below can see it.",
+			"search": "Add people by name",
+			"current": "People with access",
 			"copy_link": "Copy link",
-			"remove": "Stop sharing with {name}",
-			"unpick": "Remove {name}",
-			"removed": "Access removed",
-			"done": "Shared with {n} user | Shared with {n} users"
+			"access": "General access",
+			"access_mode": {
+				"private": "Private",
+				"link": "Anyone with the link",
+				"public": "Public"
+			},
+			"access_hint": {
+				"private": "Only you and the people above can open this album.",
+				"link": "Anyone with the link can open it. It is not listed anywhere.",
+				"public": "Listed for everyone, including visitors who are not signed in."
+			},
+			"visitor_options": "Visitor options"
 		},
 		"move": {
 			"title_album": "Move album | Move {n} albums",
@@ -428,8 +426,6 @@
 		"empty_hint": "Use “Share” on an album to give people access.",
 		"no_match": "No matching shares",
 		"manage": "Add people",
-		"user_count": "no users | {n} user | {n} users",
-		"remove": "Stop sharing {album} with {name}",
 		"removed": "Access removed",
 		"updated": "Access updated",
 		"grants": {
@@ -440,23 +436,23 @@
 			"grantsMove": "Move",
 			"grantsDelete": "Delete"
 		},
-		"grants_short": {
-			"grantsFullPhotoAccess": "Full size",
-			"grantsDownload": "Download",
-			"grantsUpload": "Upload",
-			"grantsEdit": "Edit",
-			"grantsMove": "Move",
-			"grantsDelete": "Delete"
-		}
+		"roles": {
+			"owner": "Owner",
+			"view": "Can view",
+			"view_hint": "See and download photos",
+			"contribute": "Can add photos",
+			"contribute_hint": "Also upload new photos",
+			"edit": "Can edit",
+			"edit_hint": "Also edit, move and delete",
+			"custom": "Custom"
+		},
+		"role_of": "Access for {name}",
+		"remove_access": "Remove access"
 	},
 	"settings": {
 		"filter": "Filter settings",
 		"categories": "Categories",
 		"no_match": "No matching settings",
-		"save_all": "Save all ({n})",
-		"save_group": "Save ({n})",
-		"save_row": "Save {key}",
-		"revert": "Revert {key}",
 		"discard": "Discard",
 		"saved": "Settings saved",
 		"unsaved": "Unsaved changes",
@@ -482,7 +478,8 @@
 			"link_sample": "Link text",
 			"save": "Save theme",
 			"saved": "Theme saved"
-		}
+		},
+		"unsaved_n": "{n} unsaved change | {n} unsaved changes"
 	},
 	"users": {
 		"filter": "Filter users",
@@ -552,9 +549,9 @@
 			"album": "One album (with sub-albums)",
 			"pick_album": "Album",
 			"variants": "Sizes",
-			"variants_hint": "Leave all unchecked to rebuild every size.",
 			"submit": "Queue jobs",
-			"queued": "No photos to process | {n} job queued | {n} jobs queued"
+			"queued": "No photos to process | {n} job queued | {n} jobs queued",
+			"variants_all": "All sizes"
 		}
 	},
 	"variants": {
@@ -593,6 +590,18 @@
 			"title": "Title",
 			"min_taken_at": "Oldest photo",
 			"max_taken_at": "Newest photo"
-		}
+		},
+		"order": {
+			"newest": "newest first",
+			"oldest": "oldest first",
+			"az": "A–Z",
+			"za": "Z–A",
+			"highest": "highest first",
+			"lowest": "lowest first",
+			"asc": "ascending",
+			"desc": "descending"
+		},
+		"highlighted_desc": "Highlighted first",
+		"highlighted_asc": "Highlighted last"
 	}
 }

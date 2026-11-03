@@ -1,5 +1,5 @@
 <template>
-	<UModal v-model:open="open" :title="t(isAlbum ? 'dialogs.delete.title_album' : 'dialogs.delete.title_photo', count)">
+	<UModal v-model:open="open" :close="false" :title="t(isAlbum ? 'dialogs.delete.title_album' : 'dialogs.delete.title_photo', count)">
 		<template #body>
 			<form id="delete-form" class="flex flex-col gap-3 text-sm" @submit.prevent="submit">
 				<p>{{ t(isAlbum ? "dialogs.delete.confirm_album" : "dialogs.delete.confirm_photo", { n: count, title: singleTitle }, count) }}</p>

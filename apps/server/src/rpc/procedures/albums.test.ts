@@ -13,6 +13,7 @@ import { db, sql as pg } from "../../db/index.ts";
 import { accessPermissions, albums as albumsTable, photoAlbum, sessions } from "../../db/schema.ts";
 import { settingBool } from "../../settings/index.ts";
 import { router } from "../router.ts";
+import { reachableCrumbs } from "./albums.ts";
 import { createWorld, ctxFor, type World } from "./gallery.fixtures.ts";
 
 let w: World;
@@ -337,5 +338,21 @@ describe("albums mutations", () => {
 		);
 		const rows = await db.select().from(accessPermissions).where(eq(accessPermissions.albumId, w.a.priv));
 		expect(rows).toEqual([]);
+	});
+});
+
+describe("reachableCrumbs", () => {
+	const row = (id: string, ok: boolean) => ({ id, title: id.toUpperCase(), ok });
+	it("keeps the whole chain when every parent can be opened", () => {
+		expect(reachableCrumbs([row("a", true), row("b", true)])).toEqual([
+			{ id: "a", title: "A" },
+			{ id: "b", title: "B" },
+		]);
+	});
+	it("stops at the first parent the viewer cannot open", () => {
+		expect(reachableCrumbs([row("a", true), row("b", false), row("c", true)])).toEqual([
+			{ id: "c", title: "C" },
+		]);
+		expect(reachableCrumbs([row("a", true), row("b", true), row("c", false)])).toEqual([]);
 	});
 });

@@ -1,5 +1,6 @@
 <template>
 	<UModal
+		:close="false"
 		:open="ui.unlockAlbumId !== null"
 		:title="t('dialogs.unlock.title')"
 		:description="t('dialogs.unlock.description')"
@@ -13,20 +14,14 @@
 			</form>
 		</template>
 		<template #footer>
-			<div class="flex w-full justify-end gap-2">
-				<UButton color="neutral" variant="ghost" @click="cancel">{{ t("common.cancel") }}</UButton>
-				<UButton
-					type="submit"
-					form="unlock-form"
-					color="primary"
-					variant="solid"
-					icon="lucide:lock-open"
-					:loading="pending"
-					:disabled="password.length === 0"
-				>
-					{{ t("dialogs.unlock.submit") }}
-				</UButton>
-			</div>
+			<DialogActions
+				form="unlock-form"
+				:confirm-label="t('dialogs.unlock.submit')"
+				icon="lucide:lock-open"
+				:loading="pending"
+				:disabled="password.length === 0"
+				@cancel="cancel"
+			/>
 		</template>
 	</UModal>
 </template>
@@ -38,6 +33,7 @@ import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { client } from "@/api/client.ts";
 import { errorCode } from "@/api/errors.ts";
+import DialogActions from "@/components/dialogs/DialogActions.vue";
 import { useUiStore } from "@/stores/ui.ts";
 
 const { t } = useI18n();

@@ -108,7 +108,7 @@ const albums = useQuery(
 );
 const listing = computed(() => (q.value ? photos.data.value : undefined));
 const albumResults = computed(() => (q.value ? (albums.data.value ?? []) : []));
-const layoutMode = computed(() => ui.layoutOverride ?? config.value.defaultLayout);
+const layoutMode = computed(() => config.value.defaultLayout);
 
 const gridRef = ref<InstanceType<typeof PhotoGrid> | null>(null);
 const location = (id: string | null) => ({

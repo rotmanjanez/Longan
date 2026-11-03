@@ -1,5 +1,5 @@
 <template>
-	<UModal v-model:open="open" :title="t(isAlbum ? 'dialogs.move.title_album' : 'dialogs.move.title_photo', count)">
+	<UModal v-model:open="open" :close="false" :title="t(isAlbum ? 'dialogs.move.title_album' : 'dialogs.move.title_photo', count)">
 		<template #body>
 			<form id="move-form" class="flex flex-col gap-3" @submit.prevent="submit">
 				<p class="text-sm text-muted">{{ t(hintKey, count) }}</p>

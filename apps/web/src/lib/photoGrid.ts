@@ -47,7 +47,8 @@ export function bucketRanges(
 		seen.add(id);
 		ranges.push({ bucketId: id, label: labels.get(id) ?? id, start: i, count: 1 });
 	}
-	return ranges.length > 1 || (ranges[0]?.label ?? "") !== "" ? ranges : whole;
+	// One bucket only (e.g. everything from the same month): a lone date title above the photos says nothing.
+	return ranges.length > 1 ? ranges : whole;
 }
 
 export type GridParams = { mode: PhotoLayout; target: number; gap: number };

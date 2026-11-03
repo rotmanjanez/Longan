@@ -1,11 +1,11 @@
 <template>
 	<div
 		v-if="type !== 'none' && (title || lines.length)"
-		class="absolute bottom-6 start-6 end-24 text-white pointer-events-none text-shadow-md"
+		class="absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] start-4 end-4 sm:start-6 sm:end-24 text-white pointer-events-none text-shadow-md"
 		data-photo-overlay
 	>
-		<p class="text-xl sm:text-2xl font-semibold text-neutral-100 truncate">{{ title }}</p>
-		<p v-for="(line, i) in lines" :key="i" class="mt-0.5 text-sm sm:text-base text-neutral-300 whitespace-pre-line line-clamp-3">
+		<p class="text-lg sm:text-2xl font-semibold text-neutral-100 truncate">{{ title }}</p>
+		<p v-for="(line, i) in lines" :key="i" class="mt-0.5 text-sm sm:text-base text-neutral-300 whitespace-pre-line line-clamp-2 sm:line-clamp-3">
 			{{ line }}
 		</p>
 	</div>

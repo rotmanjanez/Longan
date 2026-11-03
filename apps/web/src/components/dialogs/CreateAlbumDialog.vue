@@ -1,5 +1,5 @@
 <template>
-	<UModal v-model:open="open" :title="t('dialogs.create_album.title')" :description="parentTitle ? t('dialogs.create_album.inside', { title: parentTitle }) : undefined">
+	<UModal v-model:open="open" :close="false" :title="t('dialogs.create_album.title')" :description="parentTitle ? t('dialogs.create_album.inside', { title: parentTitle }) : undefined">
 		<template #body>
 			<form id="create-album-form" @submit.prevent="submit">
 				<UFormField :label="t('dialogs.fields.title')" required>

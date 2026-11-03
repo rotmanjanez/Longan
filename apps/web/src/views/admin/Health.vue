@@ -31,7 +31,7 @@
 				<dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-sm">
 					<template v-for="[label, val] in card.rows" :key="label">
 						<dt class="text-muted">{{ label }}</dt>
-						<dd class="text-default truncate font-mono text-xs self-center" :title="String(val)">{{ val }}</dd>
+						<dd class="text-default break-all font-mono text-xs self-center">{{ val }}</dd>
 					</template>
 				</dl>
 				<UProgress v-if="card.key === 'storage' && usedRatio !== null" :model-value="usedRatio" size="xs" />

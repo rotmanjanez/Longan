@@ -2,7 +2,7 @@
 	<a
 		:href="href"
 		role="listitem"
-		class="group absolute block overflow-hidden rounded-lg shadow-md shadow-black/25 outline-offset-2 focus-visible:outline-2 focus-visible:outline-primary"
+		class="group [-webkit-touch-callout:none] absolute block overflow-hidden rounded-lg shadow-md shadow-black/25 outline-offset-2 focus-visible:outline-2 focus-visible:outline-primary"
 		:class="{ 'outline-3 outline-primary': selected }"
 		:style="style"
 		:aria-label="title"
@@ -12,14 +12,18 @@
 		:data-photo-id="id"
 		data-photo-tile
 		draggable="false"
-		@click="emit('activate', $event)"
+		@click="onClick"
+		@pointerdown="press.onPointerdown"
+		@contextmenu="press.onContextmenu"
 		@dragstart.prevent
 	>
 		<img
 			:src="src"
 			:srcset="srcset"
+			:sizes="sizes"
 			:alt="title"
-			loading="lazy"
+			:loading="eager ? 'eager' : 'lazy'"
+			:fetchpriority="eager ? 'high' : undefined"
 			decoding="async"
 			draggable="false"
 			class="size-full transition-opacity duration-300"
@@ -53,10 +57,12 @@
 </template>
 
 <script setup lang="ts">
+import type { ImageSizesConfig } from "@longan/shared";
 import type { LayoutBox } from "@longan/shared/layout";
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { assetUrl, srcsetFor, type VariantFamily } from "@/api/assets.ts";
+import { assetUrl, familyRatio, renderedWidth, tileSrcset } from "@/api/assets.ts";
+import { useLongPress } from "@/composables/useLongPress.ts";
 import TileBadge from "./TileBadge.vue";
 
 const props = defineProps<{
@@ -71,14 +77,29 @@ const props = defineProps<{
 	version?: number | null;
 	/** Position relative to the enclosing chunk. */
 	box: LayoutBox;
-	family: VariantFamily;
+	family: "thumb" | "small";
+	/** width / height of the photo (listing ratio). */
+	ratio: number;
+	/** Nominal variant sizes, for the srcset width descriptors. */
+	imageSizes: ImageSizesConfig;
+	/** Above the fold on first render: load immediately at high priority instead of lazily. */
+	eager?: boolean;
 	fit: "cover" | "contain";
 	selected: boolean;
 	href: string;
 	index: number;
 	setSize: number;
 }>();
-const emit = defineEmits<{ activate: [event: MouseEvent] }>();
+const emit = defineEmits<{ activate: [event: MouseEvent]; longpress: [] }>();
+
+const press = useLongPress(() => emit("longpress"));
+function onClick(e: MouseEvent) {
+	if (press.consumeClick()) {
+		e.preventDefault();
+		return;
+	}
+	emit("activate", e);
+}
 const { t } = useI18n();
 
 const loaded = ref(false);
@@ -90,7 +111,12 @@ watch(
 );
 
 const src = computed(() => assetUrl(props.albumCtx, props.id, props.family, false, props.version));
-const srcset = computed(() => srcsetFor(props.albumCtx, props.id, props.family, props.version));
+const srcset = computed(() =>
+	tileSrcset(props.albumCtx, props.id, props.family, props.ratio, props.imageSizes, props.version),
+);
+const sizes = computed(
+	() => `${renderedWidth(props.box, familyRatio(props.family, props.ratio), props.fit)}px`,
+);
 const style = computed(() => ({
 	top: `${props.box.top}px`,
 	left: `${props.box.left}px`,

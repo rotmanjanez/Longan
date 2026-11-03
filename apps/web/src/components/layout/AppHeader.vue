@@ -1,6 +1,6 @@
 <template>
 	<header
-		class="sticky top-0 z-40 h-(--ui-header-height) flex items-center gap-2 px-2 sm:px-4 bg-default/80 backdrop-blur border-b border-default"
+		class="sticky top-0 z-40 box-content h-(--ui-header-height) pt-[env(safe-area-inset-top)] flex items-center gap-2 px-2 sm:px-4 bg-default/80 backdrop-blur border-b border-default"
 	>
 		<UButton
 			icon="lucide:menu"
@@ -9,7 +9,9 @@
 			:aria-label="t('nav.open_menu')"
 			@click="ui.leftMenuOpen = true"
 		/>
-		<RouterLink to="/" class="font-bold text-highlighted truncate max-w-[40vw] sm:max-w-xs">
+		<!-- Album pages: the album title takes the site name's place (it is the page heading). -->
+		<h1 v-if="ui.pageTitle" class="min-w-0 font-bold text-highlighted truncate sm:max-w-xs">{{ ui.pageTitle }}</h1>
+		<RouterLink v-else to="/" class="font-bold text-highlighted truncate max-w-[40vw] sm:max-w-xs">
 			{{ config.title }}
 		</RouterLink>
 		<div class="flex-1 flex justify-center px-2">

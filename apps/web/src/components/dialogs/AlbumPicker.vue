@@ -1,6 +1,6 @@
 <template>
 	<div class="flex flex-col gap-2">
-		<UInput v-model="filter" icon="lucide:search" :placeholder="t('dialogs.picker.filter')" class="w-full" autofocus />
+		<UInput v-model="filter" icon="lucide:search" :placeholder="t('dialogs.picker.filter')" class="w-full" :autofocus="FINE_POINTER" />
 		<div
 			class="max-h-72 overflow-y-auto rounded-md ring ring-default divide-y divide-default"
 			role="listbox"
@@ -12,7 +12,7 @@
 				type="button"
 				role="option"
 				:aria-selected="modelValue === null"
-				class="w-full flex items-center gap-2 px-3 py-2 text-start text-sm hover:bg-elevated focus-visible:outline-2 focus-visible:outline-primary"
+				class="w-full flex items-center gap-2 px-3 py-2 pointer-coarse:py-3 text-start text-sm hover:bg-elevated focus-visible:outline-2 focus-visible:outline-primary"
 				:class="modelValue === null ? 'bg-primary/10 text-primary' : ''"
 				@click="emit('update:modelValue', null)"
 			>
@@ -26,7 +26,7 @@
 				role="option"
 				:aria-selected="modelValue === row.id"
 				:data-album-option="row.id"
-				class="w-full flex items-center gap-2 px-3 py-2 text-start text-sm hover:bg-elevated focus-visible:outline-2 focus-visible:outline-primary"
+				class="w-full flex items-center gap-2 px-3 py-2 pointer-coarse:py-3 text-start text-sm hover:bg-elevated focus-visible:outline-2 focus-visible:outline-primary"
 				:class="modelValue === row.id ? 'bg-primary/10 text-primary' : ''"
 				:style="{ paddingInlineStart: `${0.75 + (filter ? 0 : row.depth) * 1.25}rem` }"
 				@click="emit('update:modelValue', row.id)"
@@ -47,6 +47,9 @@ import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { orpc } from "@/api/query.ts";
 import { flattenTree, withDescendants } from "@/lib/options.ts";
+
+/** Don't pop up the on-screen keyboard over the list on touch devices. */
+const FINE_POINTER = typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches === true;
 
 /**
  * Target album picker over `albums.tree` (albums the viewer may edit). `exclude` removes albums and their

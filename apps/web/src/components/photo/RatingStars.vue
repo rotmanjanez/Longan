@@ -5,14 +5,14 @@
 				v-for="n in 5"
 				:key="n"
 				type="button"
-				class="p-0.5 rounded-sm disabled:cursor-default focus-visible:outline-2 focus-visible:outline-primary"
+				class="p-1 pointer-coarse:p-2 rounded-sm disabled:cursor-default focus-visible:outline-2 focus-visible:outline-primary"
 				:class="readonly ? '' : 'hover:scale-110 transition-transform'"
 				:disabled="readonly"
 				:aria-label="t('lightbox.details.rate', { n }, n)"
 				:aria-pressed="!readonly ? mine === n : undefined"
 				@click="emit('rate', mine === n ? 0 : n)"
-				@mouseenter="hover = n"
-				@mouseleave="hover = 0"
+				@pointerenter="(e: PointerEvent) => e.pointerType === 'mouse' && (hover = n)"
+				@pointerleave="hover = 0"
 			>
 				<UIcon
 					name="lucide:star"

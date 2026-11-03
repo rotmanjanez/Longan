@@ -10,7 +10,7 @@
 		<!-- Pinned date label once the bucket's own header row has scrolled away. -->
 		<div
 			v-if="pinnedHeader"
-			class="sticky top-(--ui-header-height) z-10 pointer-events-none flex items-center font-semibold text-toned text-lg bg-default/70 backdrop-blur"
+			class="sticky top-(--app-header-bottom) z-10 pointer-events-none flex items-center font-semibold text-toned text-lg bg-default/70 backdrop-blur"
 			:style="{ height: `${HEADER_ROW_HEIGHT}px`, marginBottom: `-${HEADER_ROW_HEIGHT}px` }"
 			aria-hidden="true"
 		>
@@ -46,12 +46,16 @@
 					:version="data.updatedAts[i] ?? null"
 					:box="relativeBox(i, chunks[item.index]!.top)"
 					:family="family"
+					:ratio="data.ratios[i] ?? 1"
+					:image-sizes="config.imageSizes"
+					:eager="isAboveFold(i)"
 					:fit="layoutMode === 'grid' ? 'contain' : 'cover'"
 					:selected="selection.photoSet.has(data.ids[i]!)"
 					:href="hrefFor(data.ids[i]!)"
 					:index="i"
 					:set-size="data.ids.length"
 					@activate="(e) => onActivate(i, e)"
+					@longpress="selectable && selection.longPressPhoto(data.ids[i]!, data.ids)"
 				/>
 			</template>
 		</div>
@@ -162,6 +166,13 @@ const pinnedHeader = computed(() => {
 	}
 	return current;
 });
+
+/** Viewport height at mount: tiles starting within it are the first screenful and skip lazy loading. */
+const foldPx = typeof window !== "undefined" ? window.innerHeight : 0;
+function isAboveFold(i: number): boolean {
+	const b = layout.value.boxes[i];
+	return !!b && b.top + scrollMargin.value < foldPx;
+}
 
 function tileIndices(c: GridChunk): number[] {
 	return Array.from({ length: c.count }, (_, k) => c.start + k);

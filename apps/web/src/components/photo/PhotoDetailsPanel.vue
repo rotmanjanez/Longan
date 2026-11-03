@@ -13,19 +13,6 @@
 			</div>
 		</section>
 
-		<div v-if="detail.colours.length" class="flex gap-2" :aria-label="t('lightbox.details.colours')" role="list">
-			<RouterLink
-				v-for="c in detail.colours"
-				:key="c"
-				role="listitem"
-				:to="{ name: 'search', query: { q: `color:${c}` } }"
-				class="size-6 rounded-md ring ring-default shadow-sm"
-				:style="{ backgroundColor: c }"
-				:title="c"
-				:aria-label="t('lightbox.details.search_colour', { colour: c })"
-			/>
-		</div>
-
 		<section class="flex flex-col gap-1 text-muted">
 			<p class="flex items-center gap-2">
 				<UIcon name="lucide:upload" class="size-4 shrink-0" />
@@ -114,6 +101,7 @@
 						:src="tile.url"
 						alt=""
 						loading="lazy"
+						decoding="async"
 						class="absolute size-64 max-w-none"
 						:style="{ left: `${tile.col * 256}px`, top: `${tile.row * 256}px` }"
 					/>
@@ -134,40 +122,14 @@
 			<p class="text-toned">{{ t(licenseKey(detail.license)) }}</p>
 		</section>
 
-		<section v-if="detail.sizeVariants.length">
-			<h3 class="font-bold text-highlighted mb-1">{{ t("lightbox.details.variants") }}</h3>
-			<table class="w-full text-left">
-				<tbody>
-					<tr v-for="v in detail.sizeVariants" :key="v.type" class="border-b border-default last:border-0">
-						<th scope="row" class="py-1 pe-2 font-medium text-toned">{{ t(`variants.${v.type}`) }}</th>
-						<td class="py-1 pe-2 text-muted" dir="ltr">{{ v.width }} × {{ v.height }}</td>
-						<td class="py-1 pe-2 text-muted text-end" dir="ltr">{{ formatBytes(v.filesize) }}</td>
-						<td class="py-1 w-8 text-end">
-							<UButton
-								v-if="canDownloadVariant(v.type)"
-								:href="assetUrl(albumCtx, detail.id, v.type, true, versionOf(detail.updatedAt))"
-								download
-								external
-								icon="lucide:download"
-								size="xs"
-								color="neutral"
-								variant="ghost"
-								:aria-label="t('lightbox.download_variant', { variant: t(`variants.${v.type}`) })"
-							/>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</section>
 	</div>
 </template>
 
 <script setup lang="ts">
-import type { PhotoDetail, SizeVariantType } from "@longan/shared";
+import type { PhotoDetail } from "@longan/shared";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import type { RouteLocationRaw } from "vue-router";
-import { assetUrl, versionOf } from "@/api/assets.ts";
 import { useInit } from "@/composables/useInit.ts";
 import { isSmartAlbumId, plainText } from "@/lib/albums.ts";
 import { formatBytes, formatDuration, formatTakenAt } from "@/lib/format.ts";
@@ -215,8 +177,4 @@ const osmLink = computed(() => {
 	const { latitude: lat, longitude: lng } = props.detail;
 	return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`;
 });
-
-function canDownloadVariant(type: SizeVariantType) {
-	return props.detail.rights.canDownload && config.value.downloadableVariants.includes(type);
-}
 </script>

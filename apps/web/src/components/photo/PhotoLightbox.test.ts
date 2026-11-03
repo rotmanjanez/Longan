@@ -182,7 +182,7 @@ describe("lightbox", () => {
 		expect(text).toContain("FUJIFILM");
 		expect(text).toContain("beach");
 		expect(text).toContain("CC BY 4.0");
-		expect(text).toContain("Medium");
+		expect(text).not.toContain("Medium");
 		const star = box()!.querySelector<HTMLButtonElement>('button[aria-label="Rate 4 stars"]');
 		expect(star).not.toBeNull();
 		star!.click();

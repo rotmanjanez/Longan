@@ -16,6 +16,7 @@
 
 <script setup lang="ts">
 import type { DropdownMenuItem } from "@nuxt/ui";
+import { useMediaQuery } from "@vueuse/core";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
@@ -29,6 +30,8 @@ const ui = useUiStore();
 const { user, rights } = useInit();
 
 const login = computed(() => loginUrl(route.fullPath));
+/** Shortcuts are useless on touch-only devices. */
+const hasKeyboard = useMediaQuery("(any-pointer: fine)");
 
 /**
  * `POST /auth/logout` as JSON: the server ends the session and answers `{ redirect }` (the IdP end-session
@@ -59,12 +62,13 @@ const items = computed<DropdownMenuItem[][]>(() => {
 	if (rights.value.mayUpload) {
 		tools.push({ label: t("nav.sharing"), icon: "lucide:share-2", to: "/sharing" });
 	}
-	tools.push({
-		label: t("keys.title"),
-		icon: "lucide:keyboard",
-		onSelect: () => ui.openDialog("keybindings"),
-	});
-	groups.push(tools);
+	if (hasKeyboard.value)
+		tools.push({
+			label: t("keys.title"),
+			icon: "lucide:keyboard",
+			onSelect: () => ui.openDialog("keybindings"),
+		});
+	if (tools.length) groups.push(tools);
 	groups.push([{ label: t("user.sign_out"), icon: "lucide:log-out", onSelect: logout }]);
 	return groups;
 });

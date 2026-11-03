@@ -1,5 +1,5 @@
 <template>
-	<div class="relative h-[calc(100dvh-var(--ui-header-height))] w-full">
+	<div class="relative h-[calc(100dvh-var(--app-header-bottom))] w-full">
 		<div ref="mapEl" class="absolute inset-0 z-0" role="application" :aria-label="t('map.label')" @click="onMapClick" />
 		<div class="absolute top-3 end-3 z-10 flex flex-col items-end gap-2 pointer-events-none">
 			<div

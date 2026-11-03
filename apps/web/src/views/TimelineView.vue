@@ -2,20 +2,18 @@
 	<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-4">
 		<div class="flex flex-wrap items-center gap-2">
 			<h1 class="text-lg font-bold text-highlighted flex-1">{{ t("nav.timeline") }}</h1>
-			<div class="flex items-center" role="group" :aria-label="t('timeline.granularity')">
-				<UButton
-					v-for="g in GRANULARITIES"
-					:key="g"
-					size="sm"
-					:color="granularity === g ? 'primary' : 'neutral'"
-					:variant="granularity === g ? 'soft' : 'ghost'"
-					:aria-pressed="granularity === g"
-					@click="setGranularity(g)"
-				>
-					{{ t(`timeline.${g}`) }}
-				</UButton>
-			</div>
-			<LayoutSwitcher :model-value="layoutMode" @update:model-value="ui.layoutOverride = $event" />
+			<USelect
+				:model-value="granularity"
+				:items="granularityItems"
+				icon="lucide:calendar-range"
+				color="neutral"
+				variant="ghost"
+				size="sm"
+				:content="{ align: 'end' }"
+				:aria-label="t('timeline.granularity')"
+				class="w-auto"
+				@update:model-value="setGranularity"
+			/>
 		</div>
 		<div v-if="ratios.isPending.value" class="flex justify-center py-16 text-muted" role="status">
 			<UIcon name="lucide:loader-circle" class="size-6 animate-spin" />
@@ -57,7 +55,6 @@ import type { BucketGranularity } from "@longan/shared";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
-import LayoutSwitcher from "@/components/gallery/LayoutSwitcher.vue";
 import LightboxMount from "@/components/gallery/LightboxMount.vue";
 import PhotoGrid from "@/components/gallery/PhotoGrid.vue";
 import { useInit } from "@/composables/useInit.ts";
@@ -80,10 +77,12 @@ const granularity = computed<BucketGranularity>(() => {
 	const g = route.query.g;
 	return g === "year" || g === "day" ? g : "month";
 });
-const layoutMode = computed(() => ui.layoutOverride ?? config.value.defaultLayout);
+const layoutMode = computed(() => config.value.defaultLayout);
 
 const { ratios, buckets } = usePhotoListing("timeline", granularity);
 const listing = computed(() => ratios.data.value);
+
+const granularityItems = computed(() => GRANULARITIES.map((g) => ({ value: g, label: t(`timeline.${g}`) })));
 
 function setGranularity(g: BucketGranularity) {
 	router.replace({ query: { ...route.query, g: g === "month" ? undefined : g } });

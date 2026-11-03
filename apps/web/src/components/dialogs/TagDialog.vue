@@ -1,5 +1,5 @@
 <template>
-	<UModal v-model:open="open" :title="t('dialogs.tags.title', ctx.photoIds.length)">
+	<UModal v-model:open="open" :close="false" :title="t('dialogs.tags.title', ctx.photoIds.length)">
 		<template #body>
 			<form id="tag-form" class="flex flex-col gap-4" @submit.prevent="submit">
 				<div v-if="current.length">
@@ -9,6 +9,7 @@
 							v-for="tag in current"
 							:key="tag.id"
 							:color="removed.has(tag.id) ? 'error' : 'neutral'"
+							size="lg"
 							variant="soft"
 							:class="removed.has(tag.id) ? 'line-through' : ''"
 						>
@@ -16,7 +17,7 @@
 							<span v-if="ctx.photoIds.length > 1" class="text-muted">({{ tag.count }}/{{ ctx.photoIds.length }})</span>
 							<button
 								type="button"
-								class="ms-0.5 rounded-sm hover:text-error focus-visible:outline-2 focus-visible:outline-primary"
+								class="-me-1 p-1 pointer-coarse:p-1.5 rounded-sm hover:text-error focus-visible:outline-2 focus-visible:outline-primary"
 								:aria-label="t(removed.has(tag.id) ? 'dialogs.tags.keep' : 'dialogs.tags.remove', { name: tag.name })"
 								@click="toggleRemove(tag.id)"
 							>

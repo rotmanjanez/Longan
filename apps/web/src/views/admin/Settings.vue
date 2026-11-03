@@ -1,18 +1,8 @@
 <template>
-	<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 max-w-5xl">
+	<div class="px-3 sm:px-6 lg:px-8 pt-6 flex flex-col gap-6 max-w-5xl">
 		<div class="flex flex-wrap items-center gap-2">
 			<h1 class="text-lg font-bold text-highlighted flex-1">{{ t("nav.admin_settings") }}</h1>
-			<UInput v-model="filter" icon="lucide:search" size="sm" :placeholder="t('settings.filter')" :aria-label="t('settings.filter')" />
-			<UButton
-				v-if="dirtyRows.length"
-				icon="lucide:save"
-				size="sm"
-				:loading="save.isPending.value"
-				:disabled="hasErrors(dirtyRows)"
-				@click="saveRows(dirtyRows)"
-			>
-				{{ t("settings.save_all", { n: dirtyRows.length }) }}
-			</UButton>
+			<UInput v-model="filter" icon="lucide:search" class="max-sm:w-full" :placeholder="t('settings.filter')" :aria-label="t('settings.filter')" />
 		</div>
 
 		<div v-if="list.isPending.value" class="flex justify-center py-16 text-muted" role="status">
@@ -21,13 +11,14 @@
 		</div>
 		<UEmpty v-else-if="list.isError.value" icon="lucide:triangle-alert" :title="t('errors.load_failed')" :description="list.error.value?.message" />
 		<template v-else>
-			<nav class="flex flex-wrap gap-1" :aria-label="t('settings.categories')">
+			<nav class="flex flex-wrap gap-1 max-sm:flex-nowrap max-sm:overflow-x-auto max-sm:-mx-3 max-sm:px-3 max-sm:pb-1 [scrollbar-width:none]" :aria-label="t('settings.categories')">
 				<UButton
 					v-for="g in groups"
 					:key="g.category"
-					size="xs"
+					size="sm"
 					color="neutral"
 					variant="soft"
+					class="shrink-0"
 					:to="{ hash: `#${anchor(g.category)}` }"
 				>
 					{{ g.category }}
@@ -41,22 +32,8 @@
 				class="rounded-xl ring ring-default bg-default scroll-mt-20"
 				:aria-labelledby="`${anchor(g.category)}-h`"
 			>
-				<header class="flex items-center gap-2 px-4 py-3 border-b border-default">
-					<h2 :id="`${anchor(g.category)}-h`" class="font-semibold text-highlighted flex-1">{{ g.category }}</h2>
-					<template v-if="!(g.category === THEME_CATEGORY && !filter) && dirtyIn(g.rows).length">
-						<UButton size="xs" color="neutral" variant="ghost" @click="discardRows(dirtyIn(g.rows))">
-							{{ t("settings.discard") }}
-						</UButton>
-						<UButton
-							size="xs"
-							icon="lucide:save"
-							:loading="save.isPending.value"
-							:disabled="hasErrors(dirtyIn(g.rows))"
-							@click="saveRows(dirtyIn(g.rows))"
-						>
-							{{ t("settings.save_group", { n: dirtyIn(g.rows).length }) }}
-						</UButton>
-					</template>
+				<header class="px-4 py-3 border-b border-default">
+					<h2 :id="`${anchor(g.category)}-h`" class="font-semibold text-highlighted">{{ g.category }}</h2>
 				</header>
 
 				<div v-if="g.category === THEME_CATEGORY && !filter" class="p-4">
@@ -66,12 +43,13 @@
 					<li
 						v-for="row in g.rows"
 						:key="row.key"
-						class="grid gap-x-4 gap-y-2 px-4 py-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)_auto] sm:items-center"
+						class="grid gap-x-4 gap-y-2 px-4 py-3 border-s-2 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] sm:items-center"
+						:class="isDirty(row) ? 'border-warning' : 'border-transparent'"
 						:data-setting="row.key"
 					>
 						<label :for="inputId(row.key)" class="min-w-0">
 							<span class="block text-sm text-default">{{ row.description }}</span>
-							<code class="block text-xs text-dimmed truncate">{{ row.key }}</code>
+							<code class="block text-xs text-dimmed break-all">{{ row.key }}</code>
 						</label>
 						<div class="min-w-0 flex flex-col gap-1">
 							<SettingInput
@@ -86,31 +64,29 @@
 								{{ t(errorOf(row)!.key, errorOf(row)!.params ?? {}) }}
 							</p>
 						</div>
-						<div class="flex items-center gap-1 justify-end min-w-16">
-							<template v-if="isDirty(row)">
-								<UButton
-									size="xs"
-									color="neutral"
-									variant="ghost"
-									icon="lucide:undo-2"
-									:aria-label="t('settings.revert', { key: row.key })"
-									@click="discardRows([row])"
-								/>
-								<UButton
-									size="xs"
-									icon="lucide:check"
-									:aria-label="t('settings.save_row', { key: row.key })"
-									:loading="save.isPending.value && savingKeys.has(row.key)"
-									:disabled="!!errorOf(row)"
-									@click="saveRows([row])"
-								/>
-							</template>
-						</div>
 					</li>
 				</ul>
 			</section>
 			<UEmpty v-if="visibleGroups.length === 0" icon="lucide:search-x" :title="t('settings.no_match')" />
 		</template>
+
+		<!-- The one place that saves setting rows (the theme editor keeps its own draft and save button). -->
+		<div class="sticky bottom-0 z-20 -mx-3 sm:mx-0 pb-[env(safe-area-inset-bottom)] sm:pb-4">
+			<div
+				v-if="dirtyRows.length"
+				class="flex items-center gap-2 px-4 py-3 sm:rounded-xl bg-default/90 backdrop-blur ring ring-default shadow-lg"
+				role="region"
+				:aria-label="t('settings.unsaved')"
+			>
+				<span class="flex-1 min-w-0 text-sm text-warning">{{ t("settings.unsaved_n", dirtyRows.length) }}</span>
+				<UButton color="neutral" variant="ghost" :disabled="save.isPending.value" @click="discardRows(dirtyRows)">
+					{{ t("settings.discard") }}
+				</UButton>
+				<UButton icon="lucide:save" :loading="save.isPending.value" :disabled="hasErrors(dirtyRows)" @click="saveRows(dirtyRows)">
+					{{ t("common.save") }}
+				</UButton>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -166,7 +142,6 @@ const drafts = reactive<Record<string, string | null>>({});
 const current = (row: SettingRow) => (row.key in drafts ? (drafts[row.key] ?? null) : row.value);
 const isDirty = (row: SettingRow) => row.key in drafts && drafts[row.key] !== row.value;
 const errorOf = (row: SettingRow) => (isDirty(row) ? checkSettingValue(typeOf(row), current(row)) : null);
-const dirtyIn = (rows: SettingRow[]) => rows.filter(isDirty);
 const hasErrors = (rows: SettingRow[]) => rows.some((r) => errorOf(r) !== null);
 const dirtyRows = computed(() => (list.data.value ?? []).filter(isDirty));
 
@@ -178,12 +153,10 @@ function discardRows(rows: SettingRow[]) {
 	for (const r of rows) delete drafts[r.key];
 }
 
-const savingKeys = ref(new Set<string>());
 const save = useSaveSettings(
 	() => t("settings.saved"),
 	(entries) => {
 		for (const e of entries) if (drafts[e.key] === e.value) delete drafts[e.key];
-		savingKeys.value = new Set();
 	},
 );
 function saveRows(rows: SettingRow[]) {
@@ -191,7 +164,6 @@ function saveRows(rows: SettingRow[]) {
 		.filter((r) => isDirty(r) && !errorOf(r))
 		.map((r) => ({ key: r.key, value: current(r) }));
 	if (!entries.length) return;
-	savingKeys.value = new Set(entries.map((e) => e.key));
-	save.mutate(entries, { onError: () => (savingKeys.value = new Set()) });
+	save.mutate(entries);
 }
 </script>

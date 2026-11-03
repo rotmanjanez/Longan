@@ -25,12 +25,17 @@ function addRange(target: Set<string>, ordered: readonly string[], a: number, b:
  * plain click = not a selection (caller opens the item), ctrl/cmd = toggle, shift = range from the last
  * clicked item (removes the range when the clicked item is already selected). Selecting photos clears the
  * album selection and vice versa.
+ *
+ * Touch: a long press starts a selection ("tap mode"); while it lasts a plain tap toggles, like a ctrl-click.
+ * Tap mode ends when the selection becomes empty.
  */
 export const useSelectionStore = defineStore("selection", () => {
 	const photoIds = ref<string[]>([]);
 	const albumIds = ref<string[]>([]);
 	const photoAnchor = ref<string | null>(null);
 	const albumAnchor = ref<string | null>(null);
+	/** Started by a touch long press: plain taps toggle instead of opening. */
+	const tapMode = ref(false);
 
 	const photoSet = computed(() => new Set(photoIds.value));
 	const albumSet = computed(() => new Set(albumIds.value));
@@ -65,17 +70,45 @@ export const useSelectionStore = defineStore("selection", () => {
 		return true;
 	}
 
+	/** In tap mode a plain tap on the kind being selected toggles it. */
+	function effective(mods: ClickModifiers, ids: typeof photoIds): ClickModifiers {
+		return !mods.mod && !mods.shift && tapMode.value && ids.value.length > 0
+			? { mod: true, shift: false }
+			: mods;
+	}
+
+	function endTapModeIfEmpty() {
+		if (photoIds.value.length === 0 && albumIds.value.length === 0) tapMode.value = false;
+	}
+
 	/** Returns true when the click was consumed as a selection gesture. */
 	function clickPhoto(id: string, ordered: readonly string[], mods: ClickModifiers): boolean {
-		if (!mods.mod && !mods.shift) return false;
+		const m = effective(mods, photoIds);
+		if (!m.mod && !m.shift) return false;
 		albumIds.value = [];
-		return clickGeneric(photoIds, photoAnchor, id, ordered, mods);
+		const done = clickGeneric(photoIds, photoAnchor, id, ordered, m);
+		endTapModeIfEmpty();
+		return done;
 	}
 
 	function clickAlbum(id: string, ordered: readonly string[], mods: ClickModifiers): boolean {
-		if (!mods.mod && !mods.shift) return false;
+		const m = effective(mods, albumIds);
+		if (!m.mod && !m.shift) return false;
 		photoIds.value = [];
-		return clickGeneric(albumIds, albumAnchor, id, ordered, mods);
+		const done = clickGeneric(albumIds, albumAnchor, id, ordered, m);
+		endTapModeIfEmpty();
+		return done;
+	}
+
+	/** Touch long press: enter tap mode and toggle the pressed item. */
+	function longPressPhoto(id: string, ordered: readonly string[]) {
+		tapMode.value = true;
+		clickPhoto(id, ordered, { mod: true, shift: false });
+	}
+
+	function longPressAlbum(id: string, ordered: readonly string[]) {
+		tapMode.value = true;
+		clickAlbum(id, ordered, { mod: true, shift: false });
 	}
 
 	function setPhotos(ids: readonly string[]) {
@@ -93,6 +126,7 @@ export const useSelectionStore = defineStore("selection", () => {
 		albumIds.value = [];
 		photoAnchor.value = null;
 		albumAnchor.value = null;
+		tapMode.value = false;
 	}
 
 	/** Drops ids that are no longer listed (after a reload). */
@@ -101,6 +135,7 @@ export const useSelectionStore = defineStore("selection", () => {
 		const a = new Set(validAlbums);
 		photoIds.value = photoIds.value.filter((id) => p.has(id));
 		albumIds.value = albumIds.value.filter((id) => a.has(id));
+		endTapModeIfEmpty();
 	}
 
 	return {
@@ -112,6 +147,9 @@ export const useSelectionStore = defineStore("selection", () => {
 		count,
 		clickPhoto,
 		clickAlbum,
+		longPressPhoto,
+		longPressAlbum,
+		tapMode,
 		setPhotos,
 		selectAll,
 		clear,

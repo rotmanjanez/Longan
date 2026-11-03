@@ -48,6 +48,21 @@ import { hashPassword, verifyPassword } from "./password.ts";
 import { photoScope, SMART_TITLES, smartAllowed } from "./photo-scope.ts";
 
 /** Ids of the given albums and all their descendants. */
+
+/**
+ * Ancestors (root first) the viewer can walk up to from the album: stops at the first parent they cannot open,
+ * so a link never skips over an inaccessible level. A shared sub-album of a private parent gets no crumbs.
+ */
+export function reachableCrumbs(rows: readonly { id: string; title: string; ok: boolean }[]) {
+	const out: { id: string; title: string }[] = [];
+	for (let i = rows.length - 1; i >= 0; i--) {
+		const r = rows[i]!;
+		if (!r.ok) break;
+		out.unshift({ id: r.id, title: r.title });
+	}
+	return out;
+}
+
 export async function subtreeIds(db: Q, ids: string[]): Promise<string[]> {
 	if (ids.length === 0) return [];
 	const rows = await db.execute<{ id: string }>(sql`
@@ -197,7 +212,7 @@ export const albums = os.albums.router({
 			ownerId: album.ownerId,
 			ownerName: owner?.name ?? null,
 			parentId: album.parentId,
-			breadcrumbs: crumbs.filter((c) => c.ok).map((c) => ({ id: c.id, title: c.title })),
+			breadcrumbs: reachableCrumbs(crumbs),
 			coverId: album.coverId,
 			isNsfw: album.isNsfw,
 			license: (album.license as License | null) ?? null,

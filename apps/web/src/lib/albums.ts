@@ -23,6 +23,16 @@ export const SMART_ALBUM_ICONS: Record<string, string> = {
 };
 
 /** Plain-text rendering helper: collapse >2 blank lines; markup is never interpreted. */
+/** Display title: smart albums ("highlighted", ...) are translated, everything else is the stored title. */
+export function albumTitle(
+	head: { id: string; kind: string; title: string },
+	t: (key: string) => string,
+	te: (key: string) => boolean,
+): string {
+	const key = `gallery.smart.${head.id}`;
+	return head.kind === "smart" && te(key) ? t(key) : head.title;
+}
+
 export function plainText(text: string | null | undefined): string {
 	return (text ?? "")
 		.replace(/\r\n?/g, "\n")

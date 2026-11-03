@@ -1,12 +1,14 @@
 <template>
 	<ul class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 sm:gap-6">
-		<li v-for="album in albums" :key="album.id">
+		<li v-for="(album, i) in albums" :key="album.id">
 			<AlbumTile
 				:album="album"
+				:eager="i < EAGER_TILES"
 				:href="router.resolve(albumRoute(album.id)).href"
 				:selected="selection.albumSet.has(album.id)"
 				:blurred="isBlurred(album)"
 				@activate="(e) => onActivate(album.id, e)"
+				@longpress="selectable && selection.longPressAlbum(album.id, ordered)"
 			/>
 		</li>
 	</ul>
@@ -20,6 +22,9 @@ import { useInit } from "@/composables/useInit.ts";
 import { modifiersOf, useSelectionStore } from "@/stores/selection.ts";
 import { useUiStore } from "@/stores/ui.ts";
 import AlbumTile from "./AlbumTile.vue";
+
+/** Covers loaded eagerly: roughly the first screenful across breakpoints (2-8 columns). */
+const EAGER_TILES = 12;
 
 const props = defineProps<{
 	albums: AlbumTileT[];

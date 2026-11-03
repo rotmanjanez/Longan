@@ -1,5 +1,5 @@
 <template>
-	<UModal v-model:open="open" :title="t('dialogs.create_tag_album.title')" :description="t('dialogs.create_tag_album.description')">
+	<UModal v-model:open="open" :close="false" :title="t('dialogs.create_tag_album.title')" :description="t('dialogs.create_tag_album.description')">
 		<template #body>
 			<form id="create-tag-album-form" class="flex flex-col gap-4" @submit.prevent="submit">
 				<UFormField :label="t('dialogs.fields.title')" required>
@@ -9,7 +9,7 @@
 					<TagInput v-model="tags" />
 				</UFormField>
 				<UFormField :label="t('dialogs.fields.tag_logic')">
-					<URadioGroup v-model="logic" orientation="horizontal" :items="logicItems" />
+					<USelect v-model="logic" :items="logicItems" class="w-full" />
 				</UFormField>
 			</form>
 		</template>

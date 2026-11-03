@@ -23,9 +23,45 @@ export default defineConfig({
 			icon: { clientBundle: { scan: { globInclude: ["src/**/*.{vue,ts}"], globExclude: ["**/*.test.ts"] } } },
 			ui: {
 				colors: { primary: "sky", neutral: "slate" },
+				// Touch screens: every button is at least a 40×40 tap target, whatever its size prop.
 				button: {
-					slots: { base: "rounded-xl" },
+					slots: { base: "rounded-xl pointer-coarse:min-h-10 pointer-coarse:min-w-10 justify-center" },
 					compoundVariants: [{ color: "primary", variant: "solid", class: "text-white" }],
+				},
+				// iOS-style switch: 52×32 pill, white knob with a soft shadow, green when on, label left / switch right.
+				switch: {
+					slots: {
+						root: "flex-row-reverse items-center justify-between gap-3",
+						base: "p-0.5 border-0 data-[state=unchecked]:bg-neutral-200 dark:data-[state=unchecked]:bg-neutral-700",
+						thumb: "bg-white shadow-[0_3px_8px_rgb(0_0_0/0.15),0_3px_1px_rgb(0_0_0/0.06)]",
+						wrapper: "ms-0 min-w-0",
+					},
+					variants: {
+						size: {
+							md: {
+								base: "w-13",
+								container: "h-8",
+								thumb: "size-7 data-[state=checked]:translate-x-5 data-[state=checked]:rtl:-translate-x-5",
+							},
+						},
+					},
+					defaultVariants: { color: "success", size: "md" },
+				},
+				// 16px text in fields on phones: iOS Safari zooms into anything smaller on focus.
+				input: { slots: { base: "max-sm:text-base" } },
+				textarea: { slots: { base: "max-sm:text-base" } },
+				select: { slots: { base: "max-sm:text-base" } },
+				selectMenu: { slots: { base: "max-sm:text-base" } },
+				inputMenu: { slots: { base: "max-sm:text-base" } },
+				navigationMenu: { slots: { link: "pointer-coarse:py-2.5" } },
+				// Phones get a bottom sheet (full width, flush with the bottom edge, safe-area aware) instead of a
+				// floating centred card.
+				modal: {
+					slots: {
+						content:
+							"max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:w-full max-sm:max-w-none max-sm:rounded-b-none max-sm:max-h-[calc(100dvh-env(safe-area-inset-top)-1.5rem)]",
+						footer: "max-sm:pb-[calc(1rem+env(safe-area-inset-bottom))]",
+					},
 				},
 			},
 		}),

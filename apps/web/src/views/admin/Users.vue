@@ -2,7 +2,7 @@
 	<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-4">
 		<div class="flex flex-wrap items-center gap-2">
 			<h1 class="text-lg font-bold text-highlighted flex-1">{{ t("nav.admin_users") }}</h1>
-			<UInput v-model="filter" icon="lucide:search" size="sm" :placeholder="t('users.filter')" :aria-label="t('users.filter')" />
+			<UInput v-model="filter" icon="lucide:search" class="max-sm:w-full" :placeholder="t('users.filter')" :aria-label="t('users.filter')" />
 			<UButton
 				icon="lucide:refresh-cw"
 				size="sm"

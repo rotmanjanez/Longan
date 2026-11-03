@@ -1,5 +1,5 @@
 <template>
-	<UModal v-model:open="open" :title="t('dialogs.merge.title', ctx.albumIds.length)">
+	<UModal v-model:open="open" :close="false" :title="t('dialogs.merge.title', ctx.albumIds.length)">
 		<template #body>
 			<form id="merge-form" class="flex flex-col gap-3" @submit.prevent="submit">
 				<p class="text-sm text-muted">{{ t("dialogs.merge.hint", ctx.albumIds.length) }}</p>

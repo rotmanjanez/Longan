@@ -1,8 +1,8 @@
 <template>
-	<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-4 max-w-5xl">
+	<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 max-w-2xl">
 		<div class="flex flex-wrap items-center gap-2">
 			<h1 class="text-lg font-bold text-highlighted flex-1">{{ t("nav.sharing") }}</h1>
-			<UInput v-model="filter" icon="lucide:search" size="sm" :placeholder="t('sharing.filter')" :aria-label="t('sharing.filter')" />
+			<UInput v-model="filter" icon="lucide:search" class="max-sm:w-full" :placeholder="t('sharing.filter')" :aria-label="t('sharing.filter')" />
 		</div>
 		<p class="text-sm text-muted">{{ t("sharing.page_hint") }}</p>
 
@@ -21,54 +21,38 @@
 			v-for="g in groups"
 			v-else
 			:key="g.albumId"
-			class="rounded-xl ring ring-default"
+			class="flex flex-col"
 			:aria-label="g.albumTitle"
 			:data-share-album="g.albumId"
 		>
-			<header class="flex flex-wrap items-center gap-2 px-4 py-2.5 border-b border-default">
-				<UIcon name="lucide:folder" class="size-4 text-muted" />
+			<header class="flex items-center gap-2 pb-1">
 				<RouterLink
 					:to="{ name: 'album', params: { albumId: g.albumId } }"
 					class="font-semibold text-highlighted hover:underline flex-1 min-w-0 truncate"
 				>
 					{{ g.albumTitle }}
 				</RouterLink>
-				<UBadge size="sm" color="neutral" variant="soft">{{ t("sharing.user_count", g.rows.length) }}</UBadge>
 				<UButton
-					size="xs"
 					color="neutral"
 					variant="ghost"
 					icon="lucide:user-plus"
+					:aria-label="t('sharing.manage')"
 					@click="ui.openDialog('share', { albumId: g.albumId, photoIds: [], albumIds: [g.albumId] })"
-				>
-					{{ t("sharing.manage") }}
-				</UButton>
+				/>
 			</header>
-			<ul class="divide-y divide-default">
-				<li
-					v-for="row in g.rows"
-					:key="row.id"
-					class="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5"
-					:data-share="row.id"
-				>
-					<div class="min-w-40 flex-1">
-						<div class="text-sm font-medium text-default">{{ row.user.displayName }}</div>
-						<div class="text-xs text-dimmed">{{ row.user.username }}</div>
+			<ul>
+				<li v-for="row in g.rows" :key="row.id" class="flex items-center gap-3 py-1.5" :data-share="row.id">
+					<UAvatar :alt="row.user.displayName" size="md" />
+					<div class="min-w-0 flex-1">
+						<div class="text-sm font-medium truncate">{{ row.user.displayName }}</div>
+						<div class="text-xs text-muted truncate">@{{ row.user.username }}</div>
 					</div>
-					<GrantCheckboxes
-						:model-value="pickGrants(row)"
-						:label="row.user.displayName"
-						:disabled="busy.has(row.id)"
-						@update:model-value="(grants: ShareGrants) => onUpdate(row.id, grants)"
-					/>
-					<UButton
-						size="xs"
-						color="error"
-						variant="ghost"
-						icon="lucide:user-minus"
-						:loading="remove.isPending.value && remove.variables.value?.ids.includes(row.id)"
-						:aria-label="t('sharing.remove', { name: row.user.displayName, album: g.albumTitle })"
-						@click="remove.mutate({ ids: [row.id] })"
+					<ShareRoleMenu
+						:grants="pickGrants(row)"
+						:name="row.user.displayName"
+						:loading="busy.has(row.id)"
+						@update="(grants) => onUpdate(row.id, grants)"
+						@remove="onRemove(row.id)"
 					/>
 				</li>
 			</ul>
@@ -83,8 +67,8 @@ import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { client } from "@/api/client.ts";
 import { orpc } from "@/api/query.ts";
-import GrantCheckboxes from "@/components/dialogs/GrantCheckboxes.vue";
 import { pickGrants } from "@/components/dialogs/grants.ts";
+import ShareRoleMenu from "@/components/dialogs/ShareRoleMenu.vue";
 import { useApiAction } from "@/components/dialogs/useDialog.ts";
 import { useUiStore } from "@/stores/ui.ts";
 
@@ -116,18 +100,21 @@ const update = useApiAction((v: { id: number; grants: ShareGrants }) => client.s
 	success: () => t("sharing.updated"),
 	invalidate: () => ({ sharing: true }),
 });
-function onUpdate(id: number, grants: ShareGrants) {
+function track(id: number) {
 	busy.value = new Set(busy.value).add(id);
-	update.mutate(
-		{ id, grants },
-		{
-			onSettled: () => {
-				const next = new Set(busy.value);
-				next.delete(id);
-				busy.value = next;
-			},
+	return {
+		onSettled: () => {
+			const next = new Set(busy.value);
+			next.delete(id);
+			busy.value = next;
 		},
-	);
+	};
+}
+function onUpdate(id: number, grants: ShareGrants) {
+	update.mutate({ id, grants }, track(id));
+}
+function onRemove(id: number) {
+	remove.mutate({ ids: [id] }, track(id));
 }
 
 const remove = useApiAction((v: { ids: number[] }) => client.sharing.remove(v), {

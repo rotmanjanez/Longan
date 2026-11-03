@@ -1,5 +1,5 @@
 <template>
-	<UModal v-model:open="open" :title="t('dialogs.photo_edit.title')" :ui="{ content: 'sm:max-w-xl' }">
+	<UModal v-model:open="open" :close="false" :title="t('dialogs.photo_edit.title')" :ui="{ content: 'sm:max-w-xl' }">
 		<template #body>
 			<p v-if="!photo" class="text-sm text-muted">{{ t("app.loading") }}</p>
 			<form v-else id="photo-edit-form" class="flex flex-col gap-4" @submit.prevent="submit">
