@@ -43,7 +43,6 @@ import {
 	publicRow,
 	type Q,
 	requireAccessibleAlbum,
-	requireSiteAccess,
 } from "./gallery-common.ts";
 import { hashPassword, verifyPassword } from "./password.ts";
 import { photoScope, SMART_TITLES, smartAllowed } from "./photo-scope.ts";
@@ -86,7 +85,6 @@ async function rightsOrForbid(
 }
 
 async function smartHead(ctx: Ctx, id: SmartAlbumId): Promise<AlbumHead> {
-	await requireSiteAccess(ctx);
 	if (!(await smartAllowed(id, ctx.viewer))) {
 		throw new ORPCError(ctx.viewer.userId === null ? "UNAUTHORIZED" : "NOT_FOUND");
 	}
@@ -137,7 +135,6 @@ function sorting<T extends string>(col: string | null, order: string | null, col
 
 export const albums = os.albums.router({
 	root: os.albums.root.handler(async ({ context: ctx }) => {
-		await requireSiteAccess(ctx);
 		const v = ctx.viewer;
 		const sort = await defaultAlbumSort();
 		const uid = v.userId;
@@ -190,6 +187,7 @@ export const albums = os.albums.router({
 			protection = {
 				isPublic: pub !== null,
 				isLinkRequired: pub?.isLinkRequired ?? false,
+				requiresLogin: pub?.requiresLogin ?? false,
 				hasPassword: pub?.passwordHash != null,
 				grantsFullPhotoAccess: pub?.grantsFullPhotoAccess ?? false,
 				grantsDownload: pub?.grantsDownload ?? false,
@@ -303,19 +301,20 @@ export const albums = os.albums.router({
 				if (tagIds.length)
 					await tx.insert(tagAlbumTags).values(tagIds.map((tagId) => ({ albumId: id, tagId })));
 			}
-			if (protection === "public" || protection === "public_hidden") {
+			if (protection === "public" || protection === "public_hidden" || protection === "signed_in") {
 				await tx.insert(accessPermissions).values({
 					albumId: id,
 					userId: null,
 					isLinkRequired: protection === "public_hidden",
+					requiresLogin: protection === "signed_in",
 					grantsFullPhotoAccess: grantsFull,
 					grantsDownload,
 				});
 			} else if (protection === "inherit" && parent) {
 				await tx.execute(sql`
-					insert into access_permissions (album_id, user_id, is_link_required, password_hash, grants_full_photo_access,
-						grants_download, grants_upload, grants_edit, grants_delete, grants_move)
-					select ${id}, user_id, is_link_required, password_hash, grants_full_photo_access,
+					insert into access_permissions (album_id, user_id, is_link_required, requires_login, password_hash,
+						grants_full_photo_access, grants_download, grants_upload, grants_edit, grants_delete, grants_move)
+					select ${id}, user_id, is_link_required, requires_login, password_hash, grants_full_photo_access,
 						grants_download, grants_upload, grants_edit, grants_delete, grants_move
 					from access_permissions where album_id = ${parent.id}`);
 			}
@@ -506,6 +505,8 @@ export const albums = os.albums.router({
 			}
 			const values = {
 				isLinkRequired: input.isLinkRequired,
+				// undefined = unchanged, so callers that predate the flag never open a sign-in-only album to everyone.
+				...(input.requiresLogin !== undefined ? { requiresLogin: input.requiresLogin } : {}),
 				grantsFullPhotoAccess: input.grantsFullPhotoAccess,
 				grantsDownload: input.grantsDownload,
 				grantsUpload: input.grantsUpload,
@@ -526,6 +527,8 @@ export const albums = os.albums.router({
 	unlock: os.albums.unlock.handler(async ({ input, context: ctx }) => {
 		const row = await publicRow(ctx.db, input.id);
 		if (!row) throw new ORPCError("NOT_FOUND", { message: "Album not found" });
+		// Sign in first; the password alone never opens a sign-in-only album.
+		if (row.requiresLogin && ctx.viewer.userId === null) throw new ORPCError("UNAUTHORIZED");
 		if (!row.passwordHash) return;
 		if (!(await verifyPassword(input.password, row.passwordHash))) {
 			throw new ORPCError("FORBIDDEN", { message: "Wrong password" });

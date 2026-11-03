@@ -151,19 +151,21 @@ const busyId = computed(() =>
 			: undefined,
 );
 
-type Access = "private" | "link" | "public";
+type Access = "private" | "signed_in" | "link" | "public";
 const ACCESS_ICONS: Record<Access, string> = {
 	private: "lucide:lock",
+	signed_in: "lucide:users",
 	link: "lucide:link",
 	public: "lucide:globe",
 };
 const access = computed<Access>(() => {
 	const p = head.value?.protection;
 	if (!p?.isPublic) return "private";
+	if (p.requiresLogin) return "signed_in";
 	return p.isLinkRequired ? "link" : "public";
 });
 const accessItems = computed(() =>
-	(["private", "link", "public"] as const).map((a) => ({
+	(["private", "signed_in", "link", "public"] as const).map((a) => ({
 		value: a,
 		label: t(`dialogs.share.access_mode.${a}`),
 		icon: ACCESS_ICONS[a],
@@ -185,6 +187,7 @@ function changeAccess(next: Access) {
 		id: h.id,
 		isPublic: next !== "private",
 		isLinkRequired: next === "link",
+		requiresLogin: next === "signed_in",
 		isNsfw: h.isNsfw,
 		grantsFullPhotoAccess: was ? p.grantsFullPhotoAccess : true,
 		grantsDownload: was ? p.grantsDownload : false,

@@ -13,7 +13,7 @@ unchanged on Node.js (>= 22.18, type stripping) and Bun, against an external Pos
   thumb, each with 2x) in WebP or JPEG, blurred placeholders, video thumbnails (ffmpeg), HEIC import,
   five dominant colours per photo
 - Editing: title, description, tags, date, licence, star rating, highlight, rotate, move/copy between albums, delete
-- Sharing: public, link-only and password-protected albums (guests unlock per browser session), per-user grants
+- Sharing: public, signed-in-users-only, link-only and password-protected albums (guests unlock per browser session), per-user grants
   (full photo, download, upload, edit, delete, move), user directory from Keycloak
 - Discovery: smart albums (unsorted, recent, highlighted, untagged, on this day), tag albums, search
   (`tag:`, `type:`, `date:`, `color:#rrggbb`, `make:`, `model:`, `license:`, `rating:>=n`), timeline, map

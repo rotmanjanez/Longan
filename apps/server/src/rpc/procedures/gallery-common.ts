@@ -8,7 +8,6 @@ import type { Db, Tx } from "../../db/index.ts";
 import { type Album, accessPermissions, albums, photos, tags } from "../../db/schema.ts";
 import { log } from "../../lib/log.ts";
 import { albumAccessible, albumListed, photoGrant, type Viewer } from "../../policy/index.ts";
-import { settingBool } from "../../settings/index.ts";
 import type { Ctx } from "../context.ts";
 
 export type Q = Db | Tx;
@@ -47,23 +46,12 @@ export function inList(values: readonly (string | number)[]): SQL {
 	)})`;
 }
 
-/** Anonymous visitors get nothing when site.login_required is on. */
-export async function requireSiteAccess(ctx: Ctx): Promise<void> {
-	if (
-		ctx.viewer.userId === null &&
-		!ctx.viewer.isAdmin &&
-		(await settingBool("site.login_required", false))
-	) {
-		throw new ORPCError("UNAUTHORIZED");
-	}
-}
-
 /**
- * Load an album by id (or by slug) and decide access. Throws NOT_FOUND / PASSWORD_REQUIRED / FORBIDDEN
- * when the viewer may not open it. NOT_FOUND is used whenever the viewer cannot know the album exists.
+ * Load an album by id (or by slug) and decide access. Throws NOT_FOUND / UNAUTHORIZED / PASSWORD_REQUIRED /
+ * FORBIDDEN when the viewer may not open it. NOT_FOUND is used whenever the viewer cannot know the album exists.
+ * UNAUTHORIZED (an anonymous visitor on a sign-in-only album) makes the web app send them to the login.
  */
 export async function requireAccessibleAlbum(ctx: Ctx, idOrSlug: string, db: Q = ctx.db): Promise<Album> {
-	await requireSiteAccess(ctx);
 	const v = ctx.viewer;
 	const rows = await db
 		.select({
@@ -71,6 +59,7 @@ export async function requireAccessibleAlbum(ctx: Ctx, idOrSlug: string, db: Q =
 			accessible: albumAccessible(v),
 			listed: albumListed(v),
 			hasPassword: sql<boolean>`exists (select 1 from ${accessPermissions} ap where ap.album_id = albums.id and ap.user_id is null and ap.password_hash is not null)`,
+			requiresLogin: sql<boolean>`exists (select 1 from ${accessPermissions} ap where ap.album_id = albums.id and ap.user_id is null and ap.requires_login)`,
 		})
 		.from(albums)
 		.where(or(eq(albums.id, idOrSlug), eq(albums.slug, idOrSlug)))
@@ -78,6 +67,7 @@ export async function requireAccessibleAlbum(ctx: Ctx, idOrSlug: string, db: Q =
 	const row = rows.find((r) => r.album.id === idOrSlug) ?? rows[0];
 	if (!row) throw new ORPCError("NOT_FOUND", { message: "Album not found" });
 	if (row.accessible) return row.album;
+	if (row.requiresLogin && v.userId === null) throw new ORPCError("UNAUTHORIZED");
 	if (row.hasPassword) throw passwordRequired();
 	if (row.listed) throw new ORPCError("FORBIDDEN");
 	throw new ORPCError("NOT_FOUND", { message: "Album not found" });

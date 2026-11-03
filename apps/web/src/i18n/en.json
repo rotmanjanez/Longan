@@ -62,6 +62,7 @@
 			"locked": "Password protected",
 			"public": "Public",
 			"link": "Public (link only)",
+			"signed_in": "Signed-in users",
 			"highlighted": "Highlighted",
 			"video": "Video"
 		},
@@ -295,11 +296,13 @@
 			"access": "General access",
 			"access_mode": {
 				"private": "Private",
+				"signed_in": "Everyone signed in",
 				"link": "Anyone with the link",
 				"public": "Public"
 			},
 			"access_hint": {
 				"private": "Only you and the people above can open this album.",
+				"signed_in": "Listed for everyone who is signed in. Visitors who are not signed in cannot open it.",
 				"link": "Anyone with the link can open it. It is not listed anywhere.",
 				"public": "Listed for everyone, including visitors who are not signed in."
 			},
@@ -494,10 +497,6 @@
 					"label": "Site name",
 					"hint": "Shown in the header and the browser tab."
 				},
-				"login_required": {
-					"label": "Require sign-in",
-					"hint": "Visitors who are not signed in see nothing."
-				},
 				"dark_mode_default": {
 					"label": "Dark mode by default",
 					"hint": "Everyone can still switch in the header."
@@ -561,6 +560,7 @@
 					"label": "New albums are",
 					"options": {
 						"private": "Private",
+						"signed_in": "Visible to everyone signed in",
 						"public": "Public",
 						"public_hidden": "Anyone with the link",
 						"inherit": "Same as the parent album"

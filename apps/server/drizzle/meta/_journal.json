@@ -22,6 +22,13 @@
       "when": 1793687333134,
       "tag": "0002_theme_alpine",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793712320691,
+      "tag": "0003_album_requires_login",
+      "breakpoints": true
     }
   ]
 }

@@ -35,19 +35,20 @@ async function albumFor(title: string, parentId: string | null, ownerId: number)
 	const license = await settingStr("albums.default_license", "none");
 	await db.transaction(async (tx) => {
 		await tx.insert(albums).values({ id, ownerId, title, parentId, license });
-		if (protection === "public" || protection === "public_hidden") {
+		if (protection === "public" || protection === "public_hidden" || protection === "signed_in") {
 			await tx.insert(accessPermissions).values({
 				albumId: id,
 				userId: null,
 				isLinkRequired: protection === "public_hidden",
+				requiresLogin: protection === "signed_in",
 				grantsFullPhotoAccess: await settingBool("albums.public_grants_full_photo", true),
 				grantsDownload: await settingBool("albums.public_grants_download", false),
 			});
 		} else if (protection === "inherit" && parentId) {
 			await tx.execute(sql`
-				insert into access_permissions (album_id, user_id, is_link_required, password_hash, grants_full_photo_access,
-					grants_download, grants_upload, grants_edit, grants_delete, grants_move)
-				select ${id}, user_id, is_link_required, password_hash, grants_full_photo_access,
+				insert into access_permissions (album_id, user_id, is_link_required, requires_login, password_hash,
+					grants_full_photo_access, grants_download, grants_upload, grants_edit, grants_delete, grants_move)
+				select ${id}, user_id, is_link_required, requires_login, password_hash, grants_full_photo_access,
 					grants_download, grants_upload, grants_edit, grants_delete, grants_move
 				from access_permissions where album_id = ${parentId}`);
 		}

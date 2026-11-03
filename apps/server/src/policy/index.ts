@@ -4,6 +4,7 @@
  * - Admin (Keycloak role) bypasses everything.
  * - The owner of an album/photo can do everything with it.
  * - access_permissions rows: user_id NULL = public grant; user_id set = per-user share.
+ *   A public row with requires_login opens the album to every signed-in user but not to anonymous visitors.
  * - Photos have no flags of their own: a photo is visible when ANY album containing it is accessible
  *   (or the viewer owns it). Photos in no album are visible to owner/admin only ("unsorted").
  * - Nothing is inherited down the tree; every album needs its own row.
@@ -56,11 +57,16 @@ function userGrantExists(v: Viewer, a: AlbumRef, extra?: SQL): SQL<boolean> {
 	) as SQL<boolean>;
 }
 
-/** EXISTS(public grant row that is open for this viewer: no password, or unlocked). */
+/** Extra condition on the public row: anonymous visitors only get rows that do not require sign-in. */
+function guestRowFilter(v: Viewer): SQL {
+	return v.userId === null ? sql` and ${accessPermissions.requiresLogin} = false` : sql``;
+}
+
+/** EXISTS(public grant row that is open for this viewer: no password, or unlocked; signed in when required). */
 function publicGrantOpen(v: Viewer, a: AlbumRef, extra?: SQL): SQL<boolean> {
 	const ap = accessPermissions;
 	return exists(
-		sql`(select 1 from ${ap} where ${ap.albumId} = ${a.id} and ${ap.userId} is null and (${ap.passwordHash} is null or ${a.id} in ${unlockedList(v)})${extra ? sql` and ${extra}` : sql``})`,
+		sql`(select 1 from ${ap} where ${ap.albumId} = ${a.id} and ${ap.userId} is null${guestRowFilter(v)} and (${ap.passwordHash} is null or ${a.id} in ${unlockedList(v)})${extra ? sql` and ${extra}` : sql``})`,
 	) as SQL<boolean>;
 }
 
@@ -75,12 +81,15 @@ export function albumAccessible(v: Viewer, a: AlbumRef = albums): SQL<boolean> {
 	return or(isOwner(v, a), userGrantExists(v, a), publicGrantOpen(v, a)) as SQL<boolean>;
 }
 
-/** Album appears in listings (root/children/search). Link-required public albums are hidden here. Locked albums are listed. */
+/**
+ * Album appears in listings (root/children/search). Link-required public albums are hidden here, and sign-in-only
+ * albums are hidden from anonymous visitors. Locked albums are listed.
+ */
 export function albumListed(v: Viewer, a: AlbumRef = albums): SQL<boolean> {
 	if (v.isAdmin) return TRUE;
 	const ap = accessPermissions;
 	const publicListed = exists(
-		sql`(select 1 from ${ap} where ${ap.albumId} = ${a.id} and ${ap.userId} is null and ${ap.isLinkRequired} = false)`,
+		sql`(select 1 from ${ap} where ${ap.albumId} = ${a.id} and ${ap.userId} is null${guestRowFilter(v)} and ${ap.isLinkRequired} = false)`,
 	) as SQL<boolean>;
 	return or(isOwner(v, a), userGrantExists(v, a), publicListed) as SQL<boolean>;
 }
@@ -191,7 +200,7 @@ export function rightsFromRows(v: Viewer, albumId: string, rows: AccessPermissio
 		};
 	}
 	const pub = rows.find((r) => r.userId === null);
-	if (!pub) return none;
+	if (!pub || (pub.requiresLogin && v.userId === null)) return none;
 	const open = pub.passwordHash === null || v.unlockedAlbumIds.includes(albumId);
 	if (!open) return none;
 	return {

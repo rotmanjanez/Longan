@@ -18,13 +18,7 @@ import { settingBool } from "../../settings/index.ts";
 import { os } from "../base.ts";
 import type { Ctx } from "../context.ts";
 import { albumTiles } from "./album-tiles.ts";
-import {
-	A,
-	accessibleSubtree,
-	likeEscape,
-	requireAccessibleAlbum,
-	requireSiteAccess,
-} from "./gallery-common.ts";
+import { A, accessibleSubtree, likeEscape, requireAccessibleAlbum } from "./gallery-common.ts";
 import { nsfwExclusion, photoOrderBy, ratioColumns, toRatiosSoA } from "./photo-scope.ts";
 
 export const COLOUR_DISTANCE = 48;
@@ -102,7 +96,6 @@ export function tokenCondition(t: SearchToken): SQL {
 }
 
 async function requireSearch(ctx: Ctx) {
-	await requireSiteAccess(ctx);
 	if (ctx.viewer.userId === null && !(await settingBool("features.search", true))) {
 		throw new ORPCError("UNAUTHORIZED");
 	}

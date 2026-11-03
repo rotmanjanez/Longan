@@ -18,7 +18,7 @@ import { photos, tagAlbumTags } from "../../db/schema.ts";
 import { albumRecursiveNsfw, photoVisible, type Viewer } from "../../policy/index.ts";
 import { settingBool, settingInt, settingStr } from "../../settings/index.ts";
 import type { Ctx } from "../context.ts";
-import { inList, iso, requireAccessibleAlbum, requireSiteAccess } from "./gallery-common.ts";
+import { inList, iso, requireAccessibleAlbum } from "./gallery-common.ts";
 
 export type PhotoSort = { col: PhotoSortCol; order: SortOrder };
 
@@ -220,7 +220,6 @@ export function tagMembership(tagIds: number[], logic: "and" | "or"): SQL {
 export async function photoScope(ctx: Ctx, album: AnyAlbumId): Promise<PhotoScope> {
 	const v = ctx.viewer;
 	if (isSmartAlbumId(album)) {
-		await requireSiteAccess(ctx);
 		if (!(await smartAllowed(album, v))) {
 			throw new ORPCError(v.userId === null ? "UNAUTHORIZED" : "NOT_FOUND");
 		}

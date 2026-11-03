@@ -187,6 +187,7 @@ export const sizeVariants = pgTable(
 /**
  * One row = one grant on one album. user_id NULL = the public grant (album is public iff such a row exists).
  * Per-user rows win over the public row. Nothing is inherited down the tree.
+ * A public row with requires_login only opens the album to signed-in users, never to anonymous visitors.
  */
 export const accessPermissions = pgTable(
 	"access_permissions",
@@ -198,6 +199,8 @@ export const accessPermissions = pgTable(
 		userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
 		/** Public but hidden from listings; reachable by URL. */
 		isLinkRequired: boolean("is_link_required").notNull().default(false),
+		/** Public row only: open to signed-in users, hidden from anonymous visitors. */
+		requiresLogin: boolean("requires_login").notNull().default(false),
 		passwordHash: text("password_hash"),
 		grantsFullPhotoAccess: boolean("grants_full_photo_access").notNull().default(false),
 		grantsDownload: boolean("grants_download").notNull().default(false),

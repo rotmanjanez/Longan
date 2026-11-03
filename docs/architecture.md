@@ -55,7 +55,7 @@ Module owners add files inside their directory and their `rpc/procedures/<ns>.ts
 ## Authorization rules (policy/index.ts)
 
 - Admin bypasses all. Owner has all rights on own albums/photos.
-- `access_permissions` rows: `user_id NULL` = public grant (with `is_link_required`, `password_hash`, and the public-meaningful grants full-photo/download/upload). `user_id` set = share with that user (all `grants_*`). Per-user row wins over the public row. Not inherited; creating a child album copies the parent's rows when `albums.default_protection = inherit`.
+- `access_permissions` rows: `user_id NULL` = public grant (with `is_link_required`, `requires_login` (signed-in users only; anonymous visitors get nothing and are sent to the login), `password_hash`, and the public-meaningful grants full-photo/download/upload). `user_id` set = share with that user (all `grants_*`). Per-user row wins over the public row. Not inherited; creating a child album copies the parent's rows when `albums.default_protection = inherit`.
 - Listing filter: `albumListed(viewer)`; direct access: `albumAccessible(viewer)` (password-protected albums need `albums.unlock` first, which adds the id to `sessions.unlocked_album_ids`; unlocking one album unlocks all albums sharing the same password hash).
 - Photos: `photoVisible(viewer)` = owner or in any accessible album. Grants via `photoGrant(viewer, grant)`.
 - Smart albums (`unsorted`, `recent`, `highlighted`, `untagged`, `on_this_day`, `timeline`): photo set = smart condition AND `photoVisible(viewer)`; `unsorted` = photos with no album row, owner/admin only. Anonymous visitors see smart albums only when `smart.public` is on; `timeline` additionally needs `features.timeline_public`.

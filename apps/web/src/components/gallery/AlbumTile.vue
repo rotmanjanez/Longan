@@ -64,7 +64,13 @@
 			<TileBadge v-if="album.isNsfw" role="nsfw" icon="lucide:triangle-alert" :label="t('gallery.badges.nsfw')" />
 			<TileBadge v-if="album.isLocked" role="danger" icon="lucide:lock" :label="t('gallery.badges.locked')" />
 			<TileBadge
-				v-if="album.isPublic && album.isLinkRequired"
+				v-if="album.isPublic && album.requiresLogin"
+				role="neutral"
+				icon="lucide:users"
+				:label="t('gallery.badges.signed_in')"
+			/>
+			<TileBadge
+				v-else-if="album.isPublic && album.isLinkRequired"
 				role="link"
 				icon="lucide:link"
 				:label="t('gallery.badges.link')"

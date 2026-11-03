@@ -83,6 +83,7 @@ type TileRow = {
 	created_at: string;
 	is_public: boolean;
 	is_link_required: boolean;
+	requires_login: boolean;
 	is_locked: boolean;
 	num_photos: number;
 	min_taken_at: string | null;
@@ -111,6 +112,7 @@ export async function albumTiles(
 		select a.id, a.kind, a.title, a.is_nsfw, a.owner_id, a.created_at,
 			(pub.id is not null) as is_public,
 			coalesce(pub.is_link_required, false) as is_link_required,
+			coalesce(pub.requires_login, false) as requires_login,
 			(pub.password_hash is not null and not acc.ok) as is_locked,
 			st.n as num_photos, st.mn as min_taken_at, st.mx as max_taken_at,
 			exists (select 1 from albums c where c.parent_id = a.id and ${albumListed(v, C)}) as has_children,
@@ -141,6 +143,7 @@ export async function albumTiles(
 			isNsfw: r.is_nsfw,
 			isPublic: r.is_public,
 			isLinkRequired: r.is_link_required,
+			requiresLogin: r.requires_login,
 			isLocked: r.is_locked,
 			hasChildren: r.has_children,
 			numPhotos: Number(r.num_photos),
@@ -198,6 +201,7 @@ export async function smartTiles(ctx: Ctx): Promise<AlbumTile[]> {
 				isNsfw: false,
 				isPublic: false,
 				isLinkRequired: false,
+				requiresLogin: false,
 				isLocked: false,
 				hasChildren: false,
 				numPhotos: s.numPhotos,

@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
 import type { InitData } from "@/api/client.ts";
-import { loginUrl } from "@/api/errors.ts";
 import { queryClient } from "@/api/query.ts";
 import { initQueryOptions } from "@/composables/useInit.ts";
 
@@ -119,10 +118,6 @@ router.beforeEach(async (to) => {
 		return true; // the shell shows the init error
 	}
 	if (!init) return true;
-	if (init.config.loginRequired && !init.user) {
-		window.location.assign(loginUrl(to.fullPath));
-		return false;
-	}
 	if ((to.meta.auth || to.meta.admin) && !init.user)
 		return { name: "login", query: { redirect: to.fullPath } };
 	if (to.meta.admin && !init.rights.isAdmin) return { name: "root" };

@@ -117,6 +117,8 @@ export const contract = {
 					id: AlbumId,
 					isPublic: z.boolean(),
 					isLinkRequired: z.boolean(),
+					/** Public access for signed-in users only. undefined = unchanged (false for a newly public album). */
+					requiresLogin: z.boolean().optional(),
 					isNsfw: z.boolean(),
 					/** undefined = unchanged, null = remove password, string = set. */
 					password: z.string().min(1).nullable().optional(),

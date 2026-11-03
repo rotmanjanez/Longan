@@ -11,7 +11,6 @@ import {
 	isUniqueViolation,
 	type Q,
 	requirePhotoGrant,
-	requireSiteAccess,
 } from "./gallery-common.ts";
 
 /*
@@ -66,7 +65,6 @@ async function requireTags(db: Q, ids: number[]) {
 
 export const tags = os.tags.router({
 	list: os.tags.list.handler(async ({ context: ctx }) => {
-		await requireSiteAccess(ctx);
 		const v = ctx.viewer;
 		const rows = v.isAdmin
 			? await ctx.db.execute<{ id: number; name: string; count: number }>(sql`

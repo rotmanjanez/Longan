@@ -111,7 +111,6 @@ export const InitConfig = z.object({
 	imageSizes: ImageSizesConfig,
 	imageOverlayType: ImageOverlayType,
 	dateFormat: z.string(),
-	loginRequired: z.boolean(),
 	nsfwVisibleByDefault: z.boolean(),
 	nsfwBlur: z.boolean(),
 	downloadableVariants: z.array(SizeVariantType),
@@ -140,6 +139,8 @@ export const AlbumTile = z.object({
 	isNsfw: z.boolean(),
 	isPublic: z.boolean(),
 	isLinkRequired: z.boolean(),
+	/** Public to signed-in users only. */
+	requiresLogin: z.boolean(),
 	/** Password-protected and not unlocked by this viewer. */
 	isLocked: z.boolean(),
 	hasChildren: z.boolean(),
@@ -178,6 +179,8 @@ export const AlbumHead = z.object({
 		.object({
 			isPublic: z.boolean(),
 			isLinkRequired: z.boolean(),
+			/** Only signed-in users get the public access. */
+			requiresLogin: z.boolean(),
 			hasPassword: z.boolean(),
 			grantsFullPhotoAccess: z.boolean(),
 			grantsDownload: z.boolean(),

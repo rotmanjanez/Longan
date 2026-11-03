@@ -15,13 +15,6 @@ export const DEFAULT_SETTINGS: Array<{
 }> = [
 	{ key: "site.title", value: "Longan", type: "string", category: "Gallery", description: "Site title" },
 	{
-		key: "site.login_required",
-		value: "0",
-		type: "bool",
-		category: "Gallery",
-		description: "Hide everything from anonymous visitors",
-	},
-	{
 		key: "site.dark_mode_default",
 		value: "1",
 		type: "bool",
@@ -143,7 +136,7 @@ export const DEFAULT_SETTINGS: Array<{
 	{
 		key: "albums.default_protection",
 		value: "private",
-		type: "enum:private|public|public_hidden|inherit",
+		type: "enum:private|signed_in|public|public_hidden|inherit",
 		category: "Albums",
 		description: "Protection of newly created albums",
 	},

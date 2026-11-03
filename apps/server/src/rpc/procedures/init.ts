@@ -23,8 +23,6 @@ export const init = os.init.router({
 
 		const loggedIn = ctx.user !== null;
 		const { isAdmin, mayUpload } = ctx.viewer;
-		const loginRequired = await bool("site.login_required", false);
-		const guestBlocked = !loggedIn && loginRequired;
 
 		const features = {
 			search: await bool("features.search", true),
@@ -34,20 +32,20 @@ export const init = os.init.router({
 		};
 		const smartPublic = await bool("smart.public", false);
 		const timelinePublic = await bool("features.timeline_public", false);
-		const guestTimeline = !guestBlocked && smartPublic && timelinePublic;
+		const guestTimeline = smartPublic && timelinePublic;
 
 		const rights: GlobalRights = {
 			isAdmin,
 			mayUpload,
 			canCreateAlbums: mayUpload,
-			canUseSearch: features.search && !guestBlocked,
-			canUseMap: features.map && !guestBlocked,
+			canUseSearch: features.search,
+			canUseMap: features.map,
 			canUseTimeline: features.timeline && (loggedIn || guestTimeline),
 		};
 
 		// Smart albums the viewer can see. Guests need smart.public; unsorted is owner/admin only (uploaders).
 		const smartAlbums: SmartAlbumId[] = [];
-		const guestSmart = !guestBlocked && smartPublic;
+		const guestSmart = smartPublic;
 		for (const id of ["unsorted", "recent", "highlighted", "untagged", "on_this_day"] as const) {
 			if (!(await bool(`smart.${id}`, false))) continue;
 			if (id === "unsorted" ? mayUpload : loggedIn || guestSmart) smartAlbums.push(id);
@@ -88,7 +86,6 @@ export const init = os.init.router({
 			},
 			imageOverlayType: ImageOverlayType.catch("exif").parse(await str("layout.image_overlay", "exif")),
 			dateFormat: await str("site.date_format", "d MMM yyyy"),
-			loginRequired,
 			nsfwVisibleByDefault: await bool("nsfw.visible_by_default", false),
 			nsfwBlur: await bool("nsfw.blur", true),
 			downloadableVariants,

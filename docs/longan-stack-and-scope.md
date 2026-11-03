@@ -38,7 +38,7 @@ Reference material: `docs/lychee-overview/01..04-*.md` (condensed from Lychee v7
 - Groups: Keycloak's "group membership" mapper must put full group paths into a `groups` claim. Longan stores them on the user row on every login. In v1 they are visible in the admin user list but not yet share targets; group-based sharing is deferred and will reuse `access_permissions` with a group path column.
 - Directory: the sharing picker searches Longan's `users` table first. If the OIDC client has a service account with the `realm-management` `view-users` role, Longan additionally searches the Keycloak Admin REST API (`/admin/realms/{realm}/users?search=`) so albums can be shared with people who have never logged in; the row is pre-provisioned with their `sub`.
 - API and CLI: `Authorization: Bearer <access token>` is verified against the realm JWKS with `jose`, same user mapping as the login path. Keycloak service accounts are the replacement for Lychee's API tokens.
-- Guests: unauthenticated visitors see public albums unless the `login_required` setting is on.
+- Guests: unauthenticated visitors see public albums, except those set to "Everyone signed in" (per album, `access_permissions.requires_login`).
 
 ### Repository layout
 

@@ -4,12 +4,11 @@ import { type SQL, sql } from "drizzle-orm";
 import { albumAccessible, photoVisible } from "../../policy/index.ts";
 import { settingBool } from "../../settings/index.ts";
 import { os } from "../base.ts";
-import { A, accessibleSubtree, requireAccessibleAlbum, requireSiteAccess } from "./gallery-common.ts";
+import { A, accessibleSubtree, requireAccessibleAlbum } from "./gallery-common.ts";
 import { nsfwExclusion, photoScope } from "./photo-scope.ts";
 
 export const map = os.map.router({
 	points: os.map.points.handler(async ({ input, context: ctx }) => {
-		await requireSiteAccess(ctx);
 		const v = ctx.viewer;
 		if (v.userId === null && !(await settingBool("features.map", true))) throw new ORPCError("UNAUTHORIZED");
 		const conds: SQL[] = [sql`photos.latitude is not null and photos.longitude is not null`];
