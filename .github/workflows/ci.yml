@@ -90,3 +90,38 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  client:
+    # v* tags attach the @longan/client tarball, versioned from the tag (v1.2.3 -> 1.2.3), to the GitHub release
+    # (created if it does not exist yet). Consumers install it straight from the release URL, no registry or token.
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build and pack
+        working-directory: packages/client
+        run: |
+          npm pkg set version="${GITHUB_REF_NAME#v}"
+          pnpm build
+          pnpm pack --pack-destination "$RUNNER_TEMP/pkg"
+      - name: Attach to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            prerelease=""
+            case "$GITHUB_REF_NAME" in *-*) prerelease="--prerelease" ;; esac
+            gh release create "$GITHUB_REF_NAME" --verify-tag --generate-notes --title "Longan $GITHUB_REF_NAME" $prerelease
+          fi
+          gh release upload "$GITHUB_REF_NAME" "$RUNNER_TEMP"/pkg/longan-client-*.tgz --clobber

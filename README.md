@@ -84,6 +84,16 @@ originals and variants in the `/data` volume.
 API clients and scripts can call `/api/rpc/*` with `Authorization: Bearer <access token>` issued by the same
 realm (a Keycloak service account replaces Lychee's API tokens).
 
+### API client and integrations
+
+[`@longan/client`](packages/client/README.md) is a typed TypeScript client for integrations such as a photobox:
+every RPC procedure, streamed uploads and Keycloak service-account tokens. CI attaches it as a tarball to every
+`vX.Y.Z` GitHub release, with the same version as the server image; install it from the release URL:
+
+```sh
+npm install https://github.com/rotmanjanez/Longan/releases/download/vX.Y.Z/longan-client-X.Y.Z.tgz
+```
+
 ### Reverse proxy
 
 Uploads are one streamed `PUT /api/upload` request per file, so the proxy must allow request bodies up to
@@ -128,7 +138,8 @@ docker compose exec app node apps/server/src/cli/index.ts <command> # Docker
 
 ## Architecture
 
-Monorepo with `packages/shared` (zod contract, enums, layout functions), `apps/server` (Hono, oRPC, Drizzle,
+Monorepo with `packages/shared` (zod contract, enums, layout functions), `packages/client` (published API client),
+`apps/server` (Hono, oRPC, Drizzle,
 sharp, ffmpeg, Keycloak OIDC) and `apps/web` (Vue 3, Nuxt UI, TanStack Query). See
 [docs/architecture.md](docs/architecture.md) for conventions, request flow, authorization and the media
 pipeline, and [docs/longan-stack-and-scope.md](docs/longan-stack-and-scope.md) for scope and decisions.
