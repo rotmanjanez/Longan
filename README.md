@@ -36,6 +36,10 @@ issuer to `http://localhost:8080` for both the browser and the app container (a 
 `localhost:8080` inside the app container); for anything beyond a local trial put Keycloak and Longan behind real
 hostnames, set `SESSION_SECRET`, and replace the client secret.
 
+Prebuilt images are published to the GitHub Container Registry by CI: `ghcr.io/rotmanjanez/longan:edge` tracks
+`main`, release tags `vX.Y.Z` publish `X.Y.Z`, `X.Y`, `X` and `latest` (linux/amd64). Use one in place of `build:`
+in your own compose file.
+
 The image runs database migrations on start (`docker/entrypoint.sh`, skip with `SKIP_MIGRATIONS=1`) and keeps
 originals and variants in the `/data` volume.
 
