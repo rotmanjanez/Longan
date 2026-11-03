@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyTheme, themeVariables } from "./theme.ts";
+import { applyTheme, CUSTOM_PALETTES, paletteFor, themeVariables } from "./theme.ts";
 
 describe("theme variables", () => {
 	it("maps the Tailwind palettes onto the Nuxt UI tokens and lets overrides win", () => {
@@ -11,6 +11,13 @@ describe("theme variables", () => {
 		expect(Object.keys(vars).filter((k) => k.startsWith("--ui-color-neutral-"))).toHaveLength(11);
 		expect(vars["--ui-color-primary-400"]).toMatch(/^oklch\(/);
 		expect(vars["--ui-color-primary-500"]).toBe("#ff0000");
+	});
+
+	it("resolves Longan's own palettes alongside Tailwind's", () => {
+		const vars = themeVariables({ primary: "alpine", neutral: "moss", overrides: {} });
+		expect(vars["--ui-color-primary-500"]).toBe(CUSTOM_PALETTES.alpine?.["500"]);
+		expect(vars["--ui-color-neutral-900"]).toBe(CUSTOM_PALETTES.moss?.["900"]);
+		expect(paletteFor("toString")).toBeNull();
 	});
 
 	it("ignores malformed override tokens", () => {

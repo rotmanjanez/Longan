@@ -38,6 +38,7 @@ export const SIZE_VARIANTS = [
 	"thumb",
 ] as const;
 export const THEME_COLORS = [
+	"alpine",
 	"red",
 	"orange",
 	"amber",
@@ -56,7 +57,7 @@ export const THEME_COLORS = [
 	"pink",
 	"rose",
 ] as const;
-export const THEME_NEUTRALS = ["slate", "gray", "zinc", "neutral", "stone"] as const;
+export const THEME_NEUTRALS = ["moss", "slate", "gray", "zinc", "neutral", "stone"] as const;
 
 /** Sentinel for "use the default" in selects (reka-ui selects cannot hold null / ""). */
 export const DEFAULT_OPTION = "__default";

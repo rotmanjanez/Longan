@@ -15,6 +15,13 @@
       "when": 1793644787134,
       "tag": "0001_anonymous_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793687333134,
+      "tag": "0002_theme_alpine",
+      "breakpoints": true
     }
   ]
 }

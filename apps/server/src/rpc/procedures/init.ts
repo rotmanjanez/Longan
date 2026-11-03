@@ -70,8 +70,8 @@ export const init = os.init.router({
 			version: pkg.version,
 			darkModeDefault: await bool("site.dark_mode_default", true),
 			theme: {
-				primary: ThemeColor.catch("sky").parse(await str("theme.primary", "sky")),
-				neutral: ThemeNeutral.catch("slate").parse(await str("theme.neutral", "slate")),
+				primary: ThemeColor.catch("alpine").parse(await str("theme.primary", "alpine")),
+				neutral: ThemeNeutral.catch("moss").parse(await str("theme.neutral", "moss")),
 				overrides,
 			},
 			defaultLayout: PhotoLayout.catch("justified").parse(await str("layout.default", "justified")),

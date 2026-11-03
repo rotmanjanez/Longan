@@ -5,8 +5,43 @@ export const SHADES = ["50", "100", "200", "300", "400", "500", "600", "700", "8
 
 type Palette = Record<(typeof SHADES)[number], string>;
 
-/** Tailwind v4 palette (oklch strings) for a colour name, or null if unknown. */
+/**
+ * Longan's own palettes on top of Tailwind's. Keep in sync with the `--color-*` tokens in style.css (build-time
+ * default theme). alpine: muted, pastel alpine green accent. moss: neutrals whose dark end is a deep forest green
+ * (dark-mode surfaces), light end near-neutral (text).
+ */
+export const CUSTOM_PALETTES: Record<string, Palette> = {
+	alpine: {
+		"50": "oklch(0.94 0.02 158)",
+		"100": "oklch(0.89 0.032 158)",
+		"200": "oklch(0.81 0.046 158)",
+		"300": "oklch(0.71 0.056 158)",
+		"400": "oklch(0.59 0.06 158)",
+		"500": "oklch(0.48 0.056 158)",
+		"600": "oklch(0.41 0.05 158)",
+		"700": "oklch(0.355 0.044 158)",
+		"800": "oklch(0.3 0.037 158)",
+		"900": "oklch(0.255 0.03 158)",
+		"950": "oklch(0.19 0.022 158)",
+	},
+	moss: {
+		"50": "oklch(0.985 0.004 160)",
+		"100": "oklch(0.964 0.007 160)",
+		"200": "oklch(0.924 0.011 160)",
+		"300": "oklch(0.86 0.016 160)",
+		"400": "oklch(0.69 0.022 160)",
+		"500": "oklch(0.53 0.026 160)",
+		"600": "oklch(0.36 0.03 160)",
+		"700": "oklch(0.27 0.031 160)",
+		"800": "oklch(0.2 0.029 160)",
+		"900": "oklch(0.145 0.024 160)",
+		"950": "oklch(0.11 0.018 160)",
+	},
+};
+
+/** Palette (oklch strings) for a colour name (custom or Tailwind v4), or null if unknown. */
 export function paletteFor(name: string): Palette | null {
+	if (Object.hasOwn(CUSTOM_PALETTES, name)) return CUSTOM_PALETTES[name] ?? null;
 	const p = (colors as unknown as Record<string, unknown>)[name];
 	if (!p || typeof p !== "object") return null;
 	return p as Palette;

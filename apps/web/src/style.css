@@ -9,12 +9,46 @@
 	--text-2xs--line-height: 0.8rem;
 }
 
+/* Default theme palettes (same values as CUSTOM_PALETTES in src/lib/theme.ts). `static`: Nuxt UI reads them
+   through `var(--color-alpine-*)`, which Tailwind cannot see, so they must not be tree-shaken. */
+@theme static {
+	--color-alpine-50: oklch(0.94 0.02 158);
+	--color-alpine-100: oklch(0.89 0.032 158);
+	--color-alpine-200: oklch(0.81 0.046 158);
+	--color-alpine-300: oklch(0.71 0.056 158);
+	--color-alpine-400: oklch(0.59 0.06 158);
+	--color-alpine-500: oklch(0.48 0.056 158);
+	--color-alpine-600: oklch(0.41 0.05 158);
+	--color-alpine-700: oklch(0.355 0.044 158);
+	--color-alpine-800: oklch(0.3 0.037 158);
+	--color-alpine-900: oklch(0.255 0.03 158);
+	--color-alpine-950: oklch(0.19 0.022 158);
+
+	--color-moss-50: oklch(0.985 0.004 160);
+	--color-moss-100: oklch(0.964 0.007 160);
+	--color-moss-200: oklch(0.924 0.011 160);
+	--color-moss-300: oklch(0.86 0.016 160);
+	--color-moss-400: oklch(0.69 0.022 160);
+	--color-moss-500: oklch(0.53 0.026 160);
+	--color-moss-600: oklch(0.36 0.03 160);
+	--color-moss-700: oklch(0.27 0.031 160);
+	--color-moss-800: oklch(0.2 0.029 160);
+	--color-moss-900: oklch(0.145 0.024 160);
+	--color-moss-950: oklch(0.11 0.018 160);
+}
+
 :root {
 	--ui-header-height: 3.5rem;
 	--ui-container: 100%;
 	/* Bottom edge of the sticky app header including the status bar inset (viewport-fit=cover).
 	   Separate from --ui-header-height, which Nuxt UI also uses for modal headers. */
 	--app-header-bottom: calc(var(--ui-header-height) + env(safe-area-inset-top));
+}
+
+/* Dark mode accent one shade deeper than Nuxt UI's default (400): a dark pastel green that keeps white
+   button labels legible. */
+.dark {
+	--ui-primary: var(--ui-color-primary-500);
 }
 
 body {

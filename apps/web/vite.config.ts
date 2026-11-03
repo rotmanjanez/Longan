@@ -22,13 +22,13 @@ export default defineConfig({
 			// app never falls back to fetching from api.iconify.design. Icon names must be string literals.
 			icon: { clientBundle: { scan: { globInclude: ["src/**/*.{vue,ts}"], globExclude: ["**/*.test.ts"] } } },
 			ui: {
-				colors: { primary: "sky", neutral: "slate" },
+				colors: { primary: "alpine", neutral: "moss" },
 				// Touch screens: every button is at least a 40×40 tap target, whatever its size prop.
 				button: {
 					slots: { base: "rounded-xl pointer-coarse:min-h-10 pointer-coarse:min-w-10 justify-center" },
 					compoundVariants: [{ color: "primary", variant: "solid", class: "text-white" }],
 				},
-				// iOS-style switch: 52×32 pill, white knob with a soft shadow, green when on, label left / switch right.
+				// iOS-style switch: 52×32 pill, white knob with a soft shadow, accent colour when on, label left / switch right.
 				switch: {
 					slots: {
 						root: "flex-row-reverse items-center justify-between gap-3",
@@ -45,7 +45,7 @@ export default defineConfig({
 							},
 						},
 					},
-					defaultVariants: { color: "success", size: "md" },
+					defaultVariants: { color: "primary", size: "md" },
 				},
 				// 16px text in fields on phones: iOS Safari zooms into anything smaller on focus.
 				input: { slots: { base: "max-sm:text-base" } },

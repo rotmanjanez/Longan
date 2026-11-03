@@ -93,6 +93,7 @@ export type ImageOverlayType = z.infer<typeof ImageOverlayType>;
 
 /** Nuxt UI colour names available for the theme palette. */
 export const ThemeColor = z.enum([
+	"alpine",
 	"red",
 	"orange",
 	"amber",
@@ -111,6 +112,6 @@ export const ThemeColor = z.enum([
 	"pink",
 	"rose",
 ]);
-export const ThemeNeutral = z.enum(["slate", "gray", "zinc", "neutral", "stone"]);
+export const ThemeNeutral = z.enum(["moss", "slate", "gray", "zinc", "neutral", "stone"]);
 export type ThemeColor = z.infer<typeof ThemeColor>;
 export type ThemeNeutral = z.infer<typeof ThemeNeutral>;

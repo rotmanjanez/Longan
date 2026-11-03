@@ -26,7 +26,7 @@ export const initData: InitData = {
 		title: "Test Gallery",
 		version: "0.1.0",
 		darkModeDefault: true,
-		theme: { primary: "sky", neutral: "slate", overrides: {} },
+		theme: { primary: "alpine", neutral: "moss", overrides: {} },
 		defaultLayout: "square",
 		layout: {
 			justifiedRowHeight: 200,
