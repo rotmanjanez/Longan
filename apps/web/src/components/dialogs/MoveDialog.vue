@@ -6,6 +6,7 @@
 				<AlbumPicker
 					v-model="target"
 					:exclude="isAlbum ? ctx.albumIds : []"
+					:same-owner-as="isAlbum ? ctx.albumIds : []"
 					:exclude-only="!isAlbum && ctx.albumId ? [ctx.albumId] : []"
 					allow-root
 					:root-label="isAlbum ? undefined : t('gallery.smart.unsorted')"

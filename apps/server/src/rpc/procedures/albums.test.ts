@@ -1,5 +1,6 @@
+import { randomBytes } from "node:crypto";
 import { call } from "@orpc/server";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
@@ -10,7 +11,8 @@ vi.hoisted(() => {
 });
 
 import { db, sql as pg } from "../../db/index.ts";
-import { accessPermissions, albums as albumsTable, photoAlbum, sessions } from "../../db/schema.ts";
+import { accessPermissions, albums as albumsTable, photoAlbum, photos, sessions } from "../../db/schema.ts";
+import { newId } from "../../lib/ids.ts";
 import { settingBool } from "../../settings/index.ts";
 import { router } from "../router.ts";
 import { reachableCrumbs } from "./albums.ts";
@@ -338,6 +340,171 @@ describe("albums mutations", () => {
 		);
 		const rows = await db.select().from(accessPermissions).where(eq(accessPermissions.albumId, w.a.priv));
 		expect(rows).toEqual([]);
+	});
+});
+
+describe("albums move/delete across owners", () => {
+	const grants = {
+		grantsFullPhotoAccess: false,
+		grantsDownload: false,
+		grantsUpload: false,
+		grantsEdit: false,
+		grantsDelete: false,
+		grantsMove: false,
+	};
+	const albumOf = async (ownerId: number, title: string, parentId: string | null = null) => {
+		const id = newId();
+		await db.insert(albumsTable).values({ id, ownerId, title: `${title} ${w.rand}`, parentId });
+		return id;
+	};
+	const photoIn = async (albumId: string) => {
+		const id = newId();
+		await db.insert(photos).values({
+			id,
+			ownerId: w.alice.id,
+			title: `Only in ${albumId}`,
+			type: "image",
+			mime: "image/jpeg",
+			filesize: 1000,
+			checksum: randomBytes(20).toString("hex"),
+			originalChecksum: randomBytes(20).toString("hex"),
+			width: 300,
+			height: 200,
+		});
+		await db.insert(photoAlbum).values({ photoId: id, albumId });
+		return id;
+	};
+	const parentOf = async (id: string) =>
+		(await db.select({ parentId: albumsTable.parentId }).from(albumsTable).where(eq(albumsTable.id, id)))[0]
+			?.parentId;
+	const existing = async (albumIds: string[]) =>
+		(await db.select({ id: albumsTable.id }).from(albumsTable).where(inArray(albumsTable.id, albumIds)))
+			.map((r) => r.id)
+			.sort();
+
+	it("a move-only sharee cannot graft the owner's album into their own and delete it", async () => {
+		const s = await albumOf(w.alice.id, "S");
+		const s2 = await albumOf(w.alice.id, "S2", s);
+		const q = await photoIn(s2);
+		const t = await albumOf(w.bob.id, "T");
+		await db.insert(accessPermissions).values({ albumId: s, userId: w.bob.id, ...grants, grantsMove: true });
+
+		await expect(
+			call(router.albums.move, { ids: [s], targetId: t }, { context: w.ctx.bob }),
+		).rejects.toMatchObject({ code: "FORBIDDEN" });
+		expect((await db.select().from(albumsTable).where(eq(albumsTable.id, s)))[0]?.parentId).toBeNull();
+
+		// Even once grafted (only an admin can do that now), bob's delete must not cascade into alice's albums:
+		// her album is detached to the top level with its sub-album and photo intact.
+		await call(router.albums.move, { ids: [s], targetId: t }, { context: w.ctx.admin });
+		await call(router.albums.delete, { ids: [t] }, { context: w.ctx.bob });
+		expect(await existing([s, s2, t])).toEqual([s, s2].sort());
+		expect(await parentOf(s)).toBeNull();
+		expect(await parentOf(s2)).toBe(s);
+		expect(await db.select({ id: photos.id }).from(photos).where(eq(photos.id, q))).toEqual([{ id: q }]);
+
+		await call(router.albums.delete, { ids: [s] }, { context: w.ctx.admin });
+		await db.delete(photos).where(eq(photos.id, q));
+	});
+
+	it("a delete-grant sharee cannot merge the owner's album into their own", async () => {
+		const s = await albumOf(w.alice.id, "MS");
+		const s2 = await albumOf(w.alice.id, "MS2", s);
+		const t = await albumOf(w.bob.id, "MT");
+		const a = await albumOf(w.alice.id, "MA");
+		await db.insert(accessPermissions).values([
+			{ albumId: s, userId: w.bob.id, ...grants, grantsDelete: true },
+			{ albumId: a, userId: w.bob.id, ...grants, grantsEdit: true },
+		]);
+		await expect(
+			call(router.albums.merge, { ids: [s], targetId: t }, { context: w.ctx.bob }),
+		).rejects.toMatchObject({ code: "FORBIDDEN" });
+		expect(await parentOf(s2)).toBe(s);
+		// Into another album of the same owner it is allowed.
+		await call(router.albums.merge, { ids: [s], targetId: a }, { context: w.ctx.bob });
+		expect(await existing([s, s2, a])).toEqual([s2, a].sort());
+		expect(await parentOf(s2)).toBe(a);
+		await call(router.albums.delete, { ids: [a, t] }, { context: w.ctx.admin });
+	});
+
+	it("tree with sameOwnerAs lists only albums of the sources' owner", async () => {
+		const mine = await albumOf(w.alice.id, "TreeMine");
+		const theirs = await albumOf(w.bob.id, "TreeTheirs");
+		const src = await albumOf(w.bob.id, "TreeSrc");
+		await db
+			.insert(accessPermissions)
+			.values({ albumId: mine, userId: w.bob.id, ...grants, grantsEdit: true });
+		const all = await call(router.albums.tree, undefined, { context: w.ctx.bob });
+		expect(all.ids).toEqual(expect.arrayContaining([mine, theirs, src]));
+		const same = await call(router.albums.tree, { sameOwnerAs: [src] }, { context: w.ctx.bob });
+		expect(same.ids).toEqual(expect.arrayContaining([theirs, src]));
+		expect(same.ids).not.toContain(mine);
+		// An album the viewer cannot access is ignored rather than used as an ownership oracle.
+		const hidden = await albumOf(w.alice.id, "TreeHidden");
+		const probe = await call(router.albums.tree, { sameOwnerAs: [hidden] }, { context: w.ctx.bob });
+		expect(probe.ids).toEqual(all.ids);
+		await call(router.albums.delete, { ids: [mine, theirs, src, hidden] }, { context: w.ctx.admin });
+	});
+
+	it("non-admins cannot move an album under another owner's album", async () => {
+		const mine = await albumOf(w.alice.id, "Mine");
+		const theirs = await albumOf(w.bob.id, "Theirs");
+		// Alice has full rights on her album and upload rights on bob's: the owner mismatch alone rejects it.
+		await db
+			.insert(accessPermissions)
+			.values({ albumId: theirs, userId: w.alice.id, ...grants, grantsUpload: true, grantsEdit: true });
+		await expect(
+			call(router.albums.move, { ids: [mine], targetId: theirs }, { context: w.ctx.alice }),
+		).rejects.toMatchObject({ code: "FORBIDDEN" });
+		await call(router.albums.delete, { ids: [mine, theirs] }, { context: w.ctx.admin });
+	});
+
+	it("delete detaches sub-albums the caller may not delete instead of cascading into them", async () => {
+		const top = await albumOf(w.alice.id, "Top");
+		const mid = await albumOf(w.alice.id, "Mid", top);
+		const foreign = await albumOf(w.bob.id, "Foreign", mid);
+		const deep = await albumOf(w.bob.id, "Deep", foreign);
+		await call(router.albums.delete, { ids: [top] }, { context: w.ctx.alice });
+		expect(await existing([top, mid, foreign, deep])).toEqual([foreign, deep].sort());
+		expect(await parentOf(foreign)).toBeNull();
+		expect(await parentOf(deep)).toBe(foreign);
+		await call(router.albums.delete, { ids: [foreign] }, { context: w.ctx.admin });
+
+		// A delete grant on the descendant lets it go with the album; admins delete everything.
+		const top1 = await albumOf(w.alice.id, "Top1");
+		const foreign1 = await albumOf(w.bob.id, "Foreign1", top1);
+		await db
+			.insert(accessPermissions)
+			.values({ albumId: foreign1, userId: w.alice.id, ...grants, grantsDelete: true });
+		await call(router.albums.delete, { ids: [top1] }, { context: w.ctx.alice });
+		expect(await existing([top1, foreign1])).toEqual([]);
+
+		const top2 = await albumOf(w.alice.id, "Top2");
+		const foreign2 = await albumOf(w.bob.id, "Foreign2", top2);
+		await call(router.albums.delete, { ids: [top2] }, { context: w.ctx.admin });
+		expect(await existing([top2, foreign2])).toEqual([]);
+	});
+
+	it("same-owner moves (owner or sharee) and owner deletes still work", async () => {
+		const a1 = await albumOf(w.alice.id, "A1");
+		const a2 = await albumOf(w.alice.id, "A2");
+		const a3 = await albumOf(w.alice.id, "A3");
+		const q = await photoIn(a2);
+		await call(router.albums.move, { ids: [a2], targetId: a1 }, { context: w.ctx.alice });
+
+		await db.insert(accessPermissions).values([
+			{ albumId: a3, userId: w.bob.id, ...grants, grantsMove: true },
+			{ albumId: a1, userId: w.bob.id, ...grants, grantsEdit: true },
+		]);
+		await call(router.albums.move, { ids: [a3], targetId: a1 }, { context: w.ctx.bob });
+		const kids = await call(router.albums.children, { id: a1 }, { context: w.ctx.alice });
+		expect(ids(kids).sort()).toEqual([a2, a3].sort());
+
+		await call(router.albums.delete, { ids: [a1] }, { context: w.ctx.alice });
+		expect(await existing([a1, a2, a3])).toEqual([]);
+		// q lost its only album: deleted with it, or left unsorted when the media module is unavailable.
+		expect(await db.select().from(photoAlbum).where(eq(photoAlbum.photoId, q))).toEqual([]);
+		await db.delete(photos).where(eq(photos.id, q));
 	});
 });
 

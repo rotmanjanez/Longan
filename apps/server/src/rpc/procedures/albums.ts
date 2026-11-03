@@ -23,7 +23,7 @@ import {
 } from "../../db/schema.ts";
 import { newId } from "../../lib/ids.ts";
 import { log } from "../../lib/log.ts";
-import { albumAccessible, albumListed, albumRightsFor } from "../../policy/index.ts";
+import { albumAccessible, albumGrant, albumListed, albumRightsFor, photoGrant } from "../../policy/index.ts";
 import { settingBool, settingStr } from "../../settings/index.ts";
 import { os } from "../base.ts";
 import { type Ctx, requireUpload, requireUser } from "../context.ts";
@@ -38,6 +38,7 @@ import {
 	loadAlbums,
 	mediaDeletePhotos,
 	ownsOrAdmin,
+	P,
 	passwordProtectedRows,
 	publicRow,
 	type Q,
@@ -243,12 +244,19 @@ export const albums = os.albums.router({
 		);
 	}),
 
-	tree: os.albums.tree.handler(async ({ context: ctx }) => {
+	tree: os.albums.tree.handler(async ({ input, context: ctx }) => {
 		const v = ctx.viewer;
 		if (v.userId === null && !v.isAdmin) return { ids: [], titles: [], parentIds: [] };
-		const filter = v.isAdmin
+		let filter = v.isAdmin
 			? sql`true`
 			: sql`(a.owner_id = ${v.userId} or exists (select 1 from access_permissions x where x.album_id = a.id and x.user_id = ${v.userId} and x.grants_edit))`;
+		const sameOwnerAs = input?.sameOwnerAs ?? [];
+		if (!v.isAdmin && sameOwnerAs.length > 0) {
+			// Mirrors move/merge: non-admins may only nest under an album of the source albums' owner.
+			// Sources the viewer cannot access are ignored, so this reveals nothing about them.
+			const s = { id: sql`s.id`, ownerId: sql`s.owner_id` };
+			filter = sql`${filter} and not exists (select 1 from albums s where s.id in ${inList(sameOwnerAs)} and ${albumAccessible(v, s)} and s.owner_id <> a.owner_id)`;
+		}
 		const rows = await ctx.db.execute<{ id: string; title: string; parent_id: string | null }>(
 			sql`select a.id, a.title, a.parent_id from albums a where a.kind = 'album' and ${filter} order by a.title, a.id`,
 		);
@@ -384,6 +392,9 @@ export const albums = os.albums.router({
 			if (target.kind !== "album")
 				throw new ORPCError("BAD_REQUEST", { message: "Tag albums have no children" });
 			await rightsOrForbid(ctx, target, (r) => r.canUpload || r.canEdit);
+			// Moving keeps the album's owner, so non-admins may only nest it under an album of that same owner.
+			// Otherwise a sharee could graft the owner's album into their own tree and delete it from there.
+			if (!v.isAdmin && list.some((a) => a.ownerId !== target.ownerId)) throw new ORPCError("FORBIDDEN");
 			const sub = await subtreeIds(ctx.db, input.ids);
 			if (sub.includes(target.id)) {
 				throw new ORPCError("BAD_REQUEST", {
@@ -411,6 +422,10 @@ export const albums = os.albums.router({
 			if (s.kind !== "album") throw new ORPCError("BAD_REQUEST", { message: "Cannot merge tag albums" });
 			await rightsOrForbid(ctx, s, (r) => r.canDelete);
 		}
+		// Merging hands the source's photos and sub-albums to the target: like move, non-admins may only merge
+		// into an album of the same owner, or a sharee could pull the owner's content into their own tree.
+		if (!ctx.viewer.isAdmin && sources.some((s) => s.ownerId !== target.ownerId))
+			throw new ORPCError("FORBIDDEN");
 		const sub = await subtreeIds(ctx.db, input.ids);
 		if (sub.includes(target.id)) {
 			throw new ORPCError("BAD_REQUEST", { message: "Cannot merge an album into its own descendant" });
@@ -430,16 +445,36 @@ export const albums = os.albums.router({
 
 	delete: os.albums.delete.handler(async ({ input, context: ctx }) => {
 		requireUser(ctx);
+		const v = ctx.viewer;
 		const list = await loadAlbums(ctx.db, input.ids);
 		for (const a of list) await rightsOrForbid(ctx, a, (r) => r.canDelete);
 		const sub = await subtreeIds(ctx.db, input.ids);
-		const linked = await ctx.db.execute<{ photo_id: string }>(
-			sql`select distinct photo_id from photo_album where album_id in ${inList(sub)}`,
+		// Descendants go with the album (ON DELETE CASCADE). Sub-albums the caller may not delete (e.g. one an
+		// uploader created inside, or someone else's album an admin nested here) are not destroyed: the topmost
+		// of them are detached to the top level, keeping their owner and their own sub-albums.
+		const nodes = await ctx.db
+			.select({ id: albumsTable.id, parentId: albumsTable.parentId, ok: albumGrant(v, "grantsDelete") })
+			.from(albumsTable)
+			.where(inArray(albumsTable.id, sub));
+		const kept = new Set(nodes.filter((n) => !n.ok).map((n) => n.id));
+		const detach = nodes.filter((n) => !n.ok && !(n.parentId && kept.has(n.parentId))).map((n) => n.id);
+		// Decided before the links go away: only photos the caller may delete are removed with the album.
+		const linked = await ctx.db.execute<{ id: string; ok: boolean }>(
+			sql`select p.id, ${photoGrant(v, "grantsDelete", P)} as ok from photos p
+				where exists (select 1 from photo_album pa where pa.photo_id = p.id and pa.album_id in ${inList(sub)})`,
 		);
-		const candidates = linked.map((r) => r.photo_id);
-		await ctx.db.delete(albumsTable).where(inArray(albumsTable.id, input.ids));
+		const candidates = linked.filter((r) => r.ok).map((r) => r.id);
+		await ctx.db.transaction(async (tx) => {
+			if (detach.length) {
+				await tx
+					.update(albumsTable)
+					.set({ parentId: null, updatedAt: sql`now()` })
+					.where(inArray(albumsTable.id, detach));
+			}
+			await tx.delete(albumsTable).where(inArray(albumsTable.id, input.ids));
+		});
 		if (candidates.length === 0) return;
-		// Photos whose last album link went away are deleted with the album.
+		// Photos whose last album link went away are deleted with the album; others' photos stay unsorted.
 		const orphans = await ctx.db.execute<{ id: string }>(
 			sql`select p.id from photos p where p.id in ${inList(candidates)} and not exists (select 1 from photo_album pa where pa.photo_id = p.id)`,
 		);

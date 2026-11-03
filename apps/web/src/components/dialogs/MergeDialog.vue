@@ -3,7 +3,12 @@
 		<template #body>
 			<form id="merge-form" class="flex flex-col gap-3" @submit.prevent="submit">
 				<p class="text-sm text-muted">{{ t("dialogs.merge.hint", ctx.albumIds.length) }}</p>
-				<AlbumPicker v-model="target" :exclude="ctx.albumIds" :label="t('dialogs.merge.target')" />
+				<AlbumPicker
+					v-model="target"
+					:exclude="ctx.albumIds"
+					:same-owner-as="ctx.albumIds"
+					:label="t('dialogs.merge.target')"
+				/>
 			</form>
 		</template>
 		<template #footer>

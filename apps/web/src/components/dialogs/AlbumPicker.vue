@@ -60,6 +60,8 @@ const props = defineProps<{
 	exclude?: readonly string[];
 	/** Also exclude these ids, but not their descendants (e.g. the source album of a photo move). */
 	excludeOnly?: readonly string[];
+	/** Only offer albums of the same owner as these albums (album move/merge targets; the server enforces it). */
+	sameOwnerAs?: readonly string[];
 	allowRoot?: boolean;
 	/** Label/icon of the `null` option (default: top level). */
 	rootLabel?: string;
@@ -70,7 +72,14 @@ const emit = defineEmits<{ "update:modelValue": [value: string | null] }>();
 const { t } = useI18n();
 const filter = ref("");
 
-const tree = useQuery(orpc.albums.tree.queryOptions({ staleTime: 0 }));
+const tree = useQuery(
+	computed(() =>
+		orpc.albums.tree.queryOptions({
+			input: props.sameOwnerAs?.length ? { sameOwnerAs: [...props.sameOwnerAs] } : undefined,
+			staleTime: 0,
+		}),
+	),
+);
 const rows = computed(() => {
 	const data = tree.data.value;
 	if (!data) return [];

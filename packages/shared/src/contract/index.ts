@@ -62,8 +62,11 @@ export const contract = {
 		/** `id` is a smart album id, an album id or an album slug. */
 		head: oc.input(z.object({ id: z.string().min(1).max(100) })).output(AlbumHead),
 		children: oc.input(z.object({ id: AlbumId })).output(z.array(AlbumTile)),
-		/** Flat editable tree for move/merge pickers. Index-aligned. */
-		tree: oc.output(
+		/**
+		 * Flat editable tree for move/merge pickers. Index-aligned. `sameOwnerAs` (album ids) keeps only albums of
+		 * the same owner as those albums, i.e. valid move/merge targets for non-admins.
+		 */
+		tree: oc.input(z.object({ sameOwnerAs: z.array(AlbumId).max(1000).optional() }).optional()).output(
 			z.object({
 				ids: z.array(AlbumId),
 				titles: z.array(z.string()),
