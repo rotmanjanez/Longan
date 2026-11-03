@@ -207,4 +207,56 @@ describe.skipIf(!enabled)("asset / upload / zip routes (dev database)", async ()
 		expect(buf.includes(Buffer.from("Public, thumbs only/Sunset.webp"))).toBe(true);
 		expect((await req(`/api/zip?albums=${albumId}`)).status).toBe(404);
 	});
+
+	/** Which stored variants of the photo are packed in a ZIP (entries are stored uncompressed). */
+	const variantsInZip = async (res: Response) => {
+		expect(res.status).toBe(200);
+		const buf = Buffer.from(await res.arrayBuffer());
+		const rows = await db
+			.select({ type: schema.sizeVariants.type, path: schema.sizeVariants.path })
+			.from(schema.sizeVariants)
+			.where(sql`${schema.sizeVariants.photoId} = ${photoId}`);
+		const found: string[] = [];
+		for (const r of rows) if (buf.includes(await readFile(join(storage.dir, r.path)))) found.push(r.type);
+		return found;
+	};
+	const setPublicGrants = (grants: { grantsDownload: boolean; grantsFullPhotoAccess: boolean }) =>
+		db
+			.update(schema.accessPermissions)
+			.set(grants)
+			.where(
+				sql`${schema.accessPermissions.albumId} = ${albumId} and ${schema.accessPermissions.userId} is null`,
+			);
+
+	it("zip: download without full-photo grant packs only thumb-class variants", async () => {
+		await setPublicGrants({ grantsDownload: true, grantsFullPhotoAccess: false });
+		try {
+			// 1600x1200 source: original + medium exist, so the largest thumb-class variant is small2x.
+			for (const q of [
+				`albums=${albumId}`,
+				`photos=${photoId}&variant=original`,
+				`photos=${photoId}&variant=medium2x`,
+				`photos=${photoId}&variant=medium`,
+			]) {
+				expect(await variantsInZip(await req(`/api/zip?${q}`)), q).toEqual(["small2x"]);
+			}
+			expect(await variantsInZip(await req(`/api/zip?photos=${photoId}&variant=thumb`))).toEqual(["thumb"]);
+		} finally {
+			await setPublicGrants({ grantsDownload: false, grantsFullPhotoAccess: false });
+		}
+	});
+
+	it("zip: download with full-photo grant still packs originals; owner always does", async () => {
+		await setPublicGrants({ grantsDownload: true, grantsFullPhotoAccess: true });
+		try {
+			expect(await variantsInZip(await req(`/api/zip?albums=${albumId}`))).toEqual(["original"]);
+			expect(await variantsInZip(await req(`/api/zip?photos=${photoId}&variant=medium2x`))).toEqual([
+				"medium",
+			]);
+		} finally {
+			await setPublicGrants({ grantsDownload: false, grantsFullPhotoAccess: false });
+		}
+		expect(await variantsInZip(await req(`/api/zip?albums=${albumId}`, { as: owner }))).toEqual(["original"]);
+		expect(await variantsInZip(await req(`/api/zip?photos=${photoId}`, { as: owner }))).toEqual(["original"]);
+	});
 });

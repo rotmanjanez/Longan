@@ -1,6 +1,6 @@
 import { stat } from "node:fs/promises";
 import { Readable } from "node:stream";
-import { ID_RE, SizeVariantType } from "@longan/shared";
+import { ID_RE, SizeVariantType, THUMB_CLASS_VARIANTS } from "@longan/shared";
 import { and, inArray, sql } from "drizzle-orm";
 import type { Context, Hono } from "hono";
 import yazl from "yazl";
@@ -37,6 +37,7 @@ type Entry = { abs: string; name: string; mtime: Date };
 /**
  * GET /api/zip?albums=a,b&photos=x,y&variant=original
  * Streams a ZIP; albums recurse into sub-folders. Items the viewer may not download are skipped silently.
+ * Without the full-photo grant only thumb-class variants are packed (like the asset route), largest first.
  * Tag albums contribute no files (their photo set is computed by the gallery module).
  */
 async function zip(c: Context<AppEnv>) {
@@ -52,6 +53,7 @@ async function zip(c: Context<AppEnv>) {
 		...BEST.slice(BEST.indexOf(v.data) + 1),
 		...BEST.slice(0, BEST.indexOf(v.data)).reverse(),
 	];
+	const thumbOrder = order.filter((t) => THUMB_CLASS_VARIANTS.includes(t));
 
 	// Album subtree of every requested album; descend only through albums the viewer can open.
 	type Node = { id: string; parentId: string | null; title: string; accessible: boolean };
@@ -104,21 +106,35 @@ async function zip(c: Context<AppEnv>) {
 	}
 
 	// Downloadable photos: per album link, plus loose photos at the root.
-	const items: Array<{ photoId: string; title: string; folder: string }> = [];
+	const items: Array<{ photoId: string; title: string; fullAccess: boolean; folder: string }> = [];
 	const accessibleAlbums = [...folderOfAlbum.keys()];
 	if (accessibleAlbums.length > 0) {
 		const rows = await db
-			.select({ photoId: photos.id, title: photos.title, albumId: photoAlbum.albumId })
+			.select({
+				photoId: photos.id,
+				title: photos.title,
+				fullAccess: photoGrant(viewer, "grantsFullPhotoAccess"),
+				albumId: photoAlbum.albumId,
+			})
 			.from(photoAlbum)
 			.innerJoin(photos, sql`${photos.id} = ${photoAlbum.photoId}`)
 			.where(and(inArray(photoAlbum.albumId, accessibleAlbums), photoGrant(viewer, "grantsDownload")))
 			.orderBy(photos.takenAt, photos.createdAt);
 		for (const r of rows)
-			items.push({ photoId: r.photoId, title: r.title, folder: folderOfAlbum.get(r.albumId)! });
+			items.push({
+				photoId: r.photoId,
+				title: r.title,
+				fullAccess: r.fullAccess,
+				folder: folderOfAlbum.get(r.albumId)!,
+			});
 	}
 	if (photoIds.length > 0) {
 		const rows = await db
-			.select({ photoId: photos.id, title: photos.title })
+			.select({
+				photoId: photos.id,
+				title: photos.title,
+				fullAccess: photoGrant(viewer, "grantsFullPhotoAccess"),
+			})
 			.from(photos)
 			.where(and(inArray(photos.id, photoIds), photoVisible(viewer), photoGrant(viewer, "grantsDownload")));
 		for (const r of rows) items.push({ ...r, folder: "" });
@@ -146,7 +162,7 @@ async function zip(c: Context<AppEnv>) {
 	const entries: Entry[] = [];
 	for (const item of items) {
 		const m = variants.get(item.photoId);
-		const type = m && order.find((t) => m.has(t));
+		const type = m && (item.fullAccess ? order : thumbOrder).find((t) => m.has(t));
 		if (!m || !type) continue;
 		const rel = m.get(type)!;
 		const abs = absPath(rel);
