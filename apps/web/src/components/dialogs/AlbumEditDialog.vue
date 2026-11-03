@@ -144,6 +144,7 @@ import {
 	PHOTO_LAYOUTS,
 	PHOTO_SORT_COLS,
 } from "@/lib/options.ts";
+import { parseSortValue, sortOptions, sortValue } from "@/lib/sorting.ts";
 import DialogActions from "./DialogActions.vue";
 import TagInput from "./TagInput.vue";
 import { useApiAction, useDialog } from "./useDialog.ts";
@@ -202,8 +203,8 @@ watch(
 			description: h.description ?? "",
 			slug: h.slug ?? "",
 			license: h.license ?? DEFAULT_OPTION,
-			photoSort: sortValue(h.photoSorting),
-			albumSort: sortValue(h.albumSorting),
+			photoSort: sortValueOf(h.photoSorting),
+			albumSort: sortValueOf(h.albumSorting),
 			isNsfw: h.isNsfw,
 			layout: h.photoLayout ?? DEFAULT_OPTION,
 			coverId: h.coverId,
@@ -218,40 +219,16 @@ const withDefault = (prefix: string, values: readonly string[]) => [
 	{ label: t("dialogs.default"), value: DEFAULT_OPTION },
 	...values.map((v) => ({ label: t(`${prefix}.${v}`), value: v })),
 ];
-/** How each column reads in each direction ("Date taken, newest first" instead of a column + "Descending"). */
-const ORDER_WORDS: Record<string, { asc: string; desc: string }> = {
-	created_at: { asc: "oldest", desc: "newest" },
-	taken_at: { asc: "oldest", desc: "newest" },
-	min_taken_at: { asc: "oldest", desc: "newest" },
-	max_taken_at: { asc: "oldest", desc: "newest" },
-	title: { asc: "az", desc: "za" },
-	type: { asc: "az", desc: "za" },
-	rating_avg: { asc: "lowest", desc: "highest" },
-};
-function sortValue(s: { col: string; order: "asc" | "desc" } | null | undefined) {
-	return s ? `${s.col}:${s.order}` : DEFAULT_OPTION;
+function sortValueOf(s: { col: string; order: "asc" | "desc" } | null | undefined) {
+	return s ? sortValue(s.col, s.order) : DEFAULT_OPTION;
 }
-function parseSort(v: string) {
-	if (v === DEFAULT_OPTION) return null;
-	const [col, order] = v.split(":") as [string, "asc" | "desc"];
-	return { col, order };
-}
-function sortItems(prefix: string, cols: readonly string[]) {
-	return [
-		{ label: t("dialogs.default"), value: DEFAULT_OPTION },
-		...cols.flatMap((col) =>
-			(["desc", "asc"] as const).map((order) => ({
-				label:
-					col === "is_highlighted"
-						? t(`sorting.highlighted_${order}`)
-						: `${t(`${prefix}.${col}`)}, ${t(`sorting.order.${ORDER_WORDS[col]?.[order] ?? order}`)}`,
-				value: `${col}:${order}`,
-			})),
-		),
-	];
-}
-const photoSortItems = computed(() => sortItems("sorting.photo", PHOTO_SORT_COLS));
-const albumSortItems = computed(() => sortItems("sorting.album", ALBUM_SORT_COLS));
+const parseSort = (v: string) => (v === DEFAULT_OPTION ? null : parseSortValue(v));
+const withDefaultSort = (items: { label: string; value: string }[]) => [
+	{ label: t("dialogs.default"), value: DEFAULT_OPTION },
+	...items,
+];
+const photoSortItems = computed(() => withDefaultSort(sortOptions(t, "sorting.photo", PHOTO_SORT_COLS)));
+const albumSortItems = computed(() => withDefaultSort(sortOptions(t, "sorting.album", ALBUM_SORT_COLS)));
 const layoutItems = computed(() => withDefault("gallery.layout", PHOTO_LAYOUTS));
 const licenseItems = computed(() => [
 	{ label: t("dialogs.default"), value: DEFAULT_OPTION },

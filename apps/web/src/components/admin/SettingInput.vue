@@ -15,7 +15,7 @@
 		:min="type.min"
 		:max="type.max"
 		step="1"
-		class="w-40"
+		class="w-32"
 		:model-value="modelValue ?? ''"
 		:aria-label="label"
 		:aria-invalid="invalid || undefined"
@@ -26,8 +26,8 @@
 	<USelect
 		v-else-if="type.kind === 'enum'"
 		:id="id"
-		class="w-56"
-		:items="type.options"
+		class="w-full sm:w-72"
+		:items="options ?? type.options"
 		:model-value="modelValue ?? undefined"
 		:aria-label="label"
 		:disabled="disabled"
@@ -88,6 +88,8 @@ defineProps<{
 	type: SettingType;
 	modelValue: string | null;
 	label: string;
+	/** Translated labels for enum values (defaults to the raw values). */
+	options?: { label: string; value: string }[];
 	invalid?: boolean;
 	disabled?: boolean;
 }>();

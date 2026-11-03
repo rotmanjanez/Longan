@@ -76,3 +76,27 @@ export function applyTheme(theme: ThemePalette, root: HTMLElement = document.doc
 	for (const [key, value] of Object.entries(vars)) root.style.setProperty(key, value);
 	applied = Object.keys(vars);
 }
+
+const HEX_RE = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+/** `theme.overrides` JSON -> token -> colour (anything malformed reads as no overrides). */
+export function parseOverrides(raw: string | null | undefined): Record<string, string> {
+	try {
+		const v = JSON.parse(raw ?? "{}");
+		if (!v || typeof v !== "object" || Array.isArray(v)) return {};
+		return Object.fromEntries(
+			Object.entries(v).filter((e): e is [string, string] => typeof e[1] === "string"),
+		);
+	} catch {
+		return {};
+	}
+}
+
+/** Override tokens whose value is not a hex colour (blocks saving, skipped in the live preview). */
+export function invalidOverrideTokens(overrides: Record<string, string>): Set<string> {
+	return new Set(
+		Object.entries(overrides)
+			.filter(([, v]) => v.trim() !== "" && !HEX_RE.test(v.trim()))
+			.map(([k]) => k),
+	);
+}

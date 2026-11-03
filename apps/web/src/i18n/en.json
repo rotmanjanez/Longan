@@ -451,7 +451,6 @@
 	},
 	"settings": {
 		"filter": "Filter settings",
-		"categories": "Categories",
 		"no_match": "No matching settings",
 		"discard": "Discard",
 		"saved": "Settings saved",
@@ -469,17 +468,227 @@
 		"theme": {
 			"primary": "Primary colour",
 			"neutral": "Neutral colour",
-			"overrides": "Shade overrides",
+			"overrides": "Custom shades",
 			"overrides_hint": "Optional hex colours that replace single shades of the palette.",
 			"override": "Override for {token}",
-			"pick": "Pick colour for {token}",
-			"clear_override": "Clear override for {token}",
-			"preview": "Preview",
-			"link_sample": "Link text",
-			"save": "Save theme",
-			"saved": "Theme saved"
+			"pick": "Pick colour for {token}"
 		},
-		"unsaved_n": "{n} unsaved change | {n} unsaved changes"
+		"unsaved_n": "{n} unsaved change | {n} unsaved changes",
+		"more": "More settings",
+		"groups": {
+			"gallery": "General",
+			"theme": "Colours",
+			"layout": "Layout",
+			"sorting": "Default sorting",
+			"albums": "Albums",
+			"smart_albums": "Smart albums",
+			"features": "Features",
+			"map": "Map",
+			"image_processing": "Image processing",
+			"upload": "Upload",
+			"download": "Download"
+		},
+		"items": {
+			"site": {
+				"title": {
+					"label": "Site name",
+					"hint": "Shown in the header and the browser tab."
+				},
+				"login_required": {
+					"label": "Require sign-in",
+					"hint": "Visitors who are not signed in see nothing."
+				},
+				"dark_mode_default": {
+					"label": "Dark mode by default",
+					"hint": "Everyone can still switch in the header."
+				},
+				"date_format": {
+					"label": "Date format",
+					"hint": "For photo dates, e.g. d MMM yyyy."
+				}
+			},
+			"gallery": {
+				"slideshow_interval_s": {
+					"label": "Slideshow speed",
+					"hint": "Seconds per photo."
+				}
+			},
+			"layout": {
+				"default": {
+					"label": "Default layout",
+					"hint": "Albums can pick their own in Album settings."
+				},
+				"image_overlay": {
+					"label": "Caption in the photo viewer",
+					"options": {
+						"none": "None",
+						"desc": "Description",
+						"date": "Date",
+						"exif": "Camera details"
+					}
+				},
+				"justified_row_height": {
+					"label": "Row height (Justified)",
+					"hint": "In pixels."
+				},
+				"square_column_width": {
+					"label": "Tile size (Square)",
+					"hint": "In pixels."
+				},
+				"masonry_column_width": {
+					"label": "Column width (Masonry)",
+					"hint": "In pixels."
+				},
+				"grid_column_width": {
+					"label": "Column width (Grid)",
+					"hint": "In pixels."
+				},
+				"gap": {
+					"label": "Space between photos",
+					"hint": "In pixels."
+				}
+			},
+			"sorting": {
+				"photos_col": {
+					"label": "Photos"
+				},
+				"albums_col": {
+					"label": "Albums"
+				}
+			},
+			"albums": {
+				"default_protection": {
+					"label": "New albums are",
+					"options": {
+						"private": "Private",
+						"public": "Public",
+						"public_hidden": "Anyone with the link",
+						"inherit": "Same as the parent album"
+					}
+				},
+				"public_grants_full_photo": {
+					"label": "Visitors see full-size photos",
+					"hint": "Default when an album is made public."
+				},
+				"public_grants_download": {
+					"label": "Visitors can download",
+					"hint": "Default when an album is made public."
+				},
+				"default_license": {
+					"label": "Default license"
+				}
+			},
+			"nsfw": {
+				"visible_by_default": {
+					"label": "Show sensitive albums without a warning"
+				},
+				"blur": {
+					"label": "Blur covers of sensitive albums"
+				}
+			},
+			"smart": {
+				"unsorted": {
+					"label": "Unsorted",
+					"hint": "Photos that are in no album."
+				},
+				"recent": {
+					"label": "Recent"
+				},
+				"highlighted": {
+					"label": "Highlighted"
+				},
+				"untagged": {
+					"label": "Untagged"
+				},
+				"on_this_day": {
+					"label": "On this day"
+				},
+				"recent_age_days": {
+					"label": "Days counted as recent"
+				},
+				"public": {
+					"label": "Visible to visitors",
+					"hint": "Show smart albums to people who are not signed in."
+				}
+			},
+			"features": {
+				"search": {
+					"label": "Search"
+				},
+				"map": {
+					"label": "Map"
+				},
+				"timeline": {
+					"label": "Timeline"
+				},
+				"ratings": {
+					"label": "Star ratings"
+				},
+				"timeline_public": {
+					"label": "Timeline for visitors",
+					"hint": "Show the timeline to people who are not signed in."
+				}
+			},
+			"map": {
+				"tile_url": {
+					"label": "Tile server URL",
+					"hint": "Template URL of the map tiles (OpenStreetMap style)."
+				},
+				"attribution": {
+					"label": "Attribution",
+					"hint": "Credit shown in the corner of the map."
+				}
+			},
+			"image": {
+				"medium_max": {
+					"label": "Medium size",
+					"hint": "Longest edge in pixels."
+				},
+				"small_max": {
+					"label": "Small size",
+					"hint": "Longest edge in pixels."
+				},
+				"thumb_size": {
+					"label": "Thumbnail size",
+					"hint": "Square, in pixels."
+				},
+				"generate_2x": {
+					"label": "Sharper images on high-resolution screens",
+					"hint": "Also creates double-size versions."
+				},
+				"format": {
+					"label": "File format",
+					"options": {
+						"webp": "WebP",
+						"jpeg": "JPEG",
+						"avif": "AVIF (smaller, much slower)"
+					}
+				},
+				"quality": {
+					"label": "Quality",
+					"hint": "30 to 100."
+				},
+				"placeholder": {
+					"label": "Blurred placeholders while loading"
+				}
+			},
+			"upload": {
+				"skip_duplicates": {
+					"label": "Skip duplicates",
+					"hint": "Files already in the gallery are not uploaded again."
+				},
+				"parallelism": {
+					"label": "Parallel uploads"
+				},
+				"video_thumb_at": {
+					"label": "Video thumbnail",
+					"options": {
+						"first": "First frame",
+						"middle": "Middle frame"
+					}
+				}
+			}
+		}
 	},
 	"users": {
 		"filter": "Filter users",
