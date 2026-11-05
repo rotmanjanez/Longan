@@ -9,7 +9,7 @@ describe("SPA fallback", () => {
 	mountSpa(
 		app,
 		async (c, next) => (c.req.path === "/assets/app.js" ? c.text("js") : next()),
-		async (c) => c.html("<!doctype html><title>index</title>"),
+		(path) => `<!doctype html><title>index ${path}</title>`,
 	);
 
 	it("classifies server paths", () => {
@@ -23,11 +23,18 @@ describe("SPA fallback", () => {
 		expect(await (await app.request("/assets/app.js")).text()).toBe("js");
 		const deep = await app.request("/gallery/AbCdEfGhIjKlMnOpQrStUvWx/photo");
 		expect(deep.status).toBe(200);
-		expect(await deep.text()).toContain("<title>index</title>");
+		expect(deep.headers.get("cache-control")).toBe("no-cache");
+		expect(await deep.text()).toContain("<title>index /gallery/AbCdEfGhIjKlMnOpQrStUvWx/photo</title>");
 		expect((await app.request("/api/health")).status).toBe(200);
 		const api = await app.request("/api/nope");
 		expect(api.status).toBe(404);
 		expect(await api.json()).toEqual({ error: { code: "NOT_FOUND", message: "Not found" } });
 		expect((await app.request("/auth/nope")).status).toBe(404);
+	});
+
+	it("answers everything but files with a JSON 404 when the build has no index.html", async () => {
+		const apiOnly = new Hono<AppEnv>();
+		mountSpa(apiOnly, async (_c, next) => next(), null);
+		expect((await apiOnly.request("/gallery/x")).status).toBe(404);
 	});
 });
