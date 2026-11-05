@@ -66,24 +66,6 @@ originals and variants in the `/data` volume.
 | `WEB_DIST`                     | `../web/dist`           | Built SPA (production only)                                                                                |
 | `LOG_LEVEL`                    | `info`                  | `debug`, `info`, `warn` or `error`                                                                         |
 
-### Keycloak setup
-
-`docker/keycloak/realm-longan.json` is a complete example realm. For your own realm:
-
-1. Realm roles `longan-admin` and `longan-upload` (or client roles on the Longan client; both are checked).
-   Admins bypass all album permissions; uploaders may upload and create albums. Everyone else can only view
-   what is public or shared with them.
-2. A confidential OpenID Connect client (e.g. `longan`) with the standard flow enabled, PKCE method `S256`,
-   valid redirect URI `${APP_URL}/*`, post-logout redirect URIs `+` and web origins `+`.
-3. A "Group Membership" protocol mapper on the client (claim name `groups`, full group path on, added to ID
-   token, access token and userinfo). Groups are stored on the user and shown in the admin user list.
-4. Optional user directory: enable "Service accounts" on the client and give its service account the
-   `realm-management` client role `view-users`, then set `KEYCLOAK_ADMIN_URL`. The share dialog can then find
-   users who have never signed in to Longan.
-
-API clients and scripts can call `/api/rpc/*` with `Authorization: Bearer <access token>` issued by the same
-realm (a Keycloak service account replaces Lychee's API tokens).
-
 ### API client and integrations
 
 [`@longan/client`](packages/client/README.md) is a typed TypeScript client for integrations such as a photobox:
@@ -93,13 +75,6 @@ every RPC procedure, streamed uploads and Keycloak service-account tokens. CI at
 ```sh
 npm install https://github.com/rotmanjanez/Longan/releases/download/vX.Y.Z/longan-client-X.Y.Z.tgz
 ```
-
-### Reverse proxy
-
-Uploads are one streamed `PUT /api/upload` request per file, so the proxy must allow request bodies up to
-`UPLOAD_MAX_BYTES` (nginx: `client_max_body_size 2g;` and preferably `proxy_request_buffering off;`) and
-generous timeouts for large videos. ZIP downloads are streamed as well (`proxy_buffering off;` helps).
-Forward `Host` and serve Longan at the origin configured in `APP_URL`.
 
 ## Development
 
@@ -122,19 +97,6 @@ Bun works as an alternative runtime for the server: `pnpm --filter @longan/serve
 Checks (also run in CI): `pnpm typecheck`, `pnpm lint`, `pnpm test` (server tests use the dev database on port
 5433 and clean up after themselves), `pnpm build`. Schema changes: edit `apps/server/src/db/schema.ts`, then
 `pnpm db:generate`.
-
-## CLI
-
-```sh
-pnpm --filter @longan/server cli <command>                        # development
-docker compose exec app node apps/server/src/cli/index.ts <command> # Docker
-```
-
-| Command                                                                                  | Description                                                                                                   |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `sync <dir> [--album <id>] [--owner <userId\|username>] [--delete-imported] [--dry-run]` | Import a directory tree; sub-directories become nested albums, existing albums with the same title are reused |
-| `reprocess [--variants medium,thumb] [--photo <id>]`                                     | Regenerate size variants synchronously (all photos or one)                                                    |
-| `doctor [--fix]`                                                                         | Report missing files, orphan files and photos without variants; `--fix` queues repairs                        |
 
 ## Architecture
 
