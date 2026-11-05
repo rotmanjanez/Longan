@@ -1,25 +1,14 @@
 <template>
-	<div class="flex flex-col gap-3">
+	<div class="flex flex-col gap-5">
 		<UBreadcrumb v-if="crumbs.length" :items="crumbs" :ui="{ list: 'flex-wrap' }" />
-		<div class="flex items-center gap-2">
-			<div class="flex-1 min-w-0">
-				<p class="text-sm text-muted">
-					<span>{{ t("gallery.photo_count", head.numPhotos) }}</span>
-					<template v-if="head.numChildren > 0">
-						<span aria-hidden="true"> · </span>
-						<span>{{ t("gallery.album_count", head.numChildren) }}</span>
-					</template>
-					<template v-if="dateRange">
-						<span aria-hidden="true"> · </span>
-						<span>{{ dateRange }}</span>
-					</template>
-					<template v-if="head.ownerName && !isOwn">
-						<span aria-hidden="true"> · </span>
-						<span>{{ t("gallery.by_owner", { name: head.ownerName }) }}</span>
-					</template>
-				</p>
+		<div class="flex flex-wrap items-end gap-x-6 gap-y-4">
+			<div class="flex-1 min-w-0 flex flex-col gap-3">
+				<h1 ref="titleRef" class="display text-4xl sm:text-5xl lg:text-6xl text-highlighted break-words animate-rise">
+					{{ title }}
+				</h1>
+				<p class="text-sm sm:text-[0.9375rem] text-muted animate-rise-late">{{ caption }}</p>
 			</div>
-			<div class="flex items-center gap-1" data-no-drag-select>
+			<div class="flex items-center gap-1 animate-rise-late" data-no-drag-select>
 				<UButton
 					v-if="canUpload"
 					icon="lucide:upload"
@@ -36,8 +25,13 @@
 				</UDropdownMenu>
 			</div>
 		</div>
-		<p v-if="description" class="max-w-3xl text-sm text-toned whitespace-pre-line break-words">{{ description }}</p>
-		<div v-if="head.tags.length" class="flex flex-wrap gap-1">
+		<p
+			v-if="description"
+			class="max-w-2xl font-serif text-lg leading-relaxed text-toned whitespace-pre-line break-words"
+		>
+			{{ description }}
+		</p>
+		<div v-if="head.tags.length" class="flex flex-wrap gap-1.5">
 			<UBadge v-for="tag in head.tags" :key="tag.id" color="neutral" variant="soft" size="sm" icon="lucide:tag">
 				{{ tag.name }}
 			</UBadge>
@@ -48,18 +42,36 @@
 <script setup lang="ts">
 import type { AlbumHead } from "@longan/shared";
 import type { BreadcrumbItem, DropdownMenuItem } from "@nuxt/ui";
-import { computed } from "vue";
+import { useIntersectionObserver } from "@vueuse/core";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { zipUrl } from "@/api/assets.ts";
 import { useInit } from "@/composables/useInit.ts";
 import { plainText } from "@/lib/albums.ts";
+import { useUiStore } from "@/stores/ui.ts";
 import type { AlbumAction } from "./selectionActions.ts";
 
-/** Meta line, actions, description and parent links of an album. Its title is shown in the app header. */
-const props = defineProps<{ head: AlbumHead }>();
+const props = defineProps<{ head: AlbumHead; title: string }>();
 const emit = defineEmits<{ action: [name: AlbumAction] }>();
 const { t, d } = useI18n();
 const { user } = useInit();
+const ui = useUiStore();
+
+/** While the title is on screen the app header shows the site name; once it scrolls away, the album's. */
+const titleRef = ref<HTMLElement | null>(null);
+onMounted(() => {
+	ui.pageTitleInView = true;
+});
+useIntersectionObserver(
+	titleRef,
+	([entry]) => {
+		ui.pageTitleInView = entry?.isIntersecting ?? true;
+	},
+	{ rootMargin: "-64px 0px 0px 0px", threshold: 0 },
+);
+onBeforeUnmount(() => {
+	ui.pageTitleInView = false;
+});
 
 const isSmart = computed(() => props.head.kind === "smart");
 const isOwn = computed(() => user.value !== null && user.value.id === props.head.ownerId);
@@ -69,7 +81,7 @@ const description = computed(() => plainText(props.head.description));
 const crumbs = computed<BreadcrumbItem[]>(() =>
 	props.head.breadcrumbs
 		.filter((b) => b.id !== props.head.id)
-		.map((b) => ({ label: b.title, to: { name: "album", params: { albumId: b.id } } })),
+		.map((b) => ({ label: b.title, to: { name: "album", params: { albumId: b.id } }, active: false })),
 );
 
 const dateRange = computed(() => {
@@ -78,6 +90,16 @@ const dateRange = computed(() => {
 	const a = d(new Date(minTakenAt), "month");
 	const b = d(new Date(maxTakenAt), "month");
 	return a === b ? a : `${a} – ${b}`;
+});
+
+/** One quiet sentence under the title, like a wall label. */
+const caption = computed(() => {
+	const h = props.head;
+	const parts = [t("gallery.photo_count", h.numPhotos)];
+	if (h.numChildren > 0) parts.push(t("gallery.album_count", h.numChildren));
+	if (dateRange.value) parts.push(dateRange.value);
+	if (h.ownerName && !isOwn.value) parts.push(t("gallery.by_owner", { name: h.ownerName }));
+	return parts.join(", ");
 });
 
 const canUpload = computed(() => props.head.rights.canUpload && props.head.kind === "album");

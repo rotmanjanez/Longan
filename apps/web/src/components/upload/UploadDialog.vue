@@ -3,8 +3,8 @@
 		<template #body>
 			<div class="flex flex-col gap-4">
 				<div
-					class="relative flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 pointer-coarse:py-6 text-center transition-colors"
-					:class="over ? 'border-primary bg-primary/10' : 'border-default'"
+					class="relative flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-8 pointer-coarse:py-6 text-center transition-colors"
+					:class="over ? 'border-primary bg-primary/10' : 'border-accented'"
 					data-upload-dropzone
 					@dragenter.prevent.stop="over = true"
 					@dragover.prevent.stop="over = true"
@@ -55,7 +55,7 @@
 	<button
 		v-if="!open && upload.items.length && (upload.isActive || upload.failed.length)"
 		type="button"
-		class="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] start-4 z-40 flex items-center gap-2 rounded-full bg-elevated ring ring-default px-4 py-2 shadow-lg text-sm hover:bg-accented"
+		class="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] start-4 z-40 flex items-center gap-2 rounded-full bg-default/90 backdrop-blur-md ring ring-default px-4 py-2 shadow-xl shadow-black/10 text-sm hover:bg-elevated"
 		data-upload-pill
 		@click="ui.openDialog('upload', { albumId: upload.targetAlbumId })"
 	>

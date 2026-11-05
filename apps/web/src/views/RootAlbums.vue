@@ -10,9 +10,8 @@
 			@clear="selection.clear()"
 			@select-all="selectAll"
 		/>
-		<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-8">
-			<div class="flex items-center gap-2">
-				<h1 class="text-lg font-bold text-highlighted flex-1">{{ t("gallery.albums") }}</h1>
+		<div class="px-4 sm:px-8 lg:px-12 pt-8 pb-16 flex flex-col gap-12">
+			<PageHeading :title="t('gallery.albums')">
 				<UButton
 					v-if="rights.canCreateAlbums"
 					icon="lucide:folder-plus"
@@ -33,12 +32,9 @@
 				>
 					<span class="hidden sm:inline">{{ t("gallery.actions.upload") }}</span>
 				</UButton>
-			</div>
+			</PageHeading>
 
-			<div v-if="root.isPending.value" class="flex justify-center py-16 text-muted" role="status">
-				<UIcon name="lucide:loader-circle" class="size-6 animate-spin" />
-				<span class="sr-only">{{ t("app.loading") }}</span>
-			</div>
+			<LoadingLine v-if="root.isPending.value" />
 			<UEmpty
 				v-else-if="root.isError.value"
 				icon="lucide:triangle-alert"
@@ -82,6 +78,8 @@ import AlbumGrid from "@/components/gallery/AlbumGrid.vue";
 import GallerySection from "@/components/gallery/GallerySection.vue";
 import SelectionToolbar from "@/components/gallery/SelectionToolbar.vue";
 import { actionDialog, type SelectionAction } from "@/components/gallery/selectionActions.ts";
+import LoadingLine from "@/components/layout/LoadingLine.vue";
+import PageHeading from "@/components/layout/PageHeading.vue";
 import PageDropZone from "@/components/upload/PageDropZone.vue";
 import { useInit } from "@/composables/useInit.ts";
 import { useSelectionStore } from "@/stores/selection.ts";

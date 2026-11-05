@@ -1,7 +1,6 @@
 <template>
-	<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-4">
-		<div class="flex flex-wrap items-center gap-2">
-			<h1 class="text-lg font-bold text-highlighted flex-1">{{ t("nav.admin_users") }}</h1>
+	<div class="px-4 sm:px-8 lg:px-12 pt-8 pb-16 flex flex-col gap-4">
+		<PageHeading :title="t('nav.admin_users')">
 			<UInput v-model="filter" icon="lucide:search" class="max-sm:w-full" :placeholder="t('users.filter')" :aria-label="t('users.filter')" />
 			<UButton
 				icon="lucide:refresh-cw"
@@ -12,18 +11,15 @@
 				:aria-label="t('admin.refresh')"
 				@click="users.refetch()"
 			/>
-		</div>
+		</PageHeading>
 		<p class="text-sm text-muted">{{ t("users.hint") }}</p>
 
-		<div v-if="users.isPending.value" class="flex justify-center py-16 text-muted" role="status">
-			<UIcon name="lucide:loader-circle" class="size-6 animate-spin" />
-			<span class="sr-only">{{ t("app.loading") }}</span>
-		</div>
+		<LoadingLine v-if="users.isPending.value" />
 		<UEmpty v-else-if="users.isError.value" icon="lucide:triangle-alert" :title="t('errors.load_failed')" :description="users.error.value?.message" />
 		<UEmpty v-else-if="visible.length === 0" icon="lucide:users" :title="t('users.empty')" />
-		<div v-else class="overflow-x-auto rounded-xl ring ring-default">
+		<div v-else class="overflow-x-auto rounded-lg ring ring-default">
 			<table class="w-full text-sm">
-				<thead class="bg-elevated/50 text-start text-xs uppercase tracking-wide text-muted">
+				<thead class="bg-elevated/50 text-start text-xs text-muted">
 					<tr>
 						<th scope="col" class="px-3 py-2 text-start font-semibold">{{ t("users.cols.user") }}</th>
 						<th scope="col" class="px-3 py-2 text-start font-semibold">{{ t("users.cols.email") }}</th>
@@ -68,6 +64,8 @@ import { useQuery } from "@tanstack/vue-query";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { orpc } from "@/api/query.ts";
+import LoadingLine from "@/components/layout/LoadingLine.vue";
+import PageHeading from "@/components/layout/PageHeading.vue";
 
 const { t, locale } = useI18n();
 const users = useQuery(orpc.users.list.queryOptions());

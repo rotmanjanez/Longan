@@ -56,6 +56,8 @@ export function useApiAction<V, R = unknown>(
 	fn: (vars: V) => Promise<R>,
 	opts: {
 		success?: (vars: V, result: R) => string | null;
+		/** Repeats of the action (toggles, rotations) update one toast in place instead of stacking new ones. */
+		toastId?: string;
 		invalidate?: (vars: V, result: R) => InvalidateScope;
 		after?: (vars: V, result: R) => void | Promise<void>;
 	} = {},
@@ -66,7 +68,13 @@ export function useApiAction<V, R = unknown>(
 		onSuccess: async (result, vars) => {
 			if (opts.invalidate) await invalidateGallery(opts.invalidate(vars, result));
 			const title = opts.success?.(vars, result);
-			if (title) toast.add({ title, color: "success", icon: "lucide:circle-check" });
+			if (title)
+				toast.add({
+					...(opts.toastId && { id: opts.toastId }),
+					title,
+					color: "success",
+					icon: "lucide:circle-check",
+				});
 			await opts.after?.(vars, result);
 		},
 	});

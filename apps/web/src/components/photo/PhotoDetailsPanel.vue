@@ -1,9 +1,9 @@
 <template>
-	<div class="flex flex-col gap-5 p-4 text-sm" data-photo-details>
+	<div class="flex flex-col gap-6 p-5 text-sm" data-photo-details>
 		<section class="flex gap-3">
 			<UIcon :name="detail.type === 'video' ? 'lucide:film' : 'lucide:image'" class="size-10 shrink-0 text-dimmed" />
 			<div class="min-w-0">
-				<h2 class="font-bold text-lg text-highlighted break-words">{{ detail.title || t("lightbox.untitled") }}</h2>
+				<h2 class="display text-2xl text-highlighted break-words">{{ detail.title || t("lightbox.untitled") }}</h2>
 				<p class="flex flex-wrap gap-x-3 text-muted">
 					<span dir="ltr">{{ detail.width }} × {{ detail.height }}</span>
 					<span v-if="detail.duration">{{ formatDuration(detail.duration) }}</span>
@@ -27,13 +27,13 @@
 		</section>
 
 		<section v-if="description">
-			<h3 class="font-bold text-highlighted mb-1">{{ t("lightbox.details.description") }}</h3>
+			<h3 class="font-serif text-base text-highlighted mb-1.5">{{ t("lightbox.details.description") }}</h3>
 			<p class="whitespace-pre-line break-words text-toned">{{ description }}</p>
 		</section>
 
 		<section v-if="showRating || detail.rights.canEdit" class="flex flex-col gap-2">
 			<div v-if="showRating" class="flex items-center justify-between gap-2">
-				<h3 class="font-bold text-highlighted">{{ t("lightbox.details.rating") }}</h3>
+				<h3 class="font-serif text-base text-highlighted">{{ t("lightbox.details.rating") }}</h3>
 				<RatingStars
 					:mine="detail.myRating"
 					:avg="detail.ratingAvg"
@@ -42,7 +42,7 @@
 				/>
 			</div>
 			<div v-if="detail.rights.canEdit" class="flex items-center justify-between gap-2">
-				<h3 class="font-bold text-highlighted">{{ t("lightbox.details.highlighted") }}</h3>
+				<h3 class="font-serif text-base text-highlighted">{{ t("lightbox.details.highlighted") }}</h3>
 				<USwitch
 					:model-value="detail.isHighlighted"
 					:loading="actions.highlight.isPending.value"
@@ -53,7 +53,7 @@
 		</section>
 
 		<section v-if="detail.tags.length">
-			<h3 class="font-bold text-highlighted mb-1">{{ t("lightbox.details.tags") }}</h3>
+			<h3 class="font-serif text-base text-highlighted mb-1.5">{{ t("lightbox.details.tags") }}</h3>
 			<div class="flex flex-wrap gap-1.5">
 				<UBadge
 					v-for="tag in detail.tags"
@@ -68,7 +68,7 @@
 		</section>
 
 		<section v-if="detail.albums.length">
-			<h3 class="font-bold text-highlighted mb-1">{{ t("lightbox.details.albums") }}</h3>
+			<h3 class="font-serif text-base text-highlighted mb-1.5">{{ t("lightbox.details.albums") }}</h3>
 			<ul class="flex flex-col gap-0.5">
 				<li v-for="a in detail.albums" :key="a.id">
 					<ULink :to="{ name: 'album', params: { albumId: a.id } }" class="text-primary hover:underline">{{ a.title }}</ULink>
@@ -77,7 +77,7 @@
 		</section>
 
 		<section v-if="exifRows.length">
-			<h3 class="font-bold text-highlighted mb-1">{{ t("lightbox.details.camera") }}</h3>
+			<h3 class="font-serif text-base text-highlighted mb-1.5">{{ t("lightbox.details.camera") }}</h3>
 			<dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
 				<template v-for="row in exifRows" :key="row.label">
 					<dt class="text-muted">{{ row.label }}</dt>
@@ -87,7 +87,7 @@
 		</section>
 
 		<section v-if="hasLocation">
-			<h3 class="font-bold text-highlighted mb-1">{{ t("lightbox.details.location") }}</h3>
+			<h3 class="font-serif text-base text-highlighted mb-1.5">{{ t("lightbox.details.location") }}</h3>
 			<RouterLink
 				v-if="grid"
 				:to="mapLink"
@@ -110,7 +110,7 @@
 			</RouterLink>
 			<p class="mt-1 text-muted" dir="ltr">
 				{{ detail.latitude!.toFixed(5) }}, {{ detail.longitude!.toFixed(5) }}
-				<template v-if="detail.altitude !== null"> · {{ Math.round(detail.altitude) }} m</template>
+				<template v-if="detail.altitude !== null">, {{ Math.round(detail.altitude) }} m</template>
 			</p>
 			<ULink :href="osmLink" target="_blank" rel="noopener noreferrer" class="text-xs text-primary hover:underline">
 				{{ t("lightbox.details.open_osm") }}
@@ -118,7 +118,7 @@
 		</section>
 
 		<section v-if="detail.license && detail.license !== 'none'">
-			<h3 class="font-bold text-highlighted mb-1">{{ t("lightbox.details.license") }}</h3>
+			<h3 class="font-serif text-base text-highlighted mb-1.5">{{ t("lightbox.details.license") }}</h3>
 			<p class="text-toned">{{ t(licenseKey(detail.license)) }}</p>
 		</section>
 

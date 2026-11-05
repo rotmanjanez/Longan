@@ -6,13 +6,17 @@
 			type="search"
 			icon="lucide:search"
 			size="sm"
-			variant="soft"
+			variant="none"
 			class="w-full"
+			:ui="{
+				base: 'rounded-full bg-elevated/60 hover:bg-elevated focus:bg-elevated ring-0 transition-colors placeholder:text-dimmed',
+				leadingIcon: 'text-dimmed',
+			}"
 			:placeholder="t('search.placeholder')"
 			:aria-label="t('search.label')"
 		>
 			<template #trailing>
-				<UKbd value="/" class="hidden md:inline-flex" />
+				<UKbd value="/" variant="subtle" class="hidden md:inline-flex" />
 			</template>
 		</UInput>
 	</form>

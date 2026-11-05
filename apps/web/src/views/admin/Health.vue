@@ -1,7 +1,6 @@
 <template>
-	<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-4">
-		<div class="flex flex-wrap items-center gap-2">
-			<h1 class="text-lg font-bold text-highlighted flex-1">{{ t("nav.admin_health") }}</h1>
+	<div class="px-4 sm:px-8 lg:px-12 pt-8 pb-16 flex flex-col gap-4">
+		<PageHeading :title="t('nav.admin_health')">
 			<UButton
 				icon="lucide:refresh-cw"
 				size="sm"
@@ -12,18 +11,15 @@
 			>
 				{{ t("admin.refresh") }}
 			</UButton>
-		</div>
+		</PageHeading>
 
-		<div v-if="health.isPending.value" class="flex justify-center py-16 text-muted" role="status">
-			<UIcon name="lucide:loader-circle" class="size-6 animate-spin" />
-			<span class="sr-only">{{ t("app.loading") }}</span>
-		</div>
+		<LoadingLine v-if="health.isPending.value" />
 		<UEmpty v-else-if="health.isError.value" icon="lucide:triangle-alert" :title="t('errors.load_failed')" :description="health.error.value?.message" />
 		<div v-else-if="h" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-			<div v-for="card in cards" :key="card.key" class="rounded-xl ring ring-default p-4 flex flex-col gap-2" :data-health="card.key">
+			<div v-for="card in cards" :key="card.key" class="rounded-lg ring ring-default p-4 flex flex-col gap-2" :data-health="card.key">
 				<div class="flex items-center gap-2">
 					<UIcon :name="card.icon" class="size-5 text-muted" />
-					<h2 class="font-semibold text-highlighted flex-1">{{ t(`health.${card.key}`) }}</h2>
+					<h2 class="font-serif text-lg text-highlighted flex-1">{{ t(`health.${card.key}`) }}</h2>
 					<UBadge v-if="card.ok !== undefined" size="sm" :color="card.ok ? 'success' : 'error'" variant="soft">
 						{{ card.ok ? t("health.ok") : t("health.problem") }}
 					</UBadge>
@@ -48,6 +44,8 @@ import { useQuery } from "@tanstack/vue-query";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { orpc } from "@/api/query.ts";
+import LoadingLine from "@/components/layout/LoadingLine.vue";
+import PageHeading from "@/components/layout/PageHeading.vue";
 import { formatBytes } from "@/lib/format.ts";
 
 const { t, n } = useI18n();

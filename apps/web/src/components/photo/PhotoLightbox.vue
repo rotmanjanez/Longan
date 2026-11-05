@@ -26,15 +26,15 @@
 			/>
 
 			<header
-				class="absolute top-0 inset-x-0 z-10 flex items-center gap-1 h-[calc(3.5rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] px-[max(0.5rem,env(safe-area-inset-left))] bg-linear-to-b from-black/70 to-transparent transition-opacity duration-300"
+				class="absolute top-0 inset-x-0 z-10 flex items-center gap-1 h-[calc(3.75rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] px-[max(0.5rem,env(safe-area-inset-left))] bg-linear-to-b from-black/60 to-transparent transition-opacity duration-500"
 				:class="chromeVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'"
 			>
 				<UButton icon="lucide:x" color="neutral" variant="ghost" size="lg" :aria-label="t('common.close')" @click="emit('close')" />
-				<div class="min-w-0 flex-1">
-					<p class="font-semibold truncate">{{ title }}</p>
+				<div class="min-w-0 flex-1 ps-1">
+					<p class="font-serif text-lg leading-tight truncate">{{ title }}</p>
 					<p class="text-xs text-white/60 truncate">
-						<span v-if="index >= 0">{{ t("lightbox.position", { n: index + 1, total: ids.length }) }}</span>
-						<template v-if="subtitle"> · {{ subtitle }}</template>
+						<span v-if="index >= 0" class="tabular-nums">{{ t("lightbox.position", { n: index + 1, total: ids.length }) }}</span>
+						<template v-if="subtitle">, {{ subtitle }}</template>
 					</p>
 				</div>
 				<div class="flex items-center">
@@ -102,21 +102,23 @@
 			<template v-if="chromeVisible && !zoomed">
 				<UButton
 					v-if="prevId"
-					class="pointer-coarse:hidden absolute start-2 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/30 hover:bg-black/60"
+					class="pointer-coarse:hidden absolute start-3 top-1/2 -translate-y-1/2 z-10 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
 					icon="lucide:chevron-left"
 					color="neutral"
 					variant="ghost"
 					size="xl"
+					:ui="{ leadingIcon: 'size-7 stroke-[1.25]' }"
 					:aria-label="t('lightbox.previous')"
 					@click="goPrev"
 				/>
 				<UButton
 					v-if="nextId"
-					class="pointer-coarse:hidden absolute end-2 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/30 hover:bg-black/60"
+					class="pointer-coarse:hidden absolute end-3 top-1/2 -translate-y-1/2 z-10 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
 					icon="lucide:chevron-right"
 					color="neutral"
 					variant="ghost"
 					size="xl"
+					:ui="{ leadingIcon: 'size-7 stroke-[1.25]' }"
 					:aria-label="t('lightbox.next')"
 					@click="goNext"
 				/>
@@ -126,11 +128,11 @@
 
 		<aside
 			v-if="detailsOpen && detail"
-			class="absolute inset-0 z-20 sm:static sm:w-96 shrink-0 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)] bg-neutral-900 text-default border-s border-white/10"
+			class="absolute inset-0 z-20 sm:static sm:w-96 shrink-0 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)] bg-neutral-950 text-default border-s border-white/10"
 			:aria-label="t('lightbox.details_title')"
 		>
-			<div class="sticky top-0 z-10 flex items-center h-[calc(3.5rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] sm:h-14 sm:pt-0 px-4 bg-neutral-900/95 backdrop-blur">
-				<h2 class="flex-1 font-bold text-highlighted">{{ t("lightbox.details_title") }}</h2>
+			<div class="sticky top-0 z-10 flex items-center h-[calc(3.75rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] sm:h-15 sm:pt-0 px-5 bg-neutral-950/95 backdrop-blur">
+				<h2 class="flex-1 font-serif text-lg text-highlighted">{{ t("lightbox.details_title") }}</h2>
 				<!-- Phones only: the panel covers the photo there; on wider screens the info toggle closes it. -->
 				<UButton class="sm:hidden" icon="lucide:x" color="neutral" variant="ghost" :aria-label="t('common.close')" @click="detailsOpen = false" />
 			</div>
@@ -233,7 +235,7 @@ const subtitle = computed(() => {
 	if (p.takenAt) parts.push(d(new Date(p.takenAt), "long"));
 	const camera = [p.make, p.model].filter(Boolean).join(" ");
 	if (camera) parts.push(camera);
-	return parts.join(" · ");
+	return parts.join(", ");
 });
 
 // --- navigation --------------------------------------------------------------------------------------
@@ -279,18 +281,18 @@ watch(
 	{ immediate: true },
 );
 
+/** The chrome steps back once the mouse rests, sooner in a slideshow; any movement brings it back. */
 const idle = ref(false);
 let idleTimer: ReturnType<typeof setTimeout> | undefined;
 function poke() {
 	idle.value = false;
 	clearTimeout(idleTimer);
-	if (slideshow.value) idleTimer = setTimeout(() => (idle.value = true), 2500);
+	idleTimer = setTimeout(() => (idle.value = true), slideshow.value ? 2500 : 4000);
 }
 watch(slideshow, (on) => {
 	if (on) poke();
-	else idle.value = false;
 });
-const chromeVisible = computed(() => !(slideshow.value && idle.value));
+const chromeVisible = computed(() => !idle.value || detailsOpen.value);
 
 const fullscreen = useFullscreen(rootRef);
 onBeforeUnmount(() => {
@@ -345,7 +347,12 @@ function toggleHighlight() {
 const { copy } = useClipboard({ legacy: true });
 async function copyLink() {
 	await copy(window.location.href);
-	toast.add({ title: t("lightbox.toast.link_copied"), color: "success", icon: "lucide:link" });
+	toast.add({
+		id: "copy-link",
+		title: t("lightbox.toast.link_copied"),
+		color: "success",
+		icon: "lucide:link",
+	});
 }
 
 const menuItems = computed<DropdownMenuItem[][]>(() => {

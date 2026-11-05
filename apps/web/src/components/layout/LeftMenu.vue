@@ -4,11 +4,19 @@
 		side="left"
 		:title="config.title"
 		:description="t('app.version', { version: config.version })"
-		:ui="{ content: 'max-w-xs', body: 'p-2 sm:p-2' }"
+		:ui="{ content: 'max-w-xs', header: 'pt-8 pb-4', body: 'p-3 sm:p-3' }"
 	>
 		<template #body>
 			<nav :aria-label="t('nav.main')">
-				<UNavigationMenu orientation="vertical" :items="items" />
+				<UNavigationMenu
+					orientation="vertical"
+					:items="items"
+					:ui="{
+						link: 'text-[0.9375rem] py-2 rounded-md',
+						linkLeadingIcon: 'size-4.5',
+						label: 'font-serif text-xs tracking-wide text-dimmed px-2.5 pt-5',
+					}"
+				/>
 			</nav>
 		</template>
 	</USlideover>

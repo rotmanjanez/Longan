@@ -10,6 +10,7 @@ export function usePhotoActions() {
 		{
 			invalidate: (v) => ({ photos: [v.id] }),
 			success: (v) => t(v.value ? "lightbox.toast.highlighted" : "lightbox.toast.unhighlighted"),
+			toastId: "photo-highlight",
 		},
 	);
 	const rate = useApiAction((v: { id: string; rating: number }) => client.photos.rate(v), {
@@ -19,6 +20,7 @@ export function usePhotoActions() {
 	const rotate = useApiAction((v: { id: string; direction: "cw" | "ccw" }) => client.photos.rotate(v), {
 		invalidate: (v) => ({ photos: [v.id] }),
 		success: () => t("lightbox.toast.rotated"),
+		toastId: "photo-rotate",
 	});
 	return { highlight, rate, rotate };
 }

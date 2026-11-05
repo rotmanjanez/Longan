@@ -1,8 +1,7 @@
 <template>
 	<a
 		:href="href"
-		class="group [-webkit-touch-callout:none] relative block aspect-square rounded-lg outline-offset-2 focus-visible:outline-2 focus-visible:outline-primary"
-		:class="{ 'outline-2 outline-primary': selected }"
+		class="group [-webkit-touch-callout:none] block outline-none"
 		:aria-label="ariaLabel"
 		:aria-selected="selected || undefined"
 		:data-album-id="album.id"
@@ -10,24 +9,13 @@
 		@pointerdown="press.onPointerdown"
 		@contextmenu="press.onContextmenu"
 	>
-		<template v-if="album.coverId">
-			<!-- Two decorative copies fan out on hover: a small stack of prints (Lychee DESIGN.md). Same src/srcset as
-			     the cover, so all three share one download. -->
+		<div
+			class="print relative aspect-square overflow-hidden rounded-[2px] bg-elevated transition-[box-shadow] duration-200 group-focus-visible:ring-2 group-focus-visible:ring-primary group-focus-visible:ring-offset-4 group-focus-visible:ring-offset-(--ui-bg)"
+			:class="{ 'ring-2 ring-primary ring-offset-4 ring-offset-(--ui-bg)': selected }"
+			:style="tint"
+		>
 			<img
-				v-for="cls in PRINTS"
-				:key="cls"
-				:src="thumb"
-				:srcset="srcset"
-				alt=""
-				aria-hidden="true"
-				:loading="eager ? 'eager' : 'lazy'"
-				decoding="async"
-				draggable="false"
-				class="album-print absolute inset-0 size-full object-cover rounded-lg shadow-md shadow-black/25"
-				:class="[cls, { 'blur-xl': blurred }]"
-				:style="tint"
-			/>
-			<img
+				v-if="album.coverId"
 				:src="thumb"
 				:srcset="srcset"
 				:alt="title"
@@ -35,58 +23,56 @@
 				:fetchpriority="eager ? 'high' : undefined"
 				decoding="async"
 				draggable="false"
-				class="album-print absolute inset-0 size-full object-cover rounded-lg shadow-md shadow-black/25"
-				:class="{ 'blur-xl': blurred }"
-				:style="tint"
+				class="size-full object-cover transition-[filter] duration-500 group-hover:brightness-105"
+				:class="{ 'blur-xl scale-110': blurred }"
 			/>
-		</template>
-		<div
-			v-else
-			class="absolute inset-0 rounded-lg bg-elevated shadow-md shadow-black/25 flex items-center justify-center text-dimmed"
-		>
-			<UIcon :name="placeholderIcon" class="size-12" />
+			<div v-else class="absolute inset-0 flex items-center justify-center text-dimmed">
+				<UIcon :name="placeholderIcon" class="size-9 stroke-[1.25]" />
+			</div>
+
+			<div
+				v-if="blurred"
+				class="absolute inset-0 flex flex-col items-center justify-center gap-1 text-white bg-black/25 pointer-events-none"
+			>
+				<UIcon name="lucide:eye-off" class="size-6" />
+				<span class="text-xs font-medium">{{ t("gallery.nsfw.sensitive") }}</span>
+			</div>
+
+			<div class="absolute top-2 start-2 flex gap-1">
+				<TileBadge v-if="album.isNsfw" icon="lucide:triangle-alert" :label="t('gallery.badges.nsfw')" />
+				<TileBadge v-if="album.isLocked" icon="lucide:lock" :label="t('gallery.badges.locked')" />
+				<TileBadge
+					v-if="album.isPublic && album.requiresLogin"
+					icon="lucide:users"
+					:label="t('gallery.badges.signed_in')"
+				/>
+				<TileBadge
+					v-else-if="album.isPublic && album.isLinkRequired"
+					icon="lucide:link"
+					:label="t('gallery.badges.link')"
+				/>
+				<TileBadge
+					v-else-if="album.isPublic"
+					icon="lucide:eye"
+					:label="t('gallery.badges.public')"
+				/>
+			</div>
+			<div v-if="selected" class="absolute inset-0 bg-primary/15 pointer-events-none" />
+			<UIcon
+				v-if="selected"
+				name="lucide:circle-check"
+				class="absolute top-2 end-2 size-5 text-primary bg-default rounded-full pointer-events-none"
+			/>
 		</div>
 
-		<div
-			v-if="blurred"
-			class="absolute inset-0 rounded-lg flex flex-col items-center justify-center gap-1 text-white bg-black/30 pointer-events-none"
-		>
-			<UIcon name="lucide:eye-off" class="size-6" />
-			<span class="text-xs font-semibold">{{ t("gallery.nsfw.sensitive") }}</span>
-		</div>
-
-		<div class="absolute inset-x-0 bottom-0 rounded-b-lg bg-linear-to-t from-black/70 to-transparent px-3 pt-6 pb-2 text-shadow-sm">
-			<h3 class="text-sm font-bold text-white truncate" :title="title">{{ title }}</h3>
-			<p class="text-2xs text-white/75">{{ t("gallery.photo_count", album.numPhotos) }}</p>
-		</div>
-
-		<div class="absolute top-0 start-2 flex">
-			<TileBadge v-if="album.isNsfw" role="nsfw" icon="lucide:triangle-alert" :label="t('gallery.badges.nsfw')" />
-			<TileBadge v-if="album.isLocked" role="danger" icon="lucide:lock" :label="t('gallery.badges.locked')" />
-			<TileBadge
-				v-if="album.isPublic && album.requiresLogin"
-				role="neutral"
-				icon="lucide:users"
-				:label="t('gallery.badges.signed_in')"
-			/>
-			<TileBadge
-				v-else-if="album.isPublic && album.isLinkRequired"
-				role="link"
-				icon="lucide:link"
-				:label="t('gallery.badges.link')"
-			/>
-			<TileBadge
-				v-else-if="album.isPublic"
-				role="success"
-				icon="lucide:eye"
-				:label="t('gallery.badges.public')"
-			/>
-		</div>
-		<div
-			v-if="selected"
-			class="absolute top-1.5 end-1.5 size-5 rounded-full bg-default flex items-center justify-center pointer-events-none"
-		>
-			<UIcon name="lucide:circle-check" class="size-5 text-primary" />
+		<div class="mt-3 min-w-0 pe-1">
+			<h3
+				class="font-serif text-[1.0625rem] leading-snug text-highlighted truncate underline-offset-4 decoration-1 decoration-(--ui-border-accented) group-hover:underline"
+				:title="title"
+			>
+				{{ title }}
+			</h3>
+			<p class="mt-0.5 text-xs text-muted">{{ t("gallery.photo_count", album.numPhotos) }}</p>
 		</div>
 	</a>
 </template>
@@ -99,11 +85,6 @@ import { assetUrl, srcsetFor } from "@/api/assets.ts";
 import { useLongPress } from "@/composables/useLongPress.ts";
 import { SMART_ALBUM_ICONS } from "@/lib/albums.ts";
 import TileBadge from "./TileBadge.vue";
-
-const PRINTS = [
-	"group-hover:-rotate-2 group-hover:-translate-x-3 group-hover:translate-y-2",
-	"group-hover:rotate-6 group-hover:translate-x-3 group-hover:-translate-y-2",
-] as const;
 
 const props = defineProps<{
 	album: AlbumTile;

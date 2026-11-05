@@ -1,15 +1,11 @@
 <template>
-	<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-6 max-w-2xl">
-		<div class="flex flex-wrap items-center gap-2">
-			<h1 class="text-lg font-bold text-highlighted flex-1">{{ t("nav.sharing") }}</h1>
+	<div class="px-4 sm:px-8 lg:px-12 pt-8 pb-16 flex flex-col gap-6 max-w-2xl">
+		<PageHeading :title="t('nav.sharing')">
 			<UInput v-model="filter" icon="lucide:search" class="max-sm:w-full" :placeholder="t('sharing.filter')" :aria-label="t('sharing.filter')" />
-		</div>
+		</PageHeading>
 		<p class="text-sm text-muted">{{ t("sharing.page_hint") }}</p>
 
-		<div v-if="list.isPending.value" class="flex justify-center py-16 text-muted" role="status">
-			<UIcon name="lucide:loader-circle" class="size-6 animate-spin" />
-			<span class="sr-only">{{ t("app.loading") }}</span>
-		</div>
+		<LoadingLine v-if="list.isPending.value" />
 		<UEmpty v-else-if="list.isError.value" icon="lucide:triangle-alert" :title="t('errors.load_failed')" :description="list.error.value?.message" />
 		<UEmpty
 			v-else-if="groups.length === 0"
@@ -28,7 +24,7 @@
 			<header class="flex items-center gap-2 pb-1">
 				<RouterLink
 					:to="{ name: 'album', params: { albumId: g.albumId } }"
-					class="font-semibold text-highlighted hover:underline flex-1 min-w-0 truncate"
+					class="font-serif text-lg text-highlighted hover:underline underline-offset-4 decoration-1 flex-1 min-w-0 truncate"
 				>
 					{{ g.albumTitle }}
 				</RouterLink>
@@ -70,6 +66,8 @@ import { orpc } from "@/api/query.ts";
 import { pickGrants } from "@/components/dialogs/grants.ts";
 import ShareRoleMenu from "@/components/dialogs/ShareRoleMenu.vue";
 import { useApiAction } from "@/components/dialogs/useDialog.ts";
+import LoadingLine from "@/components/layout/LoadingLine.vue";
+import PageHeading from "@/components/layout/PageHeading.vue";
 import { useUiStore } from "@/stores/ui.ts";
 
 const { t } = useI18n();

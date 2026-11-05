@@ -1,7 +1,6 @@
 <template>
-	<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
-		<div class="flex flex-wrap items-center gap-2">
-			<h1 class="text-lg font-bold text-highlighted flex-1">{{ t("nav.admin_jobs") }}</h1>
+	<div class="px-4 sm:px-8 lg:px-12 pt-8 pb-16 flex flex-col gap-6">
+		<PageHeading :title="t('nav.admin_jobs')">
 			<USelect v-model="status" size="sm" class="w-36" :items="statusItems" :aria-label="t('jobs.filter')" />
 			<UButton
 				icon="lucide:refresh-cw"
@@ -12,10 +11,10 @@
 				:aria-label="t('admin.refresh')"
 				@click="jobs.refetch()"
 			/>
-		</div>
+		</PageHeading>
 
-		<section class="rounded-xl ring ring-default p-4 flex flex-col gap-3" aria-labelledby="reprocess-h">
-			<h2 id="reprocess-h" class="font-semibold text-highlighted">{{ t("jobs.reprocess.title") }}</h2>
+		<section class="rounded-lg ring ring-default p-4 flex flex-col gap-3" aria-labelledby="reprocess-h">
+			<h2 id="reprocess-h" class="font-serif text-lg text-highlighted">{{ t("jobs.reprocess.title") }}</h2>
 			<p class="text-sm text-muted">{{ t("jobs.reprocess.hint") }}</p>
 			<form class="flex flex-col gap-3" @submit.prevent="submitReprocess">
 				<div class="grid gap-3 sm:grid-cols-2">
@@ -60,16 +59,13 @@
 			</form>
 		</section>
 
-		<div v-if="jobs.isPending.value" class="flex justify-center py-16 text-muted" role="status">
-			<UIcon name="lucide:loader-circle" class="size-6 animate-spin" />
-			<span class="sr-only">{{ t("app.loading") }}</span>
-		</div>
+		<LoadingLine v-if="jobs.isPending.value" />
 		<UEmpty v-else-if="jobs.isError.value" icon="lucide:triangle-alert" :title="t('errors.load_failed')" :description="jobs.error.value?.message" />
 		<UEmpty v-else-if="visible.length === 0" icon="lucide:list-checks" :title="t('jobs.empty')" />
-		<div v-else class="overflow-x-auto rounded-xl ring ring-default">
+		<div v-else class="overflow-x-auto rounded-lg ring ring-default">
 			<table class="w-full text-sm">
 				<caption class="sr-only">{{ t("nav.admin_jobs") }}</caption>
-				<thead class="bg-elevated/50 text-xs uppercase tracking-wide text-muted">
+				<thead class="bg-elevated/50 text-xs text-muted">
 					<tr>
 						<th scope="col" class="px-3 py-2 text-start font-semibold">#</th>
 						<th scope="col" class="px-3 py-2 text-start font-semibold">{{ t("jobs.cols.type") }}</th>
@@ -120,6 +116,8 @@ import { client } from "@/api/client.ts";
 import { orpc, queryClient } from "@/api/query.ts";
 import AlbumPicker from "@/components/dialogs/AlbumPicker.vue";
 import { useApiAction } from "@/components/dialogs/useDialog.ts";
+import LoadingLine from "@/components/layout/LoadingLine.vue";
+import PageHeading from "@/components/layout/PageHeading.vue";
 
 type JobStatus = "pending" | "running" | "done" | "failed";
 const STATUS_COLOR = { pending: "neutral", running: "info", done: "success", failed: "error" } as const;

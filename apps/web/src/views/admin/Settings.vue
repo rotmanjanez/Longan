@@ -1,14 +1,10 @@
 <template>
-	<div class="px-3 sm:px-6 lg:px-8 pt-6 flex flex-col gap-8 max-w-2xl">
-		<div class="flex flex-wrap items-center gap-2">
-			<h1 class="text-lg font-bold text-highlighted flex-1">{{ t("nav.admin_settings") }}</h1>
+	<div class="px-4 sm:px-8 lg:px-12 pt-8 flex flex-col gap-8 max-w-2xl">
+		<PageHeading :title="t('nav.admin_settings')">
 			<UInput v-model="filter" icon="lucide:search" class="max-sm:w-full" :placeholder="t('settings.filter')" :aria-label="t('settings.filter')" />
-		</div>
+		</PageHeading>
 
-		<div v-if="list.isPending.value" class="flex justify-center py-16 text-muted" role="status">
-			<UIcon name="lucide:loader-circle" class="size-6 animate-spin" />
-			<span class="sr-only">{{ t("app.loading") }}</span>
-		</div>
+		<LoadingLine v-if="list.isPending.value" />
 		<UEmpty v-else-if="list.isError.value" icon="lucide:triangle-alert" :title="t('errors.load_failed')" :description="list.error.value?.message" />
 		<UEmpty v-else-if="filter && !mainSections.length" icon="lucide:search-x" :title="t('settings.no_match')" />
 		<template v-else>
@@ -25,7 +21,7 @@
 					{{ t("settings.more") }}
 				</UButton>
 				<section v-else :id="`settings-${s.id}`" :aria-labelledby="`settings-${s.id}-h`" class="flex flex-col gap-5">
-					<h2 :id="`settings-${s.id}-h`" class="font-semibold text-highlighted">{{ s.label }}</h2>
+					<h2 :id="`settings-${s.id}-h`" class="font-serif text-lg text-highlighted">{{ s.label }}</h2>
 					<ThemeEditor
 						v-if="s.category === THEME_CATEGORY"
 						:primary="settingValue('theme.primary') ?? ''"
@@ -109,6 +105,8 @@ import { orpc } from "@/api/query.ts";
 import SettingInput from "@/components/admin/SettingInput.vue";
 import ThemeEditor from "@/components/admin/ThemeEditor.vue";
 import { useSaveSettings } from "@/components/admin/useSaveSettings.ts";
+import LoadingLine from "@/components/layout/LoadingLine.vue";
+import PageHeading from "@/components/layout/PageHeading.vue";
 import {
 	ADVANCED_CATEGORIES,
 	ADVANCED_KEYS,

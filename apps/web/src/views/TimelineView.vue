@@ -1,7 +1,6 @@
 <template>
-	<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-4">
-		<div class="flex flex-wrap items-center gap-2">
-			<h1 class="text-lg font-bold text-highlighted flex-1">{{ t("nav.timeline") }}</h1>
+	<div class="px-4 sm:px-8 lg:px-12 pt-8 pb-16 flex flex-col gap-8">
+		<PageHeading :title="t('nav.timeline')">
 			<USelect
 				:model-value="granularity"
 				:items="granularityItems"
@@ -14,11 +13,8 @@
 				class="w-auto"
 				@update:model-value="setGranularity"
 			/>
-		</div>
-		<div v-if="ratios.isPending.value" class="flex justify-center py-16 text-muted" role="status">
-			<UIcon name="lucide:loader-circle" class="size-6 animate-spin" />
-			<span class="sr-only">{{ t("app.loading") }}</span>
-		</div>
+		</PageHeading>
+		<LoadingLine v-if="ratios.isPending.value" />
 		<UEmpty
 			v-else-if="ratios.isError.value"
 			icon="lucide:triangle-alert"
@@ -57,6 +53,8 @@ import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import LightboxMount from "@/components/gallery/LightboxMount.vue";
 import PhotoGrid from "@/components/gallery/PhotoGrid.vue";
+import LoadingLine from "@/components/layout/LoadingLine.vue";
+import PageHeading from "@/components/layout/PageHeading.vue";
 import { useInit } from "@/composables/useInit.ts";
 import { useLightboxNav } from "@/composables/useLightboxNav.ts";
 import { usePhotoListing } from "@/composables/usePhotoListing.ts";

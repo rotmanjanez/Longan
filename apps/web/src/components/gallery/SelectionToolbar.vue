@@ -1,12 +1,12 @@
 <template>
 	<div
-		class="sticky top-(--app-header-bottom) z-30 flex items-center gap-1 px-2 py-1.5 bg-default/85 backdrop-blur border-b border-default"
+		class="sticky top-(--app-header-bottom) z-30 flex items-center gap-1 px-2 sm:px-4 py-1.5 bg-default/85 backdrop-blur-md shadow-[0_1px_0_0_var(--ui-border)]"
 		role="toolbar"
 		:aria-label="t('selection.toolbar')"
 		data-no-drag-select
 	>
 		<UButton icon="lucide:x" color="neutral" variant="ghost" :aria-label="t('selection.clear')" @click="emit('clear')" />
-		<span class="min-w-0 truncate text-sm font-medium text-highlighted me-2" aria-live="polite">
+		<span class="min-w-0 truncate font-serif text-base text-highlighted me-2" aria-live="polite">
 			{{ kind === "photos" ? t("selection.photos", count) : t("selection.albums", count) }}
 		</span>
 		<UButton

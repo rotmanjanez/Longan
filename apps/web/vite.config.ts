@@ -25,9 +25,31 @@ export default defineConfig({
 				colors: { primary: "alpine", neutral: "moss" },
 				// Touch screens: every button is at least a 40×40 tap target, whatever its size prop.
 				button: {
-					slots: { base: "rounded-xl pointer-coarse:min-h-10 pointer-coarse:min-w-10 justify-center" },
+					slots: {
+						base: "rounded-md font-medium pointer-coarse:min-h-10 pointer-coarse:min-w-10 justify-center",
+					},
 					compoundVariants: [{ color: "primary", variant: "solid", class: "text-white" }],
 				},
+				empty: {
+					slots: {
+						root: "py-16",
+						title: "font-serif font-normal text-2xl tracking-tight text-highlighted",
+						description: "text-muted max-w-sm text-pretty",
+					},
+				},
+				breadcrumb: {
+					slots: { link: "text-xs", separatorIcon: "size-3" },
+				},
+				dropdownMenu: { slots: { content: "rounded-lg shadow-xl shadow-black/10" } },
+				toast: {
+					slots: {
+						root: "items-center gap-3 rounded-lg py-3 ps-4 pe-3 shadow-xl shadow-black/10",
+						title: "font-normal",
+						icon: "size-4",
+					},
+				},
+				tooltip: { slots: { content: "rounded-md" } },
+				kbd: { slots: { base: "rounded-sm" } },
 				// iOS-style switch: 52×32 pill, white knob with a soft shadow, accent colour when on, label left / switch right.
 				switch: {
 					slots: {
@@ -58,9 +80,21 @@ export default defineConfig({
 				// floating centred card.
 				modal: {
 					slots: {
+						overlay: "bg-black/40 backdrop-blur-[2px]",
 						content:
-							"max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:w-full max-sm:max-w-none max-sm:rounded-b-none max-sm:max-h-[calc(100dvh-env(safe-area-inset-top)-1.5rem)]",
-						footer: "max-sm:pb-[calc(1rem+env(safe-area-inset-bottom))]",
+							"rounded-xl shadow-2xl shadow-black/20 ring-0 divide-y-0 max-sm:top-auto max-sm:bottom-0 max-sm:left-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:w-full max-sm:max-w-none max-sm:rounded-b-none max-sm:max-h-[calc(100dvh-env(safe-area-inset-top)-1.5rem)]",
+						header: "pb-2 sm:pb-2",
+						title: "font-serif font-normal text-2xl tracking-tight text-highlighted",
+						description: "text-muted",
+						footer: "pt-2 sm:pt-2 max-sm:pb-[calc(1rem+env(safe-area-inset-bottom))]",
+					},
+				},
+				slideover: {
+					slots: {
+						overlay: "bg-black/40 backdrop-blur-[2px]",
+						content: "ring-0 divide-y-0",
+						title: "font-serif font-normal text-2xl tracking-tight text-highlighted",
+						description: "text-muted text-xs",
 					},
 				},
 			},

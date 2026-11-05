@@ -1,6 +1,6 @@
 <template>
-	<section :aria-labelledby="headingId" class="flex flex-col gap-3">
-		<h2 :id="headingId" class="text-sm font-semibold uppercase tracking-wide text-muted">{{ title }}</h2>
+	<section :aria-labelledby="headingId" class="flex flex-col gap-5">
+		<h2 :id="headingId" class="display text-xl text-toned">{{ title }}</h2>
 		<slot />
 	</section>
 </template>

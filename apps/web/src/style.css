@@ -1,12 +1,38 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
+@import "@fontsource-variable/instrument-sans/wght.css";
+@import "@fontsource-variable/newsreader/opsz.css";
+@import "@fontsource-variable/newsreader/opsz-italic.css";
 
 @source "../index.html";
 
 @theme {
-	--font-sans: "Libre Franklin", "Vazirmatn", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	--font-sans: "Instrument Sans Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	--font-serif: "Newsreader Variable", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
 	--text-2xs: 0.65rem;
 	--text-2xs--line-height: 0.8rem;
+	--animate-rise: rise 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+	--animate-rise-late: rise 600ms cubic-bezier(0.2, 0.7, 0.2, 1) 120ms both;
+	--animate-sweep: sweep 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+
+	@keyframes rise {
+		from {
+			opacity: 0;
+			transform: translateY(0.5rem);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+	@keyframes sweep {
+		from {
+			transform: translateX(-100%);
+		}
+		to {
+			transform: translateX(400%);
+		}
+	}
 }
 
 /* Default theme palettes (same values as CUSTOM_PALETTES in src/lib/theme.ts). `static`: Nuxt UI reads them
@@ -38,17 +64,36 @@
 }
 
 :root {
-	--ui-header-height: 3.5rem;
+	--ui-header-height: 3.75rem;
 	--ui-container: 100%;
+	--ui-radius: 0.1875rem;
 	/* Bottom edge of the sticky app header including the status bar inset (viewport-fit=cover).
 	   Separate from --ui-header-height, which Nuxt UI also uses for modal headers. */
 	--app-header-bottom: calc(var(--ui-header-height) + env(safe-area-inset-top));
+	/* Hairline around prints: a touch of ink on the wall, never a drop shadow. */
+	--print-edge: rgb(0 0 0 / 0.08);
+	--ui-border: color-mix(in oklab, var(--ui-color-neutral-900) 10%, transparent);
+	--ui-border-muted: color-mix(in oklab, var(--ui-color-neutral-900) 7%, transparent);
 }
 
-/* Dark mode accent one shade deeper than Nuxt UI's default (400): a dark pastel green that keeps white
-   button labels legible. */
+/* Darkroom: the wall is the deepest neutral, surfaces one step up, the accent one shade lighter than Nuxt UI's
+   default so white labels stay legible on it. */
 .dark {
-	--ui-primary: var(--ui-color-primary-500);
+	--ui-primary: var(--ui-color-primary-400);
+	--ui-bg: var(--ui-color-neutral-950);
+	--ui-bg-muted: var(--ui-color-neutral-900);
+	--ui-bg-elevated: var(--ui-color-neutral-900);
+	--ui-bg-accented: var(--ui-color-neutral-800);
+	--ui-border: color-mix(in oklab, #fff 10%, transparent);
+	--ui-border-muted: color-mix(in oklab, #fff 7%, transparent);
+	--ui-border-accented: var(--ui-color-neutral-700);
+	--print-edge: rgb(255 255 255 / 0.1);
+}
+
+html {
+	font-optical-sizing: auto;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
 }
 
 body {
@@ -64,9 +109,26 @@ body {
 	display: inline-block;
 }
 
-/* Album tiles: three stacked prints that fan out on hover (Lychee DESIGN.md). */
-.album-print {
-	transition: transform 200ms ease-out;
+@layer components {
+	/* Titles of things: album names, dates, the wordmark. Light weight, tight, with a slightly short line. */
+	.display {
+		font-family: var(--font-serif);
+		font-weight: 340;
+		letter-spacing: -0.015em;
+		line-height: 1.08;
+		text-wrap: balance;
+		font-feature-settings: "kern", "liga";
+	}
+
+	/* A print on the wall (a positioned element): hairline edge drawn over the image, no shadow. */
+	.print::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		box-shadow: inset 0 0 0 1px var(--print-edge);
+		pointer-events: none;
+	}
 }
 
 /* Rubber-band selection rectangle. */
@@ -75,6 +137,12 @@ body {
 	z-index: 30;
 	pointer-events: none;
 	border: 1px solid var(--ui-primary);
-	background: color-mix(in oklab, var(--ui-primary) 15%, transparent);
-	border-radius: 0.25rem;
+	background: color-mix(in oklab, var(--ui-primary) 12%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.animate-rise,
+	.animate-rise-late {
+		animation: none;
+	}
 }

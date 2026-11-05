@@ -1,24 +1,31 @@
 <template>
-	<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
-		<form role="search" class="flex gap-2 max-w-2xl" @submit.prevent="submit">
+	<div class="px-4 sm:px-8 lg:px-12 pt-8 pb-16 flex flex-col gap-6">
+		<form role="search" class="flex flex-col gap-3 max-w-2xl" @submit.prevent="submit">
 			<UInput
 				v-model="term"
 				type="search"
 				icon="lucide:search"
-				class="flex-1"
+				size="xl"
+				variant="none"
+				class="w-full"
+				:ui="{
+					base: 'display text-3xl sm:text-4xl ps-11 pe-24 py-3 rounded-none bg-transparent ring-0 border-b border-accented focus:border-highlighted transition-colors placeholder:text-dimmed [&::-webkit-search-cancel-button]:hidden',
+					leadingIcon: 'size-6 text-dimmed',
+					leading: 'ps-0',
+				}"
 				autofocus
 				:placeholder="t('search.placeholder')"
 				:aria-label="t('search.label')"
-			/>
-			<UButton type="submit" color="neutral" variant="outline">{{ t("search.submit") }}</UButton>
+			>
+				<template #trailing>
+					<UButton type="submit" color="neutral" variant="ghost" size="sm">{{ t("search.submit") }}</UButton>
+				</template>
+			</UInput>
+			<p class="text-xs text-muted">{{ t("search.hint") }}</p>
 		</form>
-		<p class="text-xs text-muted -mt-4">{{ t("search.hint") }}</p>
 
 		<template v-if="q">
-			<div v-if="photos.isPending.value || albums.isPending.value" class="flex justify-center py-16 text-muted" role="status">
-				<UIcon name="lucide:loader-circle" class="size-6 animate-spin" />
-				<span class="sr-only">{{ t("app.loading") }}</span>
-			</div>
+			<LoadingLine v-if="photos.isPending.value || albums.isPending.value" />
 			<template v-else>
 				<GallerySection v-if="albumResults.length" :title="t('search.albums', albumResults.length)">
 					<AlbumGrid :albums="albumResults" />
@@ -72,6 +79,7 @@ import AlbumGrid from "@/components/gallery/AlbumGrid.vue";
 import GallerySection from "@/components/gallery/GallerySection.vue";
 import LightboxMount from "@/components/gallery/LightboxMount.vue";
 import PhotoGrid from "@/components/gallery/PhotoGrid.vue";
+import LoadingLine from "@/components/layout/LoadingLine.vue";
 import { useInit } from "@/composables/useInit.ts";
 import { useLightboxNav } from "@/composables/useLightboxNav.ts";
 import { useUiStore } from "@/stores/ui.ts";

@@ -10,7 +10,7 @@
 		<!-- Pinned date label once the bucket's own header row has scrolled away. -->
 		<div
 			v-if="pinnedHeader"
-			class="sticky top-(--app-header-bottom) z-10 pointer-events-none flex items-center font-semibold text-toned text-lg bg-default/70 backdrop-blur"
+			class="sticky top-(--app-header-bottom) z-10 pointer-events-none flex w-fit items-center display text-2xl text-highlighted bg-default/85 backdrop-blur-md -ms-3 px-3 rounded-sm"
 			:style="{ height: `${HEADER_ROW_HEIGHT}px`, marginBottom: `-${HEADER_ROW_HEIGHT}px` }"
 			aria-hidden="true"
 		>
@@ -19,7 +19,7 @@
 		<div
 			v-for="item in virtualItems"
 			:key="String(item.key)"
-			class="absolute top-0 left-0 w-full"
+			class="absolute top-0 left-0 w-full pointer-events-none"
 			:style="{
 				height: `${item.size}px`,
 				transform: `translate3d(0, ${item.start - scrollMargin}px, 0)`,
@@ -29,7 +29,7 @@
 			<template v-if="chunks[item.index]">
 				<h2
 					v-if="chunks[item.index]!.header"
-					class="flex items-center font-semibold text-toned text-lg"
+					class="flex items-center display text-2xl text-highlighted"
 					:style="{ height: `${HEADER_ROW_HEIGHT}px` }"
 				>
 					{{ chunks[item.index]!.header!.label }}

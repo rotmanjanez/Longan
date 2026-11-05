@@ -3,7 +3,7 @@
 		<template #body>
 			<div class="flex flex-col gap-5">
 				<section v-for="group in [{ title: t('keys.gallery'), rows }, { title: t('keys.lightbox'), rows: lightboxRows }]" :key="group.title">
-					<h3 class="text-sm font-semibold text-highlighted mb-2">{{ group.title }}</h3>
+					<h3 class="font-serif text-base text-highlighted mb-2">{{ group.title }}</h3>
 					<dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
 						<template v-for="row in group.rows" :key="row.label">
 							<dt class="flex gap-1">

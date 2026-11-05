@@ -1,7 +1,6 @@
 <template>
 	<span
-		class="inline-flex items-center justify-center ms-1 px-1.5 pt-1.5 pb-1 rounded-b-md border border-t-0 border-white/80 text-white shadow-sm"
-		:class="BADGE_BG[role]"
+		class="inline-flex size-6 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm ring-1 ring-white/25"
 		:title="label"
 		role="img"
 		:aria-label="label"
@@ -11,7 +10,5 @@
 </template>
 
 <script setup lang="ts">
-import { BADGE_BG, type BadgeRole } from "@/lib/badges.ts";
-
-defineProps<{ role: BadgeRole; icon: string; label: string }>();
+defineProps<{ icon: string; label: string }>();
 </script>

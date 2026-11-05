@@ -1,9 +1,6 @@
 <template>
-	<div class="min-h-dvh flex flex-col items-center justify-center gap-6 p-6 text-center" role="status" aria-live="polite">
-		<div class="flex items-center gap-3 text-highlighted">
-			<UIcon name="lucide:images" class="size-8 text-primary" />
-			<span class="text-2xl font-bold">{{ t("app.name") }}</span>
-		</div>
+	<div class="min-h-dvh flex flex-col items-center justify-center gap-10 p-6 text-center" role="status" aria-live="polite">
+		<span class="display text-5xl text-highlighted">{{ t("app.name") }}</span>
 		<template v-if="error">
 			<UAlert
 				class="max-w-md text-start"
@@ -17,9 +14,11 @@
 				{{ t("app.retry") }}
 			</UButton>
 		</template>
-		<div v-else class="flex items-center gap-2 text-muted">
-			<UIcon name="lucide:loader-circle" class="size-5 animate-spin" />
-			<span>{{ t("app.loading") }}</span>
+		<div v-else class="flex flex-col items-center gap-4">
+			<div class="relative h-px w-24 overflow-hidden bg-accented">
+				<div class="absolute inset-y-0 w-1/4 bg-highlighted animate-sweep motion-reduce:animate-none motion-reduce:w-full" />
+			</div>
+			<span class="sr-only">{{ t("app.loading") }}</span>
 		</div>
 	</div>
 </template>

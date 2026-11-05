@@ -1,13 +1,9 @@
 <template>
-	<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-4">
-		<div class="flex flex-wrap items-center gap-2">
-			<h1 class="text-lg font-bold text-highlighted flex-1">{{ t("nav.tags") }}</h1>
-			<UInput v-model="filter" icon="lucide:search" class="max-sm:w-full" :placeholder="t('tags.filter')" :aria-label="t('tags.filter')" />
-		</div>
-		<div v-if="tags.isPending.value" class="flex justify-center py-16 text-muted" role="status">
-			<UIcon name="lucide:loader-circle" class="size-6 animate-spin" />
-			<span class="sr-only">{{ t("app.loading") }}</span>
-		</div>
+	<div class="px-4 sm:px-8 lg:px-12 pt-8 pb-16 flex flex-col gap-8">
+		<PageHeading :title="t('nav.tags')">
+			<UInput v-model="filter" icon="lucide:search" variant="soft" class="max-sm:w-full" :placeholder="t('tags.filter')" :aria-label="t('tags.filter')" />
+		</PageHeading>
+		<LoadingLine v-if="tags.isPending.value" />
 		<UEmpty v-else-if="tags.isError.value" icon="lucide:triangle-alert" :title="t('errors.load_failed')" :description="tags.error.value?.message" />
 		<UEmpty v-else-if="visible.length === 0" icon="lucide:tags" :title="t('tags.empty')" />
 		<ul v-else class="flex flex-wrap gap-2">
@@ -15,12 +11,12 @@
 				<UButton
 					color="neutral"
 					variant="soft"
-					icon="lucide:tag"
+					class="rounded-full ps-3.5 pe-2"
 					:to="{ name: 'search', query: { q: searchTerm(tag.name) } }"
 					:aria-label="t('tags.open', { name: tag.name, count: tag.count })"
 				>
-					{{ tag.name }}
-					<UBadge color="neutral" variant="outline" size="sm" class="ms-1">{{ tag.count }}</UBadge>
+					<span class="font-serif text-[0.9375rem]">{{ tag.name }}</span>
+					<span class="ms-2 text-xs text-muted tabular-nums">{{ tag.count }}</span>
 				</UButton>
 			</li>
 		</ul>
@@ -32,6 +28,8 @@ import { useQuery } from "@tanstack/vue-query";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { orpc } from "@/api/query.ts";
+import LoadingLine from "@/components/layout/LoadingLine.vue";
+import PageHeading from "@/components/layout/PageHeading.vue";
 
 const { t } = useI18n();
 const filter = ref("");

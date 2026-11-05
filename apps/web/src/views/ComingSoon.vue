@@ -1,6 +1,6 @@
 <template>
 	<!-- Placeholder for routes implemented by the second web agent (sharing, admin). See router/index.ts. -->
-	<div class="px-3 sm:px-6 lg:px-8 py-6">
+	<div class="px-4 sm:px-8 lg:px-12 pt-8 pb-16">
 		<UEmpty icon="lucide:construction" :title="title" :description="t('app.coming_soon')" />
 	</div>
 </template>

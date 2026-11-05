@@ -1,5 +1,8 @@
 <template>
-	<UApp :toaster="{ position: phone ? 'top-center' : 'bottom-right' }" :tooltip="{ delayDuration: 400 }">
+	<UApp
+		:toaster="{ position: phone ? 'top-center' : 'bottom-right', expand: false, progress: false, max: 3, duration: 4000 }"
+		:tooltip="{ delayDuration: 400 }"
+	>
 		<AppShell v-if="init.data.value" />
 		<LoadingScreen v-else :error="init.error.value" :loading="init.isFetching.value" @retry="init.refetch()" />
 	</UApp>

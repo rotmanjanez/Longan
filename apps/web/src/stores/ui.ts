@@ -75,6 +75,8 @@ export const useUiStore = defineStore("ui", () => {
 
 	/** Title of the current page when it is data-driven (album title); falls back to the route title. */
 	const pageTitle = ref<string | null>(null);
+	/** The page's own title heading is on screen: the header shows the site name instead of repeating it. */
+	const pageTitleInView = ref(false);
 
 	const dialogs = reactive(
 		Object.fromEntries(DIALOG_NAMES.map((n) => [n, false])) as Record<DialogName, boolean>,
@@ -120,6 +122,7 @@ export const useUiStore = defineStore("ui", () => {
 		toggleDark,
 		leftMenuOpen,
 		pageTitle,
+		pageTitleInView,
 		dialogs,
 		dialogContext,
 		openDialog,

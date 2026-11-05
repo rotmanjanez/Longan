@@ -10,11 +10,8 @@
 			@clear="selection.clear()"
 			@select-all="selectAll"
 		/>
-		<div class="px-3 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
-			<div v-if="head.isPending.value" class="flex justify-center py-16 text-muted" role="status">
-				<UIcon name="lucide:loader-circle" class="size-6 animate-spin" />
-				<span class="sr-only">{{ t("app.loading") }}</span>
-			</div>
+		<div class="px-4 sm:px-8 lg:px-12 pt-8 pb-16 flex flex-col gap-10">
+			<LoadingLine v-if="head.isPending.value" />
 			<UEmpty
 				v-else-if="headErrorCode === 'PASSWORD_REQUIRED'"
 				icon="lucide:lock"
@@ -30,14 +27,11 @@
 				:actions="[{ label: t('nav.gallery'), icon: 'lucide:images', color: 'neutral', variant: 'outline', to: '/' }]"
 			/>
 			<template v-else-if="headData">
-				<AlbumHeading :head="headData" @action="onAlbumAction" />
+				<AlbumHeading :head="headData" :title="albumTitle(headData, t, te)" @action="onAlbumAction" />
 				<SensitiveWarning v-if="nsfwBlocked" @consent="ui.consentNsfw(albumId)" />
 				<template v-else>
 					<AlbumGrid v-if="childAlbums.length" :albums="childAlbums" :selectable="headData.rights.canEdit" />
-					<USeparator v-if="childAlbums.length && listing" />
-					<div v-if="ratios.isPending.value && headData.numPhotos > 0" class="flex justify-center py-16 text-muted" role="status">
-						<UIcon name="lucide:loader-circle" class="size-6 animate-spin" />
-					</div>
+					<LoadingLine v-if="ratios.isPending.value && headData.numPhotos > 0" />
 					<PhotoGrid
 						v-else-if="listing && listing.ids.length"
 						ref="gridRef"
@@ -95,6 +89,7 @@ import {
 	actionDialog,
 	type SelectionAction,
 } from "@/components/gallery/selectionActions.ts";
+import LoadingLine from "@/components/layout/LoadingLine.vue";
 import PageDropZone from "@/components/upload/PageDropZone.vue";
 import { useInit } from "@/composables/useInit.ts";
 import { useLightboxNav } from "@/composables/useLightboxNav.ts";
