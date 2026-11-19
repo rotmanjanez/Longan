@@ -29,13 +29,6 @@ export const DEFAULT_SETTINGS: Array<{
 		description: "Date format for photo dates",
 	},
 	{
-		key: "gallery.slideshow_interval_s",
-		value: "5",
-		type: "int:1:60",
-		category: "Gallery",
-		description: "Slideshow interval in seconds",
-	},
-	{
 		key: "theme.primary",
 		value: "alpine",
 		type: "enum:alpine|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose",

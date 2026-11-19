@@ -121,8 +121,6 @@ export const InitConfig = z.object({
 	recentAgeDays: z.number().int(),
 	uploadMaxBytes: z.number().int(),
 	uploadParallelism: z.number().int(),
-	/** Lightbox slideshow interval in seconds. */
-	slideshowIntervalS: z.number().int(),
 });
 export type InitConfig = z.infer<typeof InitConfig>;
 

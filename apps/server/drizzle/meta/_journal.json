@@ -29,6 +29,13 @@
       "when": 1793712320691,
       "tag": "0003_album_requires_login",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795070995983,
+      "tag": "0004_drop_slideshow_setting",
+      "breakpoints": true
     }
   ]
 }

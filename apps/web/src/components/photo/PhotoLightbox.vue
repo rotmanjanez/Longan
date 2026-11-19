@@ -7,7 +7,6 @@
 		:aria-label="title"
 		data-no-drag-select
 		data-lightbox
-		@mousemove="poke"
 	>
 		<div ref="stageBoxRef" class="relative flex-1 min-w-0">
 			<PhotoStage
@@ -26,8 +25,7 @@
 			/>
 
 			<header
-				class="absolute top-0 inset-x-0 z-10 flex items-center gap-1 h-[calc(3.75rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] px-[max(0.5rem,env(safe-area-inset-left))] bg-linear-to-b from-black/60 to-transparent transition-opacity duration-500"
-				:class="chromeVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'"
+				class="absolute top-0 inset-x-0 z-10 flex items-center gap-1 h-[calc(3.75rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] px-[max(0.5rem,env(safe-area-inset-left))] bg-linear-to-b from-black/60 to-transparent"
 			>
 				<UButton icon="lucide:x" color="neutral" variant="ghost" size="lg" :aria-label="t('common.close')" @click="emit('close')" />
 				<div class="min-w-0 flex-1 ps-1">
@@ -38,16 +36,6 @@
 					</p>
 				</div>
 				<div class="flex items-center">
-					<UTooltip v-if="ids.length > 1 && wide" :text="t(slideshow ? 'lightbox.slideshow_stop' : 'lightbox.slideshow_start')">
-						<UButton
-							:icon="slideshow ? 'lucide:pause' : 'lucide:play'"
-							color="neutral"
-							variant="ghost"
-							:aria-label="t(slideshow ? 'lightbox.slideshow_stop' : 'lightbox.slideshow_start')"
-							:aria-pressed="slideshow"
-							@click="toggleSlideshow"
-						/>
-					</UTooltip>
 					<UTooltip v-if="detail?.rights.canEdit && wide" :text="t(detail.isHighlighted ? 'lightbox.unhighlight' : 'lightbox.highlight')">
 						<UButton
 							icon="lucide:star"
@@ -99,7 +87,7 @@
 				</div>
 			</header>
 
-			<template v-if="chromeVisible && !zoomed">
+			<template v-if="!zoomed">
 				<UButton
 					v-if="prevId"
 					class="pointer-coarse:hidden absolute start-3 top-1/2 -translate-y-1/2 z-10 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
@@ -123,7 +111,7 @@
 					@click="goNext"
 				/>
 			</template>
-			<PhotoOverlay v-if="!zoomed && !slideshow && !isVideo" :type="config.imageOverlayType" :title="title" :detail="detail" />
+			<PhotoOverlay v-if="!zoomed && !isVideo" :type="config.imageOverlayType" :title="title" :detail="detail" />
 		</div>
 
 		<aside
@@ -259,45 +247,9 @@ const stopRemoved = onPhotosRemoved((removed, kind) => {
 });
 onBeforeUnmount(stopRemoved);
 
-// --- slideshow + chrome ------------------------------------------------------------------------------
-const slideshow = ref(false);
-/** Slideshow interval from `gallery.slideshow_interval_s` (seconds). */
-const slideshowMs = computed(() => Math.max(1, config.value.slideshowIntervalS || 5) * 1000);
-let slideTimer: ReturnType<typeof setTimeout> | undefined;
-function toggleSlideshow() {
-	slideshow.value = !slideshow.value;
-}
-watch(
-	[slideshow, () => props.photoId],
-	([on]) => {
-		clearTimeout(slideTimer);
-		if (!on) return;
-		slideTimer = setTimeout(() => {
-			const target = nextId.value ?? props.ids[0];
-			if (target && target !== props.photoId) emit("navigate", target);
-			else slideshow.value = false;
-		}, slideshowMs.value);
-	},
-	{ immediate: true },
-);
-
-/** The chrome steps back once the mouse rests, sooner in a slideshow; any movement brings it back. */
-const idle = ref(false);
-let idleTimer: ReturnType<typeof setTimeout> | undefined;
-function poke() {
-	idle.value = false;
-	clearTimeout(idleTimer);
-	idleTimer = setTimeout(() => (idle.value = true), slideshow.value ? 2500 : 4000);
-}
-watch(slideshow, (on) => {
-	if (on) poke();
-});
-const chromeVisible = computed(() => !idle.value || detailsOpen.value);
-
+// --- fullscreen --------------------------------------------------------------------------------------
 const fullscreen = useFullscreen(rootRef);
 onBeforeUnmount(() => {
-	clearTimeout(slideTimer);
-	clearTimeout(idleTimer);
 	if (fullscreen.isFullscreen.value) void fullscreen.exit();
 });
 
@@ -361,12 +313,6 @@ const menuItems = computed<DropdownMenuItem[][]>(() => {
 	// Phones: header buttons that don't fit move here (hidden in the header with max-sm:hidden).
 	if (!wide.value) {
 		const view: DropdownMenuItem[] = [];
-		if (props.ids.length > 1)
-			view.push({
-				label: t(slideshow.value ? "lightbox.slideshow_stop" : "lightbox.slideshow_start"),
-				icon: slideshow.value ? "lucide:pause" : "lucide:play",
-				onSelect: toggleSlideshow,
-			});
 		if (p?.rights.canEdit)
 			view.push({
 				label: t(p.isHighlighted ? "lightbox.unhighlight" : "lightbox.highlight"),
@@ -448,7 +394,6 @@ defineShortcuts(
 	computed(() => {
 		if (ui.anyDialogOpen) return {} as Record<string, () => void>;
 		return {
-			" ": () => props.ids.length > 1 && toggleSlideshow(),
 			i: () => {
 				if (detail.value) detailsOpen.value = !detailsOpen.value;
 			},

@@ -37,7 +37,6 @@ const rows = computed(() => [
 ]);
 const lightboxRows = computed(() => [
 	{ keys: ["←", "→"], label: t("keys.prev_next") },
-	{ keys: ["space"], label: t("keys.slideshow") },
 	{ keys: ["i"], label: t("keys.details") },
 	{ keys: ["f"], label: t("keys.fullscreen") },
 	{ keys: ["s"], label: t("keys.highlight") },

@@ -140,8 +140,6 @@
 		"details_title": "Photo details",
 		"highlight": "Highlight",
 		"unhighlight": "Remove highlight",
-		"slideshow_start": "Start slideshow",
-		"slideshow_stop": "Stop slideshow",
 		"video_unavailable": "This video can’t be played here.",
 		"toast": {
 			"link_copied": "Link copied",
@@ -214,7 +212,6 @@
 		"lightbox": "Photo view",
 		"upload": "Upload photos",
 		"new_album": "New album",
-		"slideshow": "Start / stop slideshow",
 		"details": "Toggle details",
 		"fullscreen": "Toggle fullscreen",
 		"highlight": "Toggle highlight",
@@ -504,12 +501,6 @@
 				"date_format": {
 					"label": "Date format",
 					"hint": "For photo dates, e.g. d MMM yyyy."
-				}
-			},
-			"gallery": {
-				"slideshow_interval_s": {
-					"label": "Slideshow speed",
-					"hint": "Seconds per photo."
 				}
 			},
 			"layout": {

@@ -69,7 +69,7 @@ One API generation, modelled on Lychee's v3 struct-of-arrays tiers but without t
 - Photo edit: title, description, tags, taken_at, license, star rating, highlight, rotate, move/copy (many-to-many `photo_album`), delete with async file cleanup.
 - Sharing: public, link-only, password (signed cookie unlock), per-user grants (full photo, download, upload, edit, delete, move), SQL visibility filter shared by every listing.
 - Discovery: smart albums (unsorted, recent, highlighted, untagged, on this day, rated), tags with rename/merge, tag albums, search (text, tag, date, type), timeline bucketed by date, basic clustered map.
-- Lightbox: custom viewer with pan/zoom, video, slideshow, details sidebar, keyboard shortcuts.
+- Lightbox: custom viewer with pan/zoom, video, details sidebar, keyboard shortcuts.
 - Download: streamed ZIP with variant choice.
 - Admin: trimmed settings page (~40 config keys in a key/value table), theme palette editor (primary and neutral colour choice plus per-shade overrides, stored in config, emitted as `--ui-color-*` CSS variables at runtime, light and dark), health page (vips, ffmpeg, db, storage), user list synced from Keycloak logins with roles and groups.
 - CLI: `sync <dir>` importer, `reprocess` variants, `doctor` (orphans, stats).

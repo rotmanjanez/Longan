@@ -48,7 +48,6 @@ export const initData: InitData = {
 		recentAgeDays: 7,
 		uploadMaxBytes: 1,
 		uploadParallelism: 1,
-		slideshowIntervalS: 5,
 	},
 };
 

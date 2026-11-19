@@ -17,7 +17,7 @@ unchanged on Node.js (>= 22.18, type stripping) and Bun, against an external Pos
   (full photo, download, upload, edit, delete, move), user directory from Keycloak
 - Discovery: smart albums (unsorted, recent, highlighted, untagged, on this day), tag albums, search
   (`tag:`, `type:`, `date:`, `color:#rrggbb`, `make:`, `model:`, `license:`, `rating:>=n`), timeline, map
-- Lightbox: pan/zoom, video playback, slideshow, details panel, keyboard shortcuts
+- Lightbox: pan/zoom, video playback, details panel, keyboard shortcuts
 - Downloads: single variants and streamed ZIPs of albums or selections
 - Admin: settings, theme palette editor, user list, health page, job queue with regeneration of sizes
 - CLI: directory importer, variant regeneration, storage consistency check
