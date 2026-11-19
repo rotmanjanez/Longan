@@ -36,6 +36,13 @@
       "when": 1795070995983,
       "tag": "0004_drop_slideshow_setting",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795071492589,
+      "tag": "0005_single_colour",
+      "breakpoints": true
     }
   ]
 }

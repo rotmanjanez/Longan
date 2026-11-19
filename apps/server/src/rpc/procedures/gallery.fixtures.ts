@@ -130,12 +130,12 @@ export async function createWorld() {
 		width: 300,
 		height: 200,
 		takenAt,
-		colours: ["#808080"],
+		colour: "#808080",
 		...extra,
 	});
 	await db.insert(photos).values([
 		photo(p.p1, "Sunset beach", "2024-03-15T10:00:00Z", {
-			colours: ["#ff8800", "#112233"],
+			colour: "#ff8800",
 			make: "Canon",
 			model: "EOS R5",
 			latitude: 46.05,

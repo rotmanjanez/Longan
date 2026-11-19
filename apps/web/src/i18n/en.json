@@ -183,7 +183,7 @@
 		"label": "Search",
 		"placeholder": "Search photos and albums",
 		"submit": "Search",
-		"hint": "Modifiers: tag:name, type:video, date:2024-05, make:Canon, rating:>=4, color:#ff8800",
+		"hint": "Modifiers: tag:name, type:video, date:2024-05, make:Canon, rating:>=4",
 		"results": "Search results",
 		"albums": "Albums ({n}) | Album ({n}) | Albums ({n})",
 		"photos": "Photos ({n}) | Photo ({n}) | Photos ({n})",

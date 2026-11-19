@@ -4,8 +4,6 @@
  * - `tag:x` photo has a tag named x (case-insensitive, exact)
  * - `type:image|video`
  * - `date:YYYY[-MM[-DD]]` prefix of COALESCE(taken_at, created_at) in UTC
- * - `color:#rrggbb` one of the photo's dominant colours lies within an RGB Euclidean distance of
- *   COLOUR_DISTANCE (decoded from hex in SQL)
  * - `make:x` / `model:x` substring, case-insensitive
  * - `license:x` exact, case-insensitive
  * - `rating:>=n` (also >, <, <=, = or a bare number meaning >=) on the average rating
@@ -21,11 +19,9 @@ import { albumTiles } from "./album-tiles.ts";
 import { A, accessibleSubtree, likeEscape, requireAccessibleAlbum } from "./gallery-common.ts";
 import { nsfwExclusion, photoOrderBy, ratioColumns, toRatiosSoA } from "./photo-scope.ts";
 
-export const COLOUR_DISTANCE = 48;
-
 export type SearchToken = { key: string | null; value: string };
 
-const MODIFIERS = new Set(["tag", "type", "date", "color", "colour", "make", "model", "license", "rating"]);
+const MODIFIERS = new Set(["tag", "type", "date", "make", "model", "license", "rating"]);
 
 export function tokenize(term: string): SearchToken[] {
 	const out: SearchToken[] = [];
@@ -69,15 +65,6 @@ export function tokenCondition(t: SearchToken): SQL {
 		case "date":
 			if (!/^\d{4}(-\d{2}(-\d{2})?)?$/.test(v)) bad("date: must be YYYY, YYYY-MM or YYYY-MM-DD");
 			return sql`to_char(coalesce(photos.taken_at, photos.created_at) at time zone 'UTC', 'YYYY-MM-DD') like ${`${v}%`}`;
-		case "color":
-		case "colour": {
-			const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(v);
-			if (!m) bad("color: must be #rrggbb");
-			const [r, g, b] = [m[1], m[2], m[3]].map((h) => Number.parseInt(h ?? "0", 16));
-			const ch = (pos: number) => sql`('x' || substr(c, ${pos}::int, 2))::bit(8)::int`;
-			return sql`exists (select 1 from unnest(photos.colours) as c where c ~* '^#[0-9a-f]{6}$' and
-				power(${ch(2)} - ${r}::int, 2) + power(${ch(4)} - ${g}::int, 2) + power(${ch(6)} - ${b}::int, 2) <= ${COLOUR_DISTANCE * COLOUR_DISTANCE}::int)`;
-		}
 		case "make":
 			return sql`photos.make ilike ${`%${likeEscape(v)}%`}`;
 		case "model":

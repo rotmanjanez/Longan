@@ -155,7 +155,6 @@ export const photos = os.photos.router({
 				duration: p.duration,
 				fps: p.fps,
 				tags: (tagsBy.get(p.id) ?? []).map((t) => ({ id: t.id, name: t.name })),
-				colours: p.colours,
 				placeholder: p.placeholder,
 				sizeVariants: (variantsBy.get(p.id) ?? [])
 					.filter((sv) => full || THUMB_CLASS_VARIANTS.includes(sv.type))

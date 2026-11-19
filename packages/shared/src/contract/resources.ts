@@ -260,7 +260,6 @@ export const PhotoDetail = z.object({
 	duration: z.number().nullable(),
 	fps: z.number().nullable(),
 	tags: z.array(z.object({ id: z.number().int(), name: z.string() })),
-	colours: z.array(z.string()),
 	/** base64 webp data (no data: prefix) of the 16px placeholder, or null. */
 	placeholder: z.string().nullable(),
 	/** Variants that exist AND the viewer may fetch. */

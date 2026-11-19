@@ -65,7 +65,7 @@ One API generation, modelled on Lychee's v3 struct-of-arrays tiers but without t
 ### Ship in v1
 
 - Albums: tree, create/rename/describe, move, merge, delete, cover, per-album sort and layout, friendly slug, NSFW flag.
-- Photos: streamed upload, sha1 dedup, EXIF, size variants (original, medium, small, thumb, each with optional 2x, placeholder), webp or jpeg output, video thumbs, HEIC, five dominant colours per photo (median cut over a 64px raster from sharp) for tinted tiles and `color:` search.
+- Photos: streamed upload, sha1 dedup, EXIF, size variants (original, medium, small, thumb, each with optional 2x, placeholder), webp or jpeg output, video thumbs, HEIC, one dominant colour per photo (median cut over a 64px raster from sharp) as the fill behind tiles and the lightbox until the image loads.
 - Photo edit: title, description, tags, taken_at, license, star rating, highlight, rotate, move/copy (many-to-many `photo_album`), delete with async file cleanup.
 - Sharing: public, link-only, password (signed cookie unlock), per-user grants (full photo, download, upload, edit, delete, move), SQL visibility filter shared by every listing.
 - Discovery: smart albums (unsorted, recent, highlighted, untagged, on this day, rated), tags with rename/merge, tag albums, search (text, tag, date, type), timeline bucketed by date, basic clustered map.
@@ -104,4 +104,4 @@ Every cut item is either paid-tier in Lychee, replaced by Keycloak, or an extern
 5. `/` is the gallery root. No landing page in v1.
 6. Theme palette customization is in v1.
 7. GPX, 360 and PDF are cut.
-8. Photo colour extraction (dominant palette) is in v1.
+8. One dominant colour per photo, only as the fill behind loading images; no palettes or colour search.

@@ -62,8 +62,6 @@ describe("search.photos", () => {
 		expect((await search(`date:2023-07`, w.ctx.guest, w.a.pub)).ids).toEqual([w.p.p3]);
 		// The album filter covers the subtree (p8 lives in the child album).
 		expect((await search(`date:2024`, w.ctx.guest, w.a.pub)).ids).toEqual([w.p.p8, w.p.p1, w.p.p2]);
-		expect((await search(`color:#f08a10`, w.ctx.guest, w.a.pub)).ids).toEqual([w.p.p1]);
-		expect((await search(`color:#00ff00`, w.ctx.guest, w.a.pub)).ids).toEqual([]);
 		expect((await search(`make:canon model:"eos r5"`, w.ctx.guest, w.a.pub)).ids).toEqual([w.p.p1]);
 		expect((await search(`license:cc0`, w.ctx.guest, w.a.pub)).ids).toEqual([w.p.p1]);
 		expect((await search(`rating:>=4`, w.ctx.guest, w.a.pub)).ids).toEqual([w.p.p1]);

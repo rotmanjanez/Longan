@@ -124,7 +124,7 @@ export async function albumTiles(
 			select count(*)::int as n, min(p.taken_at) as mn, max(p.taken_at) as mx from photos p where ${member}
 		) st on true
 		left join lateral (
-			select p.id, p.colours[1] as colour from photos p
+			select p.id, p.colour from photos p
 			where acc.ok and ${member}
 			order by (p.id is not distinct from a.cover_id) desc, ${coverOrder}
 			limit 1
@@ -171,7 +171,7 @@ export async function smartStats(ctx: Ctx, id: SmartAlbumId) {
 		select st.n, st.mn, st.mx, cov.id as cover_id, cov.colour as cover_colour
 		from (select count(*)::int as n, min(photos.taken_at) as mn, max(photos.taken_at) as mx from photos where ${where}) st
 		left join lateral (
-			select photos.id, photos.colours[1] as colour from photos where ${where} order by ${sql.join(order, sql`, `)} limit 1
+			select photos.id, photos.colour from photos where ${where} order by ${sql.join(order, sql`, `)} limit 1
 		) cov on true
 	`);
 	return {

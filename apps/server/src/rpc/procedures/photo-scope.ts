@@ -266,7 +266,7 @@ export function ratioColumns(bucket: SQL<string>) {
 		ratingAvg: photos.ratingAvg,
 		takenAt: photos.takenAt,
 		createdAt: photos.createdAt,
-		colour: sql<string | null>`${photos.colours}[1]`,
+		colour: photos.colour,
 		updatedAt: sql<number>`floor(extract(epoch from ${photos.updatedAt}))::int`,
 	};
 }

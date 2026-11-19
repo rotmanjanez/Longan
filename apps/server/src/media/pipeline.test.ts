@@ -44,7 +44,7 @@ describe.skipIf(!enabled)("importFile (dev database)", async () => {
 
 	let photoId = "";
 
-	it("imports a JPEG with metadata, variants, colours and placeholder", async () => {
+	it("imports a JPEG with metadata, variants, colour and placeholder", async () => {
 		const file = join(src.dir, "IMG_0001.jpg");
 		await makeJpeg(file);
 		const res = await importFile({
@@ -80,8 +80,7 @@ describe.skipIf(!enabled)("importFile (dev database)", async () => {
 		expect(p!.longitude).toBeCloseTo(2.2944, 3);
 		expect(p!.checksum).toMatch(/^[0-9a-f]{40}$/);
 		expect(p!.originalChecksum).toBe(p!.checksum);
-		expect(p!.colours.length).toBeGreaterThanOrEqual(2);
-		expect(p!.colours[0]).toMatch(/^#[0-9a-f]{6}$/);
+		expect(p!.colour).toMatch(/^#[0-9a-f]{6}$/);
 		expect(p!.placeholder).toBeTruthy();
 		expect(Buffer.from(p!.placeholder!, "base64").subarray(8, 12).toString()).toBe("WEBP");
 

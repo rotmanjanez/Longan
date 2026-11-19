@@ -12,7 +12,7 @@ import { newId } from "../lib/ids.ts";
 import { log } from "../lib/log.ts";
 import { albumGrant, type Viewer } from "../policy/index.ts";
 import { settingBool } from "../settings/index.ts";
-import { extractColours } from "./colours.ts";
+import { extractColour } from "./colours.ts";
 import { EMPTY_METADATA, type MediaMetadata, readImageMetadata, readVideoMetadata } from "./metadata.ts";
 import { MediaError, type Sniffed, sniffFile } from "./sniff.ts";
 import {
@@ -142,7 +142,7 @@ async function cleanup(rels: Iterable<string>) {
 }
 
 /**
- * Import one file: sniff -> sha1 -> duplicate check -> metadata -> place original -> variants -> colours ->
+ * Import one file: sniff -> sha1 -> duplicate check -> metadata -> place original -> variants -> colour ->
  * placeholder -> one transaction inserting photo + size variants + album link.
  * Throws MediaError for unsupported/undecodable input and ImportError for refused targets.
  * On failure nothing is left behind (rows or files).
@@ -194,7 +194,7 @@ export async function importFile(input: ImportInput): Promise<ImportResult> {
 		const checksum = isHeic ? await sha1File(originalAbs) : originalChecksum;
 		const filesize = (await stat(originalAbs)).size;
 
-		// Image source for variants, colours and placeholder.
+		// Image source for variants, colour and placeholder.
 		let source: string | null = originalAbs;
 		if (sniffed.kind === "video") {
 			frame = await extractFrame(originalAbs, meta.duration);
@@ -216,14 +216,14 @@ export async function importFile(input: ImportInput): Promise<ImportResult> {
 		}
 
 		let variants: VariantRow[] = [];
-		let colours: string[] = [];
+		let colour: string | null = null;
 		let placeholder: string | null = null;
 		if (source) {
 			await withWorkingCopy(source, s, async (work) => {
 				variants = await generateVariants({ work, stem, settings: s, onWrite: (rel) => written.add(rel) });
-				colours = await extractColours(work.path).catch((err) => {
+				colour = await extractColour(work.path).catch((err) => {
 					log.warn("colour extraction failed", { err: String(err) });
-					return [] as string[];
+					return null;
 				});
 				if (s.placeholder) placeholder = await makePlaceholder(work.path);
 			});
@@ -265,7 +265,7 @@ export async function importFile(input: ImportInput): Promise<ImportResult> {
 				altitude: meta.altitude,
 				duration: meta.duration,
 				fps: meta.fps,
-				colours,
+				colour,
 				placeholder,
 			});
 			await tx
@@ -317,7 +317,7 @@ async function loadOriginal(db: Db, photoId: string) {
 
 /**
  * Regenerate generated size variants of a photo from its original (videos: from a fresh frame).
- * Without `variants` all generated variants, colours, placeholder and the image dimensions are refreshed.
+ * Without `variants` all generated variants, colour, placeholder and the image dimensions are refreshed.
  */
 export async function reprocessPhoto(db: Db, photoId: string, variants?: SizeVariantType[]): Promise<number> {
 	const { photo, original } = await loadOriginal(db, photoId);
@@ -351,9 +351,9 @@ export async function reprocessPhoto(db: Db, photoId: string, variants?: SizeVar
 				onWrite: (r) => written.add(r),
 			});
 			if (full) {
-				const colours = await extractColours(work.path).catch(() => photo.colours);
+				const colour = await extractColour(work.path).catch(() => photo.colour);
 				const placeholder = s.placeholder ? await makePlaceholder(work.path) : null;
-				extra = { colours, placeholder };
+				extra = { colour, placeholder };
 			}
 			return rows;
 		});

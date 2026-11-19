@@ -131,8 +131,8 @@ export const photos = pgTable(
 		ratingAvg: real("rating_avg"),
 		duration: real("duration"),
 		fps: real("fps"),
-		/** Up to 5 dominant colours as #rrggbb, most dominant first. */
-		colours: text("colours").array().notNull().default(sql`'{}'::text[]`),
+		/** Dominant colour as #rrggbb; tiles and the lightbox are filled with it until the image loads. */
+		colour: text("colour"),
 		/** base64 webp, 16px, no data: prefix. */
 		placeholder: text("placeholder"),
 		createdAt: createdAt(),

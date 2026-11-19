@@ -76,8 +76,11 @@ export function dominantColours(rgb: Uint8Array, count = 5): string[] {
 	return [...new Set(result)];
 }
 
-/** 5 dominant colours of an image file (autorotated, alpha flattened onto white, 64 px raster). */
-export async function extractColours(path: string, count = 5): Promise<string[]> {
+/**
+ * The dominant colour of an image file (autorotated, alpha flattened onto white, 64 px raster): the most
+ * populous of 5 median-cut boxes, which stays closer to the image than the plain average.
+ */
+export async function extractColour(path: string): Promise<string | null> {
 	const { data } = await sharp(path, { failOn: "none" })
 		.autoOrient()
 		.resize(64, 64, { fit: "inside" })
@@ -86,5 +89,5 @@ export async function extractColours(path: string, count = 5): Promise<string[]>
 		.toColourspace("srgb")
 		.raw()
 		.toBuffer({ resolveWithObject: true });
-	return dominantColours(new Uint8Array(data.buffer, data.byteOffset, data.length), count);
+	return dominantColours(new Uint8Array(data.buffer, data.byteOffset, data.length), 5)[0] ?? null;
 }
