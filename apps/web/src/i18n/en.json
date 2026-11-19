@@ -60,7 +60,6 @@
 		"badges": {
 			"nsfw": "Sensitive",
 			"locked": "Password protected",
-			"public": "Public",
 			"link": "Public (link only)",
 			"signed_in": "Signed-in users",
 			"highlighted": "Highlighted",

@@ -76,7 +76,7 @@ describe("app shell", () => {
 		const holiday = w.find(`a[data-album-id="${rootAlbums.albums[0]!.id}"]`);
 		expect(holiday.attributes("href")).toBe(`/gallery/${rootAlbums.albums[0]!.id}`);
 		expect(holiday.find("img[srcset]").attributes("srcset")).toContain("/thumb2x 2x");
-		expect(holiday.find('[aria-label="Public"]').exists()).toBe(true);
+		expect(holiday.find('[aria-label="Public"]').exists()).toBe(false); // plain public albums carry no badge
 		expect(
 			w.find(`a[data-album-id="${rootAlbums.albums[1]!.id}"] [aria-label="Password protected"]`).exists(),
 		).toBe(true);

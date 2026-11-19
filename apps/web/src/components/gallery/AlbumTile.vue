@@ -51,11 +51,6 @@
 					icon="lucide:link"
 					:label="t('gallery.badges.link')"
 				/>
-				<TileBadge
-					v-else-if="album.isPublic"
-					icon="lucide:eye"
-					:label="t('gallery.badges.public')"
-				/>
 			</div>
 			<div v-if="selected" class="absolute inset-0 bg-primary/15 pointer-events-none" />
 			<UIcon
