@@ -49,7 +49,8 @@ export default defineConfig({
 					},
 				},
 				tooltip: { slots: { content: "rounded-md" } },
-				kbd: { slots: { base: "rounded-sm" } },
+				// Keyboard hints look like key caps: rounded corners instead of the near-square default.
+				kbd: { base: "rounded-md" },
 				// iOS-style switch: 52×32 pill, white knob with a soft shadow, accent colour when on, label left / switch right.
 				switch: {
 					slots: {

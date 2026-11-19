@@ -16,7 +16,8 @@
 			:aria-label="t('search.label')"
 		>
 			<template #trailing>
-				<UKbd value="/" variant="subtle" class="hidden md:inline-flex" />
+				<!-- Same dimmed tone as the search icon and placeholder, no fill of its own on the soft input. -->
+				<UKbd value="/" class="hidden md:inline-flex bg-transparent text-dimmed" />
 			</template>
 		</UInput>
 	</form>
