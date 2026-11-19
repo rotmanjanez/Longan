@@ -26,6 +26,7 @@
 			:fetchpriority="eager ? 'high' : undefined"
 			decoding="async"
 			draggable="false"
+			:data-crop="family === 'thumb' ? '' : undefined"
 			class="size-full transition-[opacity,filter] duration-500 group-hover:brightness-105"
 			:class="[fit === 'contain' ? 'object-contain' : 'object-cover', loaded ? 'opacity-100' : 'opacity-0']"
 			@load="loaded = true"

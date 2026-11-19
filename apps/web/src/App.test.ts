@@ -151,7 +151,9 @@ describe("app shell", () => {
 		await new Promise((r) => setTimeout(r, 0));
 		expect(router.currentRoute.value.params.photoId).toBe(listing.ids[3]);
 		expect(
-			document.body.querySelector('[role="dialog"][aria-modal="true"] img')?.getAttribute("src"),
+			document.body
+				.querySelector('[role="dialog"][aria-modal="true"] img[data-photo-image]')
+				?.getAttribute("src"),
 		).toContain("/medium");
 		w.unmount();
 	});

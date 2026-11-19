@@ -92,6 +92,7 @@ import {
 } from "@/lib/photoGrid.ts";
 import { modifiersOf, useSelectionStore } from "@/stores/selection.ts";
 import { useUiStore } from "@/stores/ui.ts";
+import { setLightboxOrigin } from "./lightboxOrigin.ts";
 import PhotoTile from "./PhotoTile.vue";
 
 const props = withDefaults(
@@ -192,7 +193,16 @@ function onActivate(i: number, e: MouseEvent) {
 		window.open(props.hrefFor(id), "_blank", "noopener");
 		return;
 	}
+	recordOrigin(id);
 	emit("open", id);
+}
+
+/** Where the tile sits, for the lightbox's zoom-in (see lightboxOrigin.ts). Ids are base64url: selector-safe. */
+function recordOrigin(id: string) {
+	const tile = containerRef.value?.querySelector<HTMLElement>(`[data-photo-id="${id}"]`);
+	if (!tile) return;
+	const r = tile.getBoundingClientRect();
+	setLightboxOrigin(id, { left: r.left, top: r.top, width: r.width, height: r.height });
 }
 
 const drag = useDragSelect({

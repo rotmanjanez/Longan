@@ -19,12 +19,14 @@
 				:is-video="isVideo"
 				:ratio="listing?.ratios[index] ?? null"
 				:colour="listing?.colours[index] ?? null"
+				:intro="intro"
 				:title="title"
 				@swipe="(dir) => (dir === 'next' ? goNext() : goPrev())"
 				@zoomed="(z) => (zoomed = z)"
 			/>
 
 			<header
+				data-lightbox-chrome
 				class="absolute top-0 inset-x-0 z-10 flex items-center gap-1 h-[calc(3.75rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] px-[max(0.5rem,env(safe-area-inset-left))] bg-linear-to-b from-black/60 to-transparent"
 			>
 				<UButton icon="lucide:x" color="neutral" variant="ghost" size="lg" :aria-label="t('common.close')" @click="emit('close')" />
@@ -90,6 +92,7 @@
 			<template v-if="!zoomed">
 				<UButton
 					v-if="prevId"
+					data-lightbox-chrome
 					class="pointer-coarse:hidden absolute start-3 top-1/2 -translate-y-1/2 z-10 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
 					icon="lucide:chevron-left"
 					color="neutral"
@@ -101,6 +104,7 @@
 				/>
 				<UButton
 					v-if="nextId"
+					data-lightbox-chrome
 					class="pointer-coarse:hidden absolute end-3 top-1/2 -translate-y-1/2 z-10 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors"
 					icon="lucide:chevron-right"
 					color="neutral"
@@ -111,11 +115,12 @@
 					@click="goNext"
 				/>
 			</template>
-			<PhotoOverlay v-if="!zoomed && !isVideo" :type="config.imageOverlayType" :title="title" :detail="detail" />
+			<PhotoOverlay v-if="!zoomed && !isVideo" data-lightbox-chrome :type="config.imageOverlayType" :title="title" :detail="detail" />
 		</div>
 
 		<aside
 			v-if="detailsOpen && detail"
+			data-lightbox-chrome
 			class="absolute inset-0 z-20 sm:static sm:w-96 shrink-0 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)] bg-neutral-950 text-default border-s border-white/10"
 			:aria-label="t('lightbox.details_title')"
 		>
@@ -145,6 +150,11 @@ import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vu
 import { useI18n } from "vue-i18n";
 import { assetUrl, versionOf } from "@/api/assets.ts";
 import type { LightboxProps } from "@/components/gallery/lightbox.ts";
+import {
+	prefersReducedMotion,
+	takeLightboxOrigin,
+	ZOOM_IN_TIMING,
+} from "@/components/gallery/lightboxOrigin.ts";
 import { useInit } from "@/composables/useInit.ts";
 import { usePhotoDetails } from "@/composables/usePhotoDetails.ts";
 import { canMovePhotoFrom } from "@/lib/albums.ts";
@@ -178,6 +188,23 @@ const detailsOpen = computed({
 		if (wide.value) detailsStored.value = v;
 		else detailsPhone.value = v;
 	},
+});
+
+/**
+ * Opened by clicking a grid tile: the photo zooms in from the tile (PhotoStage) while the black backdrop and
+ * the controls fade in over the grid. Only for the photo opened, not after stepping to another and back.
+ */
+const intro = shallowRef(takeLightboxOrigin(props.photoId));
+watch(
+	() => props.photoId,
+	() => (intro.value = null),
+);
+onMounted(() => {
+	const root = rootRef.value;
+	if (!intro.value || !root || typeof root.animate !== "function" || prefersReducedMotion()) return;
+	root.animate([{ backgroundColor: "rgb(0 0 0 / 0)" }, { backgroundColor: "rgb(0 0 0)" }], ZOOM_IN_TIMING);
+	for (const el of root.querySelectorAll("[data-lightbox-chrome]"))
+		el.animate([{ opacity: 0 }, { opacity: 1 }], ZOOM_IN_TIMING);
 });
 
 // The page underneath must not scroll (touch drags on the header/edges would otherwise move it).

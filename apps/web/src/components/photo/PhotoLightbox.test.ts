@@ -160,7 +160,7 @@ describe("lightbox", () => {
 		const el = box();
 		expect(el).not.toBeNull();
 		expect(el!.getAttribute("role")).toBe("dialog");
-		const img = el!.querySelector<HTMLImageElement>("img[srcset]");
+		const img = el!.querySelector<HTMLImageElement>("img[data-photo-image]");
 		expect(img?.getAttribute("src")).toContain(`/api/asset/${albumId}/${listing.ids[3]}/medium`);
 		expect(img?.getAttribute("srcset")).toContain("/medium2x");
 		expect(el!.textContent).toContain(`Photo ${listing.ids[3]!.slice(0, 4)}`);

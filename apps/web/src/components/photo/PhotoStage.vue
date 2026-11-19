@@ -25,35 +25,52 @@
 			</div>
 		</div>
 		<div v-else class="absolute inset-0" :style="zoom.layerStyle.value">
-			<img
-				v-if="placeholder && !loaded"
-				:src="placeholder"
-				alt=""
-				aria-hidden="true"
-				class="absolute object-contain blur-lg"
-				:style="zoom.imageStyle.value"
-			/>
-			<img
-				:src="currentSrc"
-				:srcset="currentSrcset || undefined"
-				:sizes="currentSrcset ? sizes : undefined"
-				:alt="title"
-				draggable="false"
-				fetchpriority="high"
-				decoding="async"
-				class="absolute object-contain transition-opacity duration-200"
-				:class="loaded ? 'opacity-100' : 'opacity-0'"
-				:style="[zoom.imageStyle.value, tint]"
-				@load="onLoad"
-				@error="onError"
-			/>
-			<div
-				v-if="failed"
-				class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/70 pointer-events-none"
-				role="alert"
-			>
-				<UIcon name="lucide:image-off" class="size-10" />
-				<span class="text-sm">{{ t("lightbox.image_failed") }}</span>
+			<!-- Wrapper for the zoom-in from the grid tile (playIntro), separate from the pan/zoom transform. -->
+			<div ref="introRef" class="absolute inset-0 origin-top-left">
+				<!-- Until the full rendition is in: colour fill, blurred placeholder, then the grid's thumbnail. -->
+				<div v-if="!settled && colour" class="absolute" :style="[zoom.imageStyle.value, { backgroundColor: colour }]" />
+				<img
+					v-if="!settled && placeholder"
+					:src="placeholder"
+					alt=""
+					aria-hidden="true"
+					class="absolute object-contain blur-lg"
+					:style="zoom.imageStyle.value"
+				/>
+				<img
+					v-if="!settled && preview && !previewFailed"
+					:src="preview.src"
+					:srcset="preview.srcset || undefined"
+					alt=""
+					aria-hidden="true"
+					draggable="false"
+					class="absolute object-contain"
+					:style="zoom.imageStyle.value"
+					@error="previewFailed = true"
+				/>
+				<img
+					data-photo-image
+					:src="currentSrc"
+					:srcset="currentSrcset || undefined"
+					:sizes="currentSrcset ? sizes : undefined"
+					:alt="title"
+					draggable="false"
+					fetchpriority="high"
+					decoding="async"
+					class="absolute object-contain transition-opacity duration-200"
+					:class="loaded ? 'opacity-100' : 'opacity-0'"
+					:style="zoom.imageStyle.value"
+					@load="onLoad"
+					@error="onError"
+				/>
+				<div
+					v-if="failed"
+					class="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/70 pointer-events-none"
+					role="alert"
+				>
+					<UIcon name="lucide:image-off" class="size-10" />
+					<span class="text-sm">{{ t("lightbox.image_failed") }}</span>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -62,9 +79,17 @@
 <script setup lang="ts">
 import type { PhotoDetail } from "@longan/shared";
 import { useEventListener } from "@vueuse/core";
-import { computed, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { imageSources, videoPoster, videoSource } from "./photoSources.ts";
+import {
+	type OriginRect,
+	prefersReducedMotion,
+	tileThumbnail,
+	ZOOM_IN_TIMING,
+} from "@/components/gallery/lightboxOrigin.ts";
+import { fitRect } from "@/lib/panZoom.ts";
+import { zoomInKeyframes } from "@/lib/zoomIn.ts";
+import { imageSources, photoAssetUrl, videoPoster, videoSource } from "./photoSources.ts";
 import { usePanZoom } from "./usePanZoom.ts";
 
 const props = defineProps<{
@@ -76,6 +101,8 @@ const props = defineProps<{
 	ratio?: number | null;
 	title: string;
 	colour?: string | null;
+	/** Viewport rect of the grid tile this photo was opened from: zoom in from there. */
+	intro?: OriginRect | null;
 }>();
 const emit = defineEmits<{ swipe: [dir: "prev" | "next"]; zoomed: [value: boolean] }>();
 const { t } = useI18n();
@@ -155,7 +182,43 @@ const videoSrc = computed(() => videoSource(props.albumCtx, props.photoId, props
 const placeholder = computed(() =>
 	props.detail?.placeholder ? `data:image/webp;base64,${props.detail.placeholder}` : null,
 );
-const tint = computed(() => (!loaded.value && props.colour ? { backgroundColor: props.colour } : undefined));
+/**
+ * Shown until the full rendition is in: the grid tile's loaded thumbnail (cached, so instant), else the small
+ * rendition, which arrives well before medium on a slow connection.
+ */
+const tileSrc = tileThumbnail(props.photoId);
+const preview = computed(() => {
+	if (tileSrc) return { src: tileSrc, srcset: "" };
+	const url = (variant: "small" | "small2x") =>
+		photoAssetUrl(props.albumCtx, props.photoId, variant, props.detail);
+	return { src: url("small"), srcset: `${url("small")} 1x, ${url("small2x")} 2x` };
+});
+const previewFailed = ref(false);
+/** The full image has loaded and faded in: the stand-in layers underneath can go. */
+const settled = ref(false);
+let settleTimer: ReturnType<typeof setTimeout> | undefined;
+watch(loaded, (l) => {
+	clearTimeout(settleTimer);
+	if (l) settleTimer = setTimeout(() => (settled.value = true), 250);
+	else settled.value = false;
+});
+onBeforeUnmount(() => clearTimeout(settleTimer));
+
+// --- zoom-in from the grid tile ----------------------------------------------------------------------
+const introRef = ref<HTMLElement | null>(null);
+/** Grows the image out of the grid tile it was opened from (see zoomInKeyframes). */
+function playIntro(from: OriginRect) {
+	const el = introRef.value;
+	const box = containerRef.value;
+	if (!el || !box || typeof el.animate !== "function" || prefersReducedMotion()) return;
+	const c = box.getBoundingClientRect();
+	const stage = { left: c.left, top: c.top, width: c.width, height: c.height };
+	const frames = zoomInKeyframes(from, stage, fitRect(natural(), stage));
+	if (frames) el.animate(frames, ZOOM_IN_TIMING);
+}
+onMounted(() => {
+	if (props.intro && !props.isVideo) playIntro(props.intro);
+});
 
 const failed = ref(false);
 function onError() {
